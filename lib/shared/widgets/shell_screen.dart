@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:mobile_client/features/incident/view/incident_screen.dart';
 import 'package:mobile_client/features/user/view/user_screen.dart';
 
 class ShellScreen extends StatefulWidget{
@@ -12,8 +13,8 @@ class _ShellScreenState extends State<ShellScreen> {
   int _currentIndex = 0;
 
   final List<Widget> _pages = const [
-    Center(child: Text('Home tab content')),
-    Center(child: Text('Search tab content')),
+    IncidentScreen(), // à remplacer par le tableau de bord
+    IncidentScreen(),
     UserScreen(),
   ];
 

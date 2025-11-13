@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../viewmodel/auth_viewmodel.dart';
+import 'personal_info_screen.dart';
 
 class UserScreen extends StatelessWidget {
   const UserScreen({super.key});
@@ -100,7 +101,9 @@ class UserScreen extends StatelessWidget {
                       title: const Text('Personal info'),
                       trailing: const Icon(Icons.chevron_right),
                       onTap: () {
-                        // TODO: Navigate to personal info
+                        Navigator.of(context).push(MaterialPageRoute(
+                          builder: (_) => const PersonalInfoScreen(),
+                        ));
                       },
                     ),
 
