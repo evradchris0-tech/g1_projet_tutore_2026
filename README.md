@@ -22,25 +22,45 @@ Le projet suit le **pattern MVVM (Model - View - ViewModel)**, appliqué **par f
 Deux dossiers centraux — `core` et `shared` — contiennent les éléments communs à toutes les features.
 
 lib/
+
 │
+
 ├── core/ # Logique et ressources globales
+
 │ ├── error/ # Gestion des erreurs et exceptions
+
 │ ├── network/ # Services réseau (API, synchronisation)
+
 │ ├── database/ # Gestion du stockage local (SQLite, Hive, etc.)
+
 │ └── utils/ # Helpers, extensions, constantes
+
 │
+
 ├── shared/ # Composants et widgets réutilisables
+
 │ ├── widgets/
+
 │ ├── themes/
+
 │ └── styles/
+
 │
+
 ├── features/
+
 │ ├── report_incident/ # Exemple de feature : déclaration d’incident
+
 │ │ ├── model/
+
 │ │ ├── view/
+
 │ │ └── view_model/
+
 │ └── ...
+
 │
+
 └── main.dart # Point d’entrée de l’application
 
 
@@ -49,20 +69,30 @@ lib/
 ### Schéma simplifié du flux MVVM
 
 ┌───────────────┐
+
 │ View │ ← Interface utilisateur (Widgets Flutter)
+
 └──────┬────────┘
+
 │ observe / notify
+
 ▼
+
 ┌───────────────┐
+
 │ ViewModel │ ← Gère l’état et la logique de présentation
+
 └──────┬────────┘
+
 │ utilise
+
 ▼
+
 ┌───────────────┐
+
 │ Model │ ← Représente les données (locales ou API)
+
 └───────────────┘
-
-
 ---
 
 ## Installation et exécution du projet
