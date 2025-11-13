@@ -21,16 +21,18 @@ class _ShellScreenState extends State<ShellScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
+        backgroundColor: const Color.fromARGB(255, 30, 64, 175),
         title: const Row(
           mainAxisAlignment: MainAxisAlignment.start,
           children: [
-            Icon(Icons.location_on),
+            Icon(Icons.location_on_outlined, color: Colors.white,),
             SizedBox(width: 8),
-            Text('Eyang, cité universitaire'),
+            Text('Eyang, cité universitaire', style: TextStyle(fontSize: 20, color: Colors.white)),
           ],
         ),
         actions: [
           IconButton(
+            color: Colors.white,
             icon: const Icon(Icons.notifications),
             onPressed: () {},
           ),

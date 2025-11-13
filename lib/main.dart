@@ -16,12 +16,15 @@ class MyApp extends StatelessWidget {
     return MaterialApp(
       title: 'Immo 360 Client',
       theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(seedColor: Colors.blue),
+        colorScheme: ColorScheme.fromSeed(seedColor: const Color.fromARGB(255, 30, 64, 175)),
       ),
-      home: ValueListenableBuilder(valueListenable: AuthViewModel.instance.user, builder: (context, user, _) {
-        if (user == null) return const LoginScreen();
+      home: ValueListenableBuilder(
+        valueListenable: AuthViewModel.instance.user,
+        builder: (context, user, _) {
+          if (user == null) return const LoginScreen();
           return const ShellScreen();
-      }),
+        },
+      ),
     );
   }
 }
