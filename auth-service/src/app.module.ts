@@ -5,6 +5,9 @@ import { AuthModule } from './modules/auth/auth.module';
 import { ConfigModule } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { UsersModule } from './modules/users/users.module';
+import { AdminModule } from './modules/admin/admin.module';
+import { AgentModule } from './modules/agent/agent.module';
+import { OccupantModule } from './modules/occupant/occupant.module';
 
 
 @Module({
@@ -18,7 +21,7 @@ import { UsersModule } from './modules/users/users.module';
       database: process.env.DB_NAME,
       autoLoadEntities: true,
       synchronize: true,
-    }), AuthModule, UsersModule],
+    }), AuthModule, UsersModule, AdminModule, AgentModule, OccupantModule],
   controllers: [AppController],
   providers: [AppService],
 

@@ -1,5 +1,6 @@
 import { IsString, MinLength, IsEnum, IsOptional } from 'class-validator';
-import { UserRole } from '../user.entity';
+import { UserRole } from '../../users/user.entity';
+import { AccessLevel } from 'src/modules/admin/admin.entity';
 
 
 export class RegisterDto {
@@ -11,7 +12,31 @@ export class RegisterDto {
   @MinLength(6, { message: 'Password must be at least 6 characters long' })
   password: string;
 
+  @IsEnum(UserRole, { message: 'Role must be one of ADMIN, AGENT, OCCUPANT' })
+  role: UserRole;
+
   @IsOptional()
-  @IsEnum(UserRole, { message: 'Role must be one of ADMIN, AGENT, OCCUPANT, SUPERVISEUR' })
-  role?: UserRole;
+  nom?: string;
+
+  @IsOptional()
+  prenom?: string;
+
+  @IsOptional()
+  @IsEnum(AccessLevel, { message: 'Access Level must be ADMIN or SUPERADMIN' })
+  access?: AccessLevel;
+
+  @IsOptional()
+  IsSupervisor?: boolean;
+
+  @IsOptional()
+  phone?: string;
+
+  @IsOptional()
+  numeroChambre?: string;
+
+  @IsOptional()
+  tempPassword?: string;
+
+  @IsOptional()
+  speciality?: string;
 }
