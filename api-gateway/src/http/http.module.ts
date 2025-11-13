@@ -1,10 +1,16 @@
 import { HttpModule } from '@nestjs/axios';
 import { Module } from '@nestjs/common';
+import { ConfigModule, ConfigService } from '@nestjs/config';
 
 @Module({imports: [
-    HttpModule.register({
-      baseURL: process.env.AUTH_SERVICE_URL || 'http://auth-service:3001',
-      timeout: 5000,
+    ConfigModule.forRoot({ isGlobal: true }),
+    HttpModule.registerAsync({
+      imports: [ConfigModule],
+      inject: [ConfigService],
+      useFactory: (config: ConfigService) => ({
+        baseURL: config.get('AUTH_SERVICE_URL'),
+        timeout: 5000,
+      }),
     }),
   ],
   exports: [HttpModule],})

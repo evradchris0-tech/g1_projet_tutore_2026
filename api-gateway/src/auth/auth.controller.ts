@@ -10,7 +10,7 @@ export class AuthController {
    @Post('register')
   async register(@Body() body) {
     const res = await firstValueFrom(
-      this.http.post('http://auth-service:3001/auth/register', body)
+      this.http.post('http://localhost:3001/auth/register', body)
     );
     return res.data;
   }
@@ -18,7 +18,7 @@ export class AuthController {
   @Post('login')
   async login(@Body() body) {
     const res = await firstValueFrom(
-      this.http.post('http://auth-service:3001/auth/login', body)
+      this.http.post('http://localhost:3001/auth/login', body)
     );
     return res.data;
   }
