@@ -3,7 +3,10 @@ import 'package:mobile_client/features/user/view/login_screen.dart';
 import 'package:mobile_client/features/user/viewmodel/auth_viewmodel.dart';
 import 'package:mobile_client/shared/widgets/shell_screen.dart';
 
-void main() {
+Future<void> main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  // Load persisted auth (if any) before building the app
+  await AuthViewModel.instance.loadFromDb();
   runApp(const MyApp());
 }
 
