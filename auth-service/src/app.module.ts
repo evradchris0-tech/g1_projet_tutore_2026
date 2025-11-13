@@ -8,6 +8,12 @@ import { UsersModule } from './modules/users/users.module';
 import { AdminModule } from './modules/admin/admin.module';
 import { AgentModule } from './modules/agent/agent.module';
 import { OccupantModule } from './modules/occupant/occupant.module';
+import { OccupantController } from './modules/occupant/occupant.controller';
+import { AgentController } from './modules/agent/agent.controller';
+import { AdminController } from './modules/admin/admin.controller';
+import { AdminService } from './modules/admin/admin.service';
+import { AgentService } from './modules/agent/agent.service';
+import { OccupantService } from './modules/occupant/occupant.service';
 
 
 @Module({
@@ -21,8 +27,8 @@ import { OccupantModule } from './modules/occupant/occupant.module';
       database: process.env.DB_NAME,
       autoLoadEntities: true,
       synchronize: true,
-    }), AuthModule, UsersModule, AdminModule, AgentModule, OccupantModule],
-  controllers: [AppController],
+    }), AuthModule, UsersModule, AgentModule, OccupantModule, AdminModule],
+  controllers: [AppController,  ],
   providers: [AppService],
 
 })
