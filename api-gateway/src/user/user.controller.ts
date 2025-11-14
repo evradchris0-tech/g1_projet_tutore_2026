@@ -10,7 +10,7 @@ export class UserController {
   constructor(private http: HttpService) {}
 
   @Post()
-  @ApiOperation({ summary: 'Create a new user' })
+  @ApiOperation({ summary: 'Create a new user ' })
   @ApiResponse({ status: 201, description: 'User successfully created.' })
   @ApiResponse({ status: 400, description: 'Validation error.' })
   async create(@Body() body: CreateUserDto, @Req() req) {
