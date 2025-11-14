@@ -8,6 +8,9 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
 import { Admin } from '../admin/admin.entity';
 import { Agent } from '../agent/agent.entity';
 import { Occupant } from '../occupant/occupant.entity';
+import { JwtStrategy } from './strategies/jwt.strategy';
+import { JwtAuthGuard } from './guards/jwt-auth.guard';
+import { RolesGuard } from './guards/roles.guard';
 
 @Module({
    imports: [
@@ -21,7 +24,9 @@ import { Occupant } from '../occupant/occupant.entity';
       }),
     }),
   ],
-  providers: [AuthService],
+  providers: [AuthService,JwtStrategy,
+    JwtAuthGuard,
+    RolesGuard,],
   controllers: [AuthController]
 })
 export class AuthModule {}
