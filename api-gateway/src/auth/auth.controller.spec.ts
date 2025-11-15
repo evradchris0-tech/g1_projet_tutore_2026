@@ -9,7 +9,7 @@ describe('AuthController', () => {
   const mockHttpService = {
     post: jest.fn(() => of({ data: {} })),
   };
-
+////PB de connectio je met un faux commentaire pour commit
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
       controllers: [AuthController],
