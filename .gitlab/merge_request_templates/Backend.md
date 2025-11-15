@@ -3,22 +3,11 @@
 ### Contexte
 <!-- Pourquoi cette MR est-elle nécessaire ? -->
 
-### Changements apportés
-<!-- Liste les principales modifications -->
-- [ ] Feature 1
-- [ ] Feature 2
-
 ### Impact
 <!-- Quel est l'impact sur l'application ? -->
 - Modules affectés: 
 - APIs modifiées:
 - Breaking changes: Oui/Non
-
-## 🧪 Tests
-
-### Tests ajoutés
-- [ ] Tests unitaires (coverage: XX%)
-- [ ] Tests d'intégration
 
 ### Comment tester localement
 ```bash
