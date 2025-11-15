@@ -13,7 +13,7 @@ import { JwtAuthGuard } from './guards/jwt-auth.guard';
 import { RolesGuard } from './guards/roles.guard';
 
 @Module({
-   imports: [
+  imports: [
     TypeOrmModule.forFeature([User, Admin, Agent, Occupant]),
     JwtModule.registerAsync({
       imports: [ConfigModule],
@@ -24,9 +24,7 @@ import { RolesGuard } from './guards/roles.guard';
       }),
     }),
   ],
-  providers: [AuthService,JwtStrategy,
-    JwtAuthGuard,
-    RolesGuard,],
-  controllers: [AuthController]
+  providers: [AuthService, JwtStrategy, JwtAuthGuard, RolesGuard],
+  controllers: [AuthController],
 })
 export class AuthModule {}

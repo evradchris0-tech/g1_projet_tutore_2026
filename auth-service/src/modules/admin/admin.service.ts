@@ -5,7 +5,9 @@ import { Admin } from './admin.entity';
 
 @Injectable()
 export class AdminService {
-  constructor(@InjectRepository(Admin) private readonly repo: Repository<Admin>) {}
+  constructor(
+    @InjectRepository(Admin) private readonly repo: Repository<Admin>,
+  ) {}
 
   async create(data: Partial<Admin>) {
     const admin = this.repo.create(data);
@@ -17,7 +19,10 @@ export class AdminService {
   }
 
   async findOne(id: string) {
-    const admin = await this.repo.findOne({ where: { id }, relations: ['user'] });
+    const admin = await this.repo.findOne({
+      where: { id },
+      relations: ['user'],
+    });
     if (!admin) throw new NotFoundException('Admin not found');
     return admin;
   }

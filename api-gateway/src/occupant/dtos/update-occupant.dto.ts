@@ -6,5 +6,4 @@ export class UpdateOccupantDto {
 
   @ApiPropertyOptional()
   tempPassword?: string;
-
 }

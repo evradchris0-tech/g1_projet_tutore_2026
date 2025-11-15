@@ -5,7 +5,9 @@ import { Occupant } from './occupant.entity';
 
 @Injectable()
 export class OccupantService {
-  constructor(@InjectRepository(Occupant) private readonly repo: Repository<Occupant>) {}
+  constructor(
+    @InjectRepository(Occupant) private readonly repo: Repository<Occupant>,
+  ) {}
 
   async create(data: Partial<Occupant>) {
     const occupant = this.repo.create(data);
@@ -17,7 +19,10 @@ export class OccupantService {
   }
 
   async findOne(id: string) {
-    const occupant = await this.repo.findOne({ where: { id }, relations: ['user'] });
+    const occupant = await this.repo.findOne({
+      where: { id },
+      relations: ['user'],
+    });
     if (!occupant) throw new NotFoundException('Occupant not found');
     return occupant;
   }

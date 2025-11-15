@@ -2,7 +2,6 @@ import { IsString, MinLength, IsEnum, IsOptional } from 'class-validator';
 import { UserRole } from '../../users/user.entity';
 import { AccessLevel } from '../../admin/admin.entity';
 
-
 export class RegisterDto {
   @IsString()
   @MinLength(3, { message: 'Username must be at least 3 characters long' })

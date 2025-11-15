@@ -1,5 +1,13 @@
-import { 
-  Controller, Get, Post, Patch, Delete, Body, Param, Req, ForbiddenException 
+import {
+  Controller,
+  Get,
+  Post,
+  Patch,
+  Delete,
+  Body,
+  Param,
+  Req,
+  ForbiddenException,
 } from '@nestjs/common';
 import { OccupantService } from './occupant.service';
 import { Roles } from '../auth/decorators/roles.decorator';

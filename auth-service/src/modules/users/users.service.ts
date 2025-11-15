@@ -1,14 +1,19 @@
-import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  BadRequestException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { User, UserRole } from './user.entity';
 import * as bcrypt from 'bcrypt';
 import { UpdateUserDto } from '../auth/dtos/update-user.dto';
 
-
 @Injectable()
 export class UsersService {
-  constructor(@InjectRepository(User) private readonly repo: Repository<User>) {}
+  constructor(
+    @InjectRepository(User) private readonly repo: Repository<User>,
+  ) {}
 
   async findAll(): Promise<User[]> {
     return this.repo.find();
@@ -35,5 +40,4 @@ export class UsersService {
     const result = await this.repo.delete(id);
     if (result.affected === 0) throw new NotFoundException('User not found');
   }
-
 }

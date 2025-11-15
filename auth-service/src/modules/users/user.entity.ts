@@ -1,4 +1,12 @@
-import { Entity, PrimaryGeneratedColumn, Column, Index, CreateDateColumn, UpdateDateColumn, OneToOne } from 'typeorm';
+import {
+  Entity,
+  PrimaryGeneratedColumn,
+  Column,
+  Index,
+  CreateDateColumn,
+  UpdateDateColumn,
+  OneToOne,
+} from 'typeorm';
 import { Admin } from '../admin/admin.entity';
 import { Agent } from '../agent/agent.entity';
 import { Occupant } from '../occupant/occupant.entity';
@@ -9,7 +17,6 @@ export enum UserRole {
   OCCUPANT = 'OCCUPANT',
   SUPERVISEUR = 'SUPERVISEUR',
 }
-
 
 @Entity('users')
 export class User {
@@ -43,5 +50,4 @@ export class User {
 
   @OneToOne(() => Occupant, (occupant) => occupant.user)
   occupant?: Occupant;
-
 }

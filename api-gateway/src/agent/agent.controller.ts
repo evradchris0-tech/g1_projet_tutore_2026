@@ -1,5 +1,13 @@
 import { HttpService } from '@nestjs/axios';
-import { Controller, Get, Post, Patch, Delete, Body, Param } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Patch,
+  Delete,
+  Body,
+  Param,
+} from '@nestjs/common';
 import { ApiBody, ApiParam, ApiResponse } from '@nestjs/swagger';
 import { firstValueFrom } from 'rxjs';
 import { CreateAgentDto } from './dtos/create-agent.dto';
@@ -12,19 +20,18 @@ export class AgentsController {
   @Post()
   @ApiBody({ type: CreateAgentDto })
   @ApiResponse({ status: 201, description: 'Admin created successfully' })
-  async create(@Body() body : CreateAgentDto) {
+  async create(@Body() body: CreateAgentDto) {
     const res = await firstValueFrom(
-      this.http.post('http://localhost:3001/agents', body)
+      this.http.post('http://localhost:3001/agents', body),
     );
     return res.data;
   }
-
 
   @Get()
   @ApiResponse({ status: 200, description: 'Get all agents' })
   async findAll() {
     const res = await firstValueFrom(
-      this.http.get('http://localhost:3001/agents')
+      this.http.get('http://localhost:3001/agents'),
     );
     return res.data;
   }
@@ -34,7 +41,7 @@ export class AgentsController {
   @ApiResponse({ status: 200, description: 'Get Agent by ID' })
   async findOne(@Param('id') id: string) {
     const res = await firstValueFrom(
-      this.http.get(`http://localhost:3001/agents/${id}`)
+      this.http.get(`http://localhost:3001/agents/${id}`),
     );
     return res.data;
   }
@@ -43,9 +50,9 @@ export class AgentsController {
   @ApiParam({ name: 'id', type: String })
   @ApiBody({ type: UpdateAgentDto })
   @ApiResponse({ status: 200, description: 'Agent updated successfully' })
-  async update(@Param('id') id: string, @Body() body : UpdateAgentDto) {
+  async update(@Param('id') id: string, @Body() body: UpdateAgentDto) {
     const res = await firstValueFrom(
-      this.http.patch(`http://localhost:3001/agents/${id}`, body)
+      this.http.patch(`http://localhost:3001/agents/${id}`, body),
     );
     return res.data;
   }
@@ -55,7 +62,7 @@ export class AgentsController {
   @ApiResponse({ status: 200, description: 'Agent deleted successfully' })
   async remove(@Param('id') id: string) {
     const res = await firstValueFrom(
-      this.http.delete(`http://localhost:3001/agents/${id}`)
+      this.http.delete(`http://localhost:3001/agents/${id}`),
     );
     return res.data;
   }

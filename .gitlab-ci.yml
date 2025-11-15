@@ -1,5 +1,4 @@
 # Pipeline CI/CD Backend - IMMO360 (Max Speed & Future-Proof)
-
 image: node:20-alpine
 
 # ==================== CACHE ====================
@@ -24,6 +23,14 @@ variables:
   PORT_AUTH: "3001"
   PORT_GATEWAY: "3000"
 
+services:
+  - name: postgres:15-alpine
+    alias: postgres
+    variables:
+      POSTGRES_DB: immo360_test
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: testpassword
+
 # ==================== STAGES ====================
 stages:
   - install
@@ -31,6 +38,11 @@ stages:
   - test
   - build
   - deploy_staging
+
+# ==================== GLOBAL BEFORE SCRIPT ====================
+before_script:
+  - echo "Pré-pull Docker pour limiter le download sur connexion lente"
+  - docker pull node:20-alpine || true
 
 # ==================== INSTALL ====================
 install_api_gateway:
@@ -42,16 +54,19 @@ install_api_gateway:
     paths:
       - api-gateway/node_modules/
     expire_in: 1h
+  tags:
+    - docker
 
 install_auth_service:
   stage: install
   script:
-    - echo "Installation des dépendances Auth Service"
     - cd auth-service && npm ci --prefer-offline --no-audit
   artifacts:
     paths:
       - auth-service/node_modules/
     expire_in: 1h
+  tags:
+    - docker
 
 # ==================== LINT ====================
 lint_api_gateway:
@@ -59,16 +74,18 @@ lint_api_gateway:
   dependencies:
     - install_api_gateway
   script:
-    - echo "Lint API Gateway"
     - cd api-gateway && npm run lint
+  tags:
+    - docker
 
 lint_auth_service:
   stage: lint
   dependencies:
     - install_auth_service
   script:
-    - echo "Lint Auth Service"
     - cd auth-service && npm run lint
+  tags:
+    - docker
 
 # ==================== TEST ====================
 test_api_gateway:
@@ -76,39 +93,36 @@ test_api_gateway:
   dependencies:
     - install_api_gateway
   script:
-    - echo "Tests API Gateway"
-    - cd api-gateway && npm run test
+    - cd api-gateway
+    - npm run test:cov
   artifacts:
+    paths:
+      - api-gateway/coverage/cobertura-coverage.xml
+    expire_in: 7d
     reports:
       coverage_report:
         coverage_format: cobertura
         path: api-gateway/coverage/cobertura-coverage.xml
-    paths:
-      - api-gateway/coverage/
-    expire_in: 7d
+  tags:
+    - docker
 
 test_auth_service:
   stage: test
   dependencies:
     - install_auth_service
-  services:
-    - name: postgres:15-alpine
-      alias: postgres
-      variables:
-        POSTGRES_DB: immo360_test
-        POSTGRES_USER: postgres
-        POSTGRES_PASSWORD: testpassword
   script:
-    - echo "Tests Auth Service avec PostgreSQL"
-    - cd auth-service && npm run test
+    - cd auth-service
+    - npm run test:cov
   artifacts:
+    paths:
+      - auth-service/coverage/cobertura-coverage.xml
+    expire_in: 7d
     reports:
       coverage_report:
         coverage_format: cobertura
         path: auth-service/coverage/cobertura-coverage.xml
-    paths:
-      - auth-service/coverage/
-    expire_in: 7d
+  tags:
+    - docker
 
 # ==================== BUILD ====================
 build_api_gateway:
@@ -116,24 +130,26 @@ build_api_gateway:
   dependencies:
     - install_api_gateway
   script:
-    - echo "Build API Gateway"
     - cd api-gateway && npm run build
   artifacts:
     paths:
       - api-gateway/dist/
     expire_in: 1d
+  tags:
+    - docker
 
 build_auth_service:
   stage: build
   dependencies:
     - install_auth_service
   script:
-    - echo "Build Auth Service"
     - cd auth-service && npm run build
   artifacts:
     paths:
       - auth-service/dist/
     expire_in: 1d
+  tags:
+    - docker
 
 # ==================== DEPLOY STAGING ====================
 deploy_staging:
@@ -147,13 +163,12 @@ deploy_staging:
     - chmod 700 ~/.ssh
     - ssh-keyscan -H $STAGING_SERVER >> ~/.ssh/known_hosts
   script:
-    - echo "Déploiement sur staging"
     - ssh $STAGING_USER@$STAGING_SERVER << 'EOF'
         cd /var/www/immo360-backend
         git pull origin develop
         cd api-gateway && npm ci && npm run build && pm2 restart api-gateway
         cd ../auth-service && npm ci && npm run build && pm2 restart auth-service
-        echo "✅ Déploiement staging terminé!"
+        echo "Déploiement staging terminé!"
       EOF
   environment:
     name: staging
@@ -161,3 +176,5 @@ deploy_staging:
   only:
     - develop
   when: manual
+  tags:
+    - docker

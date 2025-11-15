@@ -1,11 +1,16 @@
-import { Entity, PrimaryGeneratedColumn, Column, OneToOne, JoinColumn } from 'typeorm';
+import {
+  Entity,
+  PrimaryGeneratedColumn,
+  Column,
+  OneToOne,
+  JoinColumn,
+} from 'typeorm';
 import { User } from '../users/user.entity';
 
 export enum AccessLevel {
   ADMIN = 'ADMIN',
   SUPERADMIN = 'SUPERADMIN',
 }
-
 
 @Entity('admins')
 export class Admin {
@@ -22,7 +27,7 @@ export class Admin {
   phone: string;
 
   @Column({ type: 'enum', enum: AccessLevel, default: AccessLevel.ADMIN })
-  access : AccessLevel;
+  access: AccessLevel;
 
   @OneToOne(() => User, (user) => user.admin, { onDelete: 'CASCADE' })
   @JoinColumn({ name: 'user_id' })

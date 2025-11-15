@@ -5,10 +5,8 @@ import { Occupant } from './occupant.entity';
 import { OccupantController } from './occupant.controller';
 
 @Module({
-  imports: [
-        TypeOrmModule.forFeature([Occupant]),
-      ],
+  imports: [TypeOrmModule.forFeature([Occupant])],
   controllers: [OccupantController],
-  providers: [OccupantService]
+  providers: [OccupantService],
 })
 export class OccupantModule {}

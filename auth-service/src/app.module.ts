@@ -15,9 +15,9 @@ import { AdminService } from './modules/admin/admin.service';
 import { AgentService } from './modules/agent/agent.service';
 import { OccupantService } from './modules/occupant/occupant.service';
 
-
 @Module({
-  imports: [ConfigModule.forRoot({ isGlobal: true }),
+  imports: [
+    ConfigModule.forRoot({ isGlobal: true }),
     TypeOrmModule.forRoot({
       type: 'postgres',
       host: process.env.DB_HOST,
@@ -27,9 +27,14 @@ import { OccupantService } from './modules/occupant/occupant.service';
       database: process.env.DB_NAME,
       autoLoadEntities: true,
       synchronize: true,
-    }), AuthModule, UsersModule, AgentModule, OccupantModule, AdminModule],
-  controllers: [AppController,  ],
+    }),
+    AuthModule,
+    UsersModule,
+    AgentModule,
+    OccupantModule,
+    AdminModule,
+  ],
+  controllers: [AppController],
   providers: [AppService],
-
 })
 export class AppModule {}

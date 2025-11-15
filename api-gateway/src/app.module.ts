@@ -12,11 +12,19 @@ import { AgentsController } from './agent/agent.controller';
 import { UserController } from './user/user.controller';
 
 @Module({
-  imports: [ConfigModule.forRoot({ isGlobal: true }),HttpModule,GlobalHttpModule,
+  imports: [
+    ConfigModule.forRoot({ isGlobal: true }),
+    HttpModule,
+    GlobalHttpModule,
   ],
-  controllers: [AppController, AuthController, OccupantsController, AdminsController, AgentsController, UserController],
+  controllers: [
+    AppController,
+    AuthController,
+    OccupantsController,
+    AdminsController,
+    AgentsController,
+    UserController,
+  ],
   providers: [AppService],
 })
-export class AppModule {
- 
-}
+export class AppModule {}

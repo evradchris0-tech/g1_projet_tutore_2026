@@ -7,24 +7,24 @@ import { LoginDto } from './dtos/login.dto';
 
 @Controller('auth')
 export class AuthController {
-   constructor(private http: HttpService) {}
+  constructor(private http: HttpService) {}
 
-   @Post('register')
-   @ApiBody({ type: RegisterDto })
-   @ApiResponse({ status: 201, description: 'User Registered successfully' })
-  async register(@Body() body : RegisterDto) {
+  @Post('register')
+  @ApiBody({ type: RegisterDto })
+  @ApiResponse({ status: 201, description: 'User Registered successfully' })
+  async register(@Body() body: RegisterDto) {
     const res = await firstValueFrom(
-      this.http.post('http://localhost:3001/auth/register', body)
+      this.http.post('http://localhost:3001/auth/register', body),
     );
     return res.data;
   }
 
   @ApiBody({ type: LoginDto })
-   @ApiResponse({ status: 201, description: 'User Login successfully' })
+  @ApiResponse({ status: 201, description: 'User Login successfully' })
   @Post('login')
-  async login(@Body() body : LoginDto) {
+  async login(@Body() body: LoginDto) {
     const res = await firstValueFrom(
-      this.http.post('http://localhost:3001/auth/login', body)
+      this.http.post('http://localhost:3001/auth/login', body),
     );
     return res.data;
   }

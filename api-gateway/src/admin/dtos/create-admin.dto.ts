@@ -7,15 +7,14 @@ export enum AccessLevel {
 
 export class CreateAdminDto {
   @ApiPropertyOptional()
-    nom: string;
-  
-    @ApiPropertyOptional()
-    prenom: string;
-  
-    @ApiPropertyOptional()
-    phone: string;
-  
-    @ApiPropertyOptional()
-    access: AccessLevel;
+  nom: string;
 
+  @ApiPropertyOptional()
+  prenom: string;
+
+  @ApiPropertyOptional()
+  phone: string;
+
+  @ApiPropertyOptional()
+  access: AccessLevel;
 }

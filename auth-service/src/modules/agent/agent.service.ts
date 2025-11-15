@@ -5,7 +5,9 @@ import { Agent } from './agent.entity';
 
 @Injectable()
 export class AgentService {
-  constructor(@InjectRepository(Agent) private readonly repo: Repository<Agent>) {}
+  constructor(
+    @InjectRepository(Agent) private readonly repo: Repository<Agent>,
+  ) {}
 
   async create(data: Partial<Agent>) {
     const agent = this.repo.create(data);
@@ -17,7 +19,10 @@ export class AgentService {
   }
 
   async findOne(id: string) {
-    const agent = await this.repo.findOne({ where: { id }, relations: ['user'] });
+    const agent = await this.repo.findOne({
+      where: { id },
+      relations: ['user'],
+    });
     if (!agent) throw new NotFoundException('Agent not found');
     return agent;
   }

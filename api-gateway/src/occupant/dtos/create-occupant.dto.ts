@@ -11,5 +11,4 @@ export class CreateOccupantDto {
 
   @ApiProperty()
   tempPassword: string;
-
 }

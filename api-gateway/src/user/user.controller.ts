@@ -1,5 +1,14 @@
 import { HttpService } from '@nestjs/axios';
-import { Body, Controller, Delete, Get, Param, Patch, Post, Req } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Delete,
+  Get,
+  Param,
+  Patch,
+  Post,
+  Req,
+} from '@nestjs/common';
 import { ApiOperation, ApiResponse } from '@nestjs/swagger';
 import { firstValueFrom } from 'rxjs';
 import { CreateUserDto } from './dtos/create-user.dto';
@@ -53,7 +62,11 @@ export class UserController {
   @Patch(':id')
   @ApiOperation({ summary: 'Update a user' })
   @ApiResponse({ status: 200, description: 'User updated' })
-  async update(@Param('id') id: string, @Body() body: UpdateUserDto, @Req() req) {
+  async update(
+    @Param('id') id: string,
+    @Body() body: UpdateUserDto,
+    @Req() req,
+  ) {
     const res = await firstValueFrom(
       this.http.patch(`http://localhost:3001/users/${id}`, body, {
         headers: { Authorization: req.headers['authorization'] },
@@ -74,5 +87,4 @@ export class UserController {
     );
     return res.data;
   }
-  
 }

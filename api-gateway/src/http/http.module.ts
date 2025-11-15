@@ -2,7 +2,8 @@ import { HttpModule } from '@nestjs/axios';
 import { Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 
-@Module({imports: [
+@Module({
+  imports: [
     ConfigModule.forRoot({ isGlobal: true }),
     HttpModule.registerAsync({
       imports: [ConfigModule],
@@ -13,5 +14,6 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
       }),
     }),
   ],
-  exports: [HttpModule],})
-export class GlobalHttpModule  {}
+  exports: [HttpModule],
+})
+export class GlobalHttpModule {}
