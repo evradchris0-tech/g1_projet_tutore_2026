@@ -54,8 +54,6 @@ install_api_gateway:
     paths:
       - api-gateway/node_modules/
     expire_in: 1h
-  tags:
-    - docker
 
 install_auth_service:
   stage: install
@@ -65,6 +63,7 @@ install_auth_service:
     paths:
       - auth-service/node_modules/
     expire_in: 1h
+
 # ==================== LINT ====================
 lint_api_gateway:
   stage: lint
@@ -72,8 +71,6 @@ lint_api_gateway:
     - install_api_gateway
   script:
     - cd api-gateway && npm run lint
-  tags:
-    - docker
 
 lint_auth_service:
   stage: lint
