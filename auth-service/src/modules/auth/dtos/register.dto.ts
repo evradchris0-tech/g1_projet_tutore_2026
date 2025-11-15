@@ -1,6 +1,6 @@
 import { IsString, MinLength, IsEnum, IsOptional } from 'class-validator';
 import { UserRole } from '../../users/user.entity';
-import { AccessLevel } from 'src/modules/admin/admin.entity';
+import { AccessLevel } from '../../admin/admin.entity';
 
 
 export class RegisterDto {
