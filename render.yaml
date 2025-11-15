@@ -1,0 +1,68 @@
+services:
+  # PostgreSQL Database
+  - type: pserv
+    name: immo360-postgres
+    plan: free
+    env: docker
+    region: frankfurt
+    databases:
+      - name: immo360_db
+        databaseName: immo360_production
+        user: immo360_user
+
+  # Auth Service
+  - type: web
+    name: immo360-auth-service
+    env: node
+    region: frankfurt
+    plan: free
+    buildCommand: cd auth-service && npm install && npm run build
+    startCommand: cd auth-service && npm run start:prod
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 3001
+      - key: DB_HOST
+        fromDatabase:
+          name: immo360_db
+          property: host
+      - key: DB_PORT
+        fromDatabase:
+          name: immo360_db
+          property: port
+      - key: DB_USER
+        fromDatabase:
+          name: immo360_db
+          property: user
+      - key: DB_PASS
+        fromDatabase:
+          name: immo360_db
+          property: password
+      - key: DB_NAME
+        fromDatabase:
+          name: immo360_db
+          property: database
+      - key: JWT_SECRET
+        generateValue: true
+    healthCheckPath: /
+
+  # API Gateway
+  - type: web
+    name: immo360-api-gateway
+    env: node
+    region: frankfurt
+    plan: free
+    buildCommand: cd api-gateway && npm install && npm run build
+    startCommand: cd api-gateway && npm run start:prod
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 3000
+      - key: AUTH_SERVICE_URL
+        fromService:
+          name: immo360-auth-service
+          type: web
+          property: host
+    healthCheckPath: /
