@@ -1,8 +1,7 @@
-# Pipeline CI/CD Backend - IMMO360
-# Déclenché automatiquement sur Merge Requests vers develop
-
+# Pipeline CI/CD Backend - IMMO360 (Max Speed & Future-Proof)
 image: node:20-alpine
 
+# ==================== CACHE ====================
 cache:
   key:
     files:
@@ -11,6 +10,7 @@ cache:
   paths:
     - api-gateway/node_modules/
     - auth-service/node_modules/
+  policy: pull-push
 
 variables:
   NODE_ENV: test
@@ -31,6 +31,7 @@ services:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: testpassword
 
+# ==================== STAGES ====================
 stages:
   - install
   - lint
@@ -38,142 +39,117 @@ stages:
   - build
   - deploy_staging
 
-# ==================== STAGE: INSTALL ====================
-install_dependencies:
+# ==================== GLOBAL BEFORE SCRIPT ====================
+before_script:
+  - echo "Pré-pull Docker pour limiter le download sur connexion lente"
+  - docker pull node:20-alpine || true
+
+# ==================== INSTALL ====================
+install_api_gateway:
   stage: install
   script:
-    - echo " Installation des dépendances backend..."
-    - cd api-gateway && npm ci
-    - cd ../auth-service && npm ci
+    - echo "Pipeline max speed activé pour API Gateway"
+    - cd api-gateway && npm ci --prefer-offline --no-audit
   artifacts:
     paths:
       - api-gateway/node_modules/
-      - auth-service/node_modules/
-    expire_in: 1 hour
-  only:
-    - merge_requests
-    - develop
+    expire_in: 1h
   tags:
     - docker
 
-# ==================== STAGE: LINT ====================
+install_auth_service:
+  stage: install
+  script:
+    - cd auth-service && npm ci --prefer-offline --no-audit
+  artifacts:
+    paths:
+      - auth-service/node_modules/
+    expire_in: 1h
+  tags:
+    - docker
+
+# ==================== LINT ====================
 lint_api_gateway:
   stage: lint
   dependencies:
-    - install_dependencies
+    - install_api_gateway
   script:
-    - echo " Lint API Gateway..."
-    - cd api-gateway
-    - npm run lint
-  only:
-    - merge_requests
-    - develop
+    - cd api-gateway && npm run lint
   tags:
     - docker
-  allow_failure: false
 
 lint_auth_service:
   stage: lint
   dependencies:
-    - install_dependencies
+    - install_auth_service
   script:
-    - echo " Lint Auth Service..."
-    - cd auth-service
-    - npm run lint
-  only:
-    - merge_requests
-    - develop
+    - cd auth-service && npm run lint
   tags:
     - docker
-  allow_failure: false
 
-# ==================== STAGE: TEST ====================
+# ==================== TEST ====================
 test_api_gateway:
   stage: test
   dependencies:
-    - install_dependencies
+    - install_api_gateway
   script:
-    - echo " Tests unitaires API Gateway..."
-    - cd api-gateway
-    - npm run test
-  coverage: '/All files[^|]*\|[^|]*\s+([\d\.]+)/'
+    - cd api-gateway && npm run test
   artifacts:
+    paths:
+      - api-gateway/coverage/
+    expire_in: 7d
     reports:
       coverage_report:
         coverage_format: cobertura
         path: api-gateway/coverage/cobertura-coverage.xml
-    paths:
-      - api-gateway/coverage/
-    expire_in: 7 days
-  only:
-    - merge_requests
-    - develop
   tags:
     - docker
 
 test_auth_service:
   stage: test
   dependencies:
-    - install_dependencies
-  services:
-    - postgres:15-alpine
+    - install_auth_service
   script:
-    - echo "🧪 Tests unitaires Auth Service..."
-    - cd auth-service
-    - npm run test
-  coverage: '/All files[^|]*\|[^|]*\s+([\d\.]+)/'
+    - cd auth-service && npm run test
   artifacts:
+    paths:
+      - auth-service/coverage/
+    expire_in: 7d
     reports:
       coverage_report:
         coverage_format: cobertura
         path: auth-service/coverage/cobertura-coverage.xml
-    paths:
-      - auth-service/coverage/
-    expire_in: 7 days
-  only:
-    - merge_requests
-    - develop
   tags:
     - docker
 
-# ==================== STAGE: BUILD ====================
+# ==================== BUILD ====================
 build_api_gateway:
   stage: build
   dependencies:
-    - install_dependencies
+    - install_api_gateway
   script:
-    - echo "🏗️  Build API Gateway..."
-    - cd api-gateway
-    - npm run build
+    - cd api-gateway && npm run build
   artifacts:
     paths:
       - api-gateway/dist/
-    expire_in: 1 day
-  only:
-    - merge_requests
-    - develop
+    expire_in: 1d
   tags:
     - docker
 
 build_auth_service:
   stage: build
   dependencies:
-    - install_dependencies
+    - install_auth_service
   script:
-    - echo "🏗️  Build Auth Service..."
-    - cd auth-service
-    - npm run build
+    - cd auth-service && npm run build
   artifacts:
     paths:
       - auth-service/dist/
-    expire_in: 1 day
-  only:
-    - merge_requests
-    - develop
+    expire_in: 1d
   tags:
     - docker
 
-# ==================== STAGE: DEPLOY STAGING ====================
+# ==================== DEPLOY STAGING ====================
 deploy_staging:
   stage: deploy_staging
   image: alpine:latest
@@ -185,9 +161,7 @@ deploy_staging:
     - chmod 700 ~/.ssh
     - ssh-keyscan -H $STAGING_SERVER >> ~/.ssh/known_hosts
   script:
-    - echo " Déploiement sur staging..."
-    - |
-      ssh $STAGING_USER@$STAGING_SERVER << 'EOF'
+    - ssh $STAGING_USER@$STAGING_SERVER << 'EOF'
         cd /var/www/immo360-backend
         git pull origin develop
         cd api-gateway && npm ci && npm run build && pm2 restart api-gateway
