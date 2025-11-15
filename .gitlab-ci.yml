@@ -24,14 +24,6 @@ variables:
   PORT_AUTH: "3001"
   PORT_GATEWAY: "3000"
 
-services:
-  - name: postgres:15-alpine
-    alias: postgres
-    variables:
-      POSTGRES_DB: immo360_test
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: testpassword
-
 # ==================== STAGES ====================
 stages:
   - install
@@ -54,6 +46,7 @@ install_api_gateway:
 install_auth_service:
   stage: install
   script:
+    - echo "Installation des dépendances Auth Service"
     - cd auth-service && npm ci --prefer-offline --no-audit
   artifacts:
     paths:
@@ -66,6 +59,7 @@ lint_api_gateway:
   dependencies:
     - install_api_gateway
   script:
+    - echo "Lint API Gateway"
     - cd api-gateway && npm run lint
 
 lint_auth_service:
@@ -73,6 +67,7 @@ lint_auth_service:
   dependencies:
     - install_auth_service
   script:
+    - echo "Lint Auth Service"
     - cd auth-service && npm run lint
 
 # ==================== TEST ====================
@@ -81,6 +76,7 @@ test_api_gateway:
   dependencies:
     - install_api_gateway
   script:
+    - echo "Tests API Gateway"
     - cd api-gateway && npm run test
   artifacts:
     reports:
@@ -95,7 +91,15 @@ test_auth_service:
   stage: test
   dependencies:
     - install_auth_service
+  services:
+    - name: postgres:15-alpine
+      alias: postgres
+      variables:
+        POSTGRES_DB: immo360_test
+        POSTGRES_USER: postgres
+        POSTGRES_PASSWORD: testpassword
   script:
+    - echo "Tests Auth Service avec PostgreSQL"
     - cd auth-service && npm run test
   artifacts:
     reports:
@@ -112,6 +116,7 @@ build_api_gateway:
   dependencies:
     - install_api_gateway
   script:
+    - echo "Build API Gateway"
     - cd api-gateway && npm run build
   artifacts:
     paths:
@@ -123,6 +128,7 @@ build_auth_service:
   dependencies:
     - install_auth_service
   script:
+    - echo "Build Auth Service"
     - cd auth-service && npm run build
   artifacts:
     paths:
@@ -141,6 +147,7 @@ deploy_staging:
     - chmod 700 ~/.ssh
     - ssh-keyscan -H $STAGING_SERVER >> ~/.ssh/known_hosts
   script:
+    - echo "Déploiement sur staging"
     - ssh $STAGING_USER@$STAGING_SERVER << 'EOF'
         cd /var/www/immo360-backend
         git pull origin develop
