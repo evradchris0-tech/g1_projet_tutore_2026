@@ -6,7 +6,7 @@ services:
     region: frankfurt
     plan: free
     repo: https://github.com/evradchris0-tech/g1_projet_tutore_2026
-    branch: develop
+    branch: backend  # ← CHANGÉ de develop à backend
     rootDir: auth-service
     buildCommand: npm install && npm run build
     startCommand: npm run start:prod
@@ -36,7 +36,7 @@ services:
     region: frankfurt
     plan: free
     repo: https://github.com/evradchris0-tech/g1_projet_tutore_2026
-    branch: develop
+    branch: backend  # ← CHANGÉ de develop à backend
     rootDir: api-gateway
     buildCommand: npm install && npm run build
     startCommand: npm run start:prod
