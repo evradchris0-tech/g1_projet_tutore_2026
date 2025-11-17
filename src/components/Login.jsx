@@ -1,12 +1,14 @@
-import { useState } from 'react'
+import { useContext, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { IoPersonOutline, IoLockClosedOutline } from 'react-icons/io5'
 import { login } from '../api/auth'
 import '../styles/Login.css'
 import logo from '../assets/logo 1.png'
 import backgroundImage from '../assets/saintjean 1.png'
+import { AuthContext } from '../context/AuthProvider'
 
 function Login() {
+  // const { login } = useContext(AuthContext);
   const [username, setUsername] = useState('')
   const [password, setPassword] = useState('')
   const [showPassword, setShowPassword] = useState(false)
@@ -20,7 +22,7 @@ function Login() {
     setError('')
     
     try {
-      const user = await login(username, password)
+      await login(username, password)
       localStorage.setItem('isAuthenticated', 'true')
       localStorage.setItem('username', user.username || username)
       navigate('/dashboard')

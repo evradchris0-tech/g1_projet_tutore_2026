@@ -25,7 +25,8 @@ export async function login(username, password) {
 }
 
 // Fonction pour se déconnecter
-export function logout() {
+export async function logout() {
+  await api.post('/auth/logout');
   localStorage.removeItem('token');
 }
 
