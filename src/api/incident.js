@@ -3,7 +3,7 @@ import { api } from './http'
 // Fonction pour créer un nouvel incident
 export async function createIncident(incidentData) {
   try {
-    const response = await api.post('/incident', incidentData)
+    const response = await api.post('/incidents', incidentData)
     return response.data
   } catch (error) {
     console.error('Erreur lors de la création de l\'incident:', error)
@@ -14,7 +14,7 @@ export async function createIncident(incidentData) {
 // Fonction pour récupérer tous les incidents
 export async function getIncidents() {
   try {
-    const response = await api.get('/incident')
+    const response = await api.get('/incidents')
     return response.data
   } catch (error) {
     console.error('Erreur lors de la récupération des incidents:', error)
@@ -25,7 +25,7 @@ export async function getIncidents() {
 // Fonction pour mettre à jour un incident existant
 export async function updateIncident(incidentId, incidentData) {
   try {
-    const response = await api.put(`/incident/${incidentId}`, incidentData)
+    const response = await api.put(`/incidents/${incidentId}`, incidentData)
     return response.data
   } catch (error) {
     console.error('Erreur lors de la mise à jour de l\'incident:', error)
@@ -36,7 +36,7 @@ export async function updateIncident(incidentId, incidentData) {
 // Fonction pour supprimer un incident
 export async function deleteIncident(incidentId) {
   try {
-    const response = await api.delete(`/incident/${incidentId}`)
+    const response = await api.delete(`/incidents/${incidentId}`)
     return response.data
   } catch (error) {
     console.error('Erreur lors de la suppression de l\'incident:', error)
@@ -47,7 +47,7 @@ export async function deleteIncident(incidentId) {
 // Fonction pour récupérer un incident par son ID
 export async function getIncidentById(incidentId) {
   try {
-    const response = await api.get(`/incident/${incidentId}`)
+    const response = await api.get(`/incidents/${incidentId}`)
     return response.data
   } catch (error) {
     console.error('Erreur lors de la récupération de l\'incident:', error)
@@ -58,7 +58,7 @@ export async function getIncidentById(incidentId) {
 // Fonction pour rechercher des incidents par titre
 export async function searchIncidentsByTitle(title) {
   try {
-    const response = await api.get(`/incident/search`, {
+    const response = await api.get(`/incidents/search`, {
       params: { title }
     })
     return response.data
@@ -71,7 +71,7 @@ export async function searchIncidentsByTitle(title) {
 // Fonction pour rechercher des incidents par statut
 export async function searchIncidentsByStatus(status) {
   try {
-    const response = await api.get(`/incident/search`, {
+    const response = await api.get(`/incidents/search`, {
       params: { status }
     })
     return response.data
@@ -84,7 +84,7 @@ export async function searchIncidentsByStatus(status) {
 // Fonction pour rechercher des incidents par priorité
 export async function searchIncidentsByPriority(priority) {
   try {
-    const response = await api.get(`/incident/search`, {
+    const response = await api.get(`/incidents/search`, {
       params: { priority }
     })
     return response.data
@@ -97,7 +97,7 @@ export async function searchIncidentsByPriority(priority) {
 // Fonction pour rechercher des incidents par date de création
 export async function searchIncidentsByCreationDate(creationDate) {
   try {
-    const response = await api.get(`/incident/search`, {
+    const response = await api.get(`/incidents/search`, {
       params: { creationDate }
     })
     return response.data
@@ -110,7 +110,7 @@ export async function searchIncidentsByCreationDate(creationDate) {
 // Fonction pour rechercher des incidents par date de résolution
 export async function searchIncidentsByResolutionDate(resolutionDate) {
   try {
-    const response = await api.get(`/incident/search`, {
+    const response = await api.get(`/incidents/search`, {
       params: { resolutionDate }
     })
     return response.data
