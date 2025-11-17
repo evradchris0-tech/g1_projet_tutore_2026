@@ -11,7 +11,8 @@ class AuthViewModel {
   final ValueNotifier<User?> user = ValueNotifier<User?>(null);
 
   // Replace with your real API base URL
-  String apiBase = 'http://192.168.1.104:4000';
+  // String apiBase = 'http://192.168.1.104:4000';
+  String apiBase = 'https://immo360-auth-service.onrender.com';
 
   /// Login using the API and persist token + user to sqlite.
   /// Returns true on success.

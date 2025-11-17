@@ -1,14 +1,10 @@
-enum UserRole { occupant, client, admin }
+enum UserRole { occupant, client }
 
 UserRole userRoleFromString(String? s) {
   if (s == null) return UserRole.client;
   switch (s.toLowerCase()) {
     case 'occupant':
-    case 'occuPANT':
       return UserRole.occupant;
-    case 'admin':
-      return UserRole.admin;
-    case 'client':
     default:
       return UserRole.client;
   }
