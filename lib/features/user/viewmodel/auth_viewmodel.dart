@@ -20,7 +20,7 @@ class AuthViewModel {
     try {
       final url = Uri.parse('$apiBase/auth/login');
       final res = await http.post(url, headers: {'Content-Type': 'application/json'}, body: jsonEncode({'username': username, 'password': password}));
-      if (res.statusCode == 200) {
+      if (res.statusCode == 201) {
         final body = jsonDecode(res.body) as Map<String, dynamic>;
         if (body['success'] == true && body['data'] != null) {
           final data = body['data'] as Map<String, dynamic>;
@@ -57,7 +57,7 @@ class AuthViewModel {
     await Future.delayed(const Duration(milliseconds: 400));
     if (username.isEmpty || password.isEmpty) return null;
     final first = username.toLowerCase()[0];
-    if (first == 'c' || first == 'o') return UserRole.occupant;
+    if (first == 'c') return UserRole.client;
     return null;
   }
 
