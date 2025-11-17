@@ -22,6 +22,11 @@ import {
   IoSquareOutline,
   IoCloudDownloadOutline
 } from 'react-icons/io5'
+import { createEquipment } from '../api/equipment'
+import { createOccupant } from '../api/occupant'
+import { createAgent } from '../api/agent'
+import { createIncident } from '../api/incident'
+import { createBuilding } from '../api/batiment'
 import '../styles/Dashboard.css'
 import logo from '../assets/logo 1.png'
 
@@ -429,23 +434,25 @@ function Dashboard() {
   }
 
   // Fonction pour gérer l'ajout d'un bâtiment
-  const handleAddBuilding = (e) => {
+  const handleAddBuilding = async (e) => {
     e.preventDefault()
-    // TODO: Implémenter l'appel API pour créer le bâtiment
-    console.log('Nouveau bâtiment:', newBuilding)
     
-    // Pour l'instant, on simule juste l'ajout
-    // buildings.push({ ...newBuilding, incidents: 0 })
-    
-    // Réinitialiser le formulaire et fermer le modal
-    setNewBuilding({
-      name: '',
-      code: '',
-      type: 'Pédagogique',
-      floors: 1,
-      spaces: 0
-    })
-    setShowAddBuildingModal(false)
+    try {
+      await createBuilding(newBuilding)
+      
+      // Réinitialiser le formulaire et fermer le modal
+      setNewBuilding({
+        name: '',
+        code: '',
+        type: 'Pédagogique',
+        floors: 1,
+        spaces: 0
+      })
+      setShowAddBuildingModal(false)
+      
+    } catch (error) {
+      console.error('Erreur lors de la création du bâtiment:', error)
+    }
   }
 
   // Fonction pour réinitialiser le formulaire (Bâtiments)
@@ -479,25 +486,36 @@ function Dashboard() {
     }
   }
 
-  const handleAddEquipment = (e) => {
+  const handleAddEquipment = async (e) => {
     e.preventDefault()
-    // TODO: Implémenter l'appel API pour créer l'équipement
-    console.log('Nouvel équipement:', newEquipment)
     
-    // Réinitialiser le formulaire et fermer le modal
-    setNewEquipment({
-      name: '',
-      model: '',
-      value: '',
-      space: '',
-      type: '',
-      brand: '',
-      lifespan: '',
-      description: '',
-      state: 'bon etat',
-      status: 'Activé'
-    })
-    setShowAddEquipmentModal(false)
+    try {
+      const equipmentData = {
+        ...newEquipment,
+        value: parseFloat(newEquipment.value),
+        lifespan: parseInt(newEquipment.lifespan)
+      }
+      
+      await createEquipment(equipmentData)
+      
+      // Réinitialiser le formulaire et fermer le modal
+      setNewEquipment({
+        name: '',
+        model: '',
+        value: '',
+        space: '',
+        type: '',
+        brand: '',
+        lifespan: '',
+        description: '',
+        state: 'bon etat',
+        status: 'Activé'
+      })
+      setShowAddEquipmentModal(false)
+      
+    } catch (error) {
+      console.error('Erreur lors de la création de l\'équipement:', error)
+    }
   }
 
   const handleCancelAddEquipment = () => {
@@ -559,22 +577,27 @@ function Dashboard() {
     }
   }
 
-  const handleAddOccupant = (e) => {
+  const handleAddOccupant = async (e) => {
     e.preventDefault()
-    // TODO: Implémenter l'appel API pour créer l'occupant
-    console.log('Nouvel occupant:', newOccupant)
     
-    // Réinitialiser le formulaire et fermer le modal
-    setNewOccupant({
-      roomName: '',
-      email: '',
-      password: '',
-      building: '',
-      phone: '',
-      occupantType: '',
-      status: 'Activé'
-    })
-    setShowAddOccupantModal(false)
+    try {
+      await createOccupant(newOccupant)
+      
+      // Réinitialiser le formulaire et fermer le modal
+      setNewOccupant({
+        roomName: '',
+        email: '',
+        password: '',
+        building: '',
+        phone: '',
+        occupantType: '',
+        status: 'Activé'
+      })
+      setShowAddOccupantModal(false)
+      
+    } catch (error) {
+      console.error('Erreur lors de la création de l\'occupant:', error)
+    }
   }
 
   const handleCancelAddOccupant = () => {
@@ -621,23 +644,28 @@ function Dashboard() {
     }
   }
 
-  const handleAddAgent = (e) => {
+  const handleAddAgent = async (e) => {
     e.preventDefault()
-    // TODO: Implémenter l'appel API pour créer l'agent
-    console.log('Nouvel agent:', newAgent)
     
-    // Réinitialiser le formulaire et fermer le modal
-    setNewAgent({
-      name: '',
-      firstName: '',
-      email: '',
-      phone: '',
-      username: '',
-      password: '',
-      specialty: '',
-      status: 'Activé'
-    })
-    setShowAddAgentModal(false)
+    try {
+      await createAgent(newAgent)
+      
+      // Réinitialiser le formulaire et fermer le modal
+      setNewAgent({
+        name: '',
+        firstName: '',
+        email: '',
+        phone: '',
+        username: '',
+        password: '',
+        specialty: '',
+        status: 'Activé'
+      })
+      setShowAddAgentModal(false)
+      
+    } catch (error) {
+      console.error('Erreur lors de la création de l\'agent:', error)
+    }
   }
 
   const handleCancelAddAgent = () => {
@@ -685,20 +713,25 @@ function Dashboard() {
     }
   }
 
-  const handleAddIncident = (e) => {
+  const handleAddIncident = async (e) => {
     e.preventDefault()
-    // TODO: Implémenter l'appel API pour créer l'incident
-    console.log('Nouvel incident:', newIncident)
     
-    // Réinitialiser le formulaire et fermer le modal
-    setNewIncident({
-      building: '',
-      roomNumber: '',
-      assignedAgent: '',
-      date: '',
-      state: 'En cours'
-    })
-    setShowAddIncidentModal(false)
+    try {
+      await createIncident(newIncident)
+      
+      // Réinitialiser le formulaire et fermer le modal
+      setNewIncident({
+        building: '',
+        roomNumber: '',
+        assignedAgent: '',
+        date: '',
+        state: 'En cours'
+      })
+      setShowAddIncidentModal(false)
+      
+    } catch (error) {
+      console.error('Erreur lors de la création de l\'incident:', error)
+    }
   }
 
   const handleCancelAddIncident = () => {

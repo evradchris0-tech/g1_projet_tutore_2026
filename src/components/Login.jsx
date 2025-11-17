@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { IoPersonOutline, IoLockClosedOutline } from 'react-icons/io5'
+import { login } from '../api/auth'
 import '../styles/Login.css'
 import logo from '../assets/logo 1.png'
 import backgroundImage from '../assets/saintjean 1.png'
@@ -9,20 +10,25 @@ function Login() {
   const [username, setUsername] = useState('')
   const [password, setPassword] = useState('')
   const [showPassword, setShowPassword] = useState(false)
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState('')
   const navigate = useNavigate()
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault()
-    // Simulation de connexion - accepter n'importe quels identifiants pour l'instant
-    // TODO: Implémenter la vraie logique d'authentification avec le backend
-    console.log('Connexion:', { username, password })
+    setLoading(true)
+    setError('')
     
-    // Stocker l'état de connexion dans localStorage
-    localStorage.setItem('isAuthenticated', 'true')
-    localStorage.setItem('username', username)
-    
-    // Redirection vers le dashboard après connexion
-    navigate('/dashboard')
+    try {
+      const user = await login(username, password)
+      localStorage.setItem('isAuthenticated', 'true')
+      localStorage.setItem('username', user.username || username)
+      navigate('/dashboard')
+    } catch (error) {
+      setError(error.response?.data?.message || 'Erreur de connexion. Vérifiez vos identifiants.')
+    } finally {
+      setLoading(false)
+    }
   }
 
   return (
@@ -47,6 +53,12 @@ function Login() {
         <div className="login-form-container">
           <h1 className="login-title">Connectez-vous à la plateforme</h1>
           <p className="login-subtitle">Gestions d'équipements de IUSJ</p>
+
+          {error && (
+            <div className="error-message" style={{color: '#ff4444', marginBottom: '1rem', textAlign: 'center'}}>
+              {error}
+            </div>
+          )}
 
           <form onSubmit={handleSubmit} className="login-form" autoComplete="off">
             <div className="input-group">
@@ -83,8 +95,8 @@ function Login() {
               </div>
             </div>
 
-            <button type="submit" className="login-button">
-              Connexion
+            <button type="submit" className="login-button" disabled={loading}>
+              {loading ? 'Connexion...' : 'Connexion'}
             </button>
           </form>
         </div>
