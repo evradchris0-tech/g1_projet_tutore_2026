@@ -1,6 +1,0 @@
-node_modules/
-dist/
-coverage/
-**/*.spec.ts
-**/*.e2e-spec.ts
-test/
