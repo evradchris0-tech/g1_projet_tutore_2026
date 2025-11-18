@@ -1,10 +1,20 @@
-import { IsString, MinLength } from 'class-validator';
+import { IsOptional, IsString, MinLength } from 'class-validator';
 
 export class LoginDto {
   @IsString()
-  username: string;
+  @IsOptional()
+  username?: string;
 
   @IsString()
+  @IsOptional()
   @MinLength(6, { message: 'Password must be at least 6 characters long' })
-  password: string;
+  password?: string;
+
+  @IsOptional()
+  @IsString()
+  numeroChambre?: string;
+
+  @IsOptional()
+  @IsString()
+  tempPassword?: string;
 }
