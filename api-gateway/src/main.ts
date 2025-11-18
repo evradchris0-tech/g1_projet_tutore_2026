@@ -8,7 +8,7 @@ async function bootstrap() {
   app.enableCors({
     origin: [
       'http://localhost:4200',    // Angular
-      'http://localhost:3001',    // React
+      'http://localhost:5173',    // React
       'http://127.0.0.1:5500',    // Static frontend
       'https://immo360.yourdomain.com', // Production frontend
     ],
