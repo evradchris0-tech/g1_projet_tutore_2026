@@ -7,7 +7,7 @@ export default defineConfig({
   server: {
     proxy: {
       '/api': {
-        target: 'http://localhost:3000',
+        target: 'http://localhost:3001',
         // target: 'https://immo360-auth-service.onrender.com',
         changeOrigin: true,
         rewrite: (path ) => path.replace(/^\/api/, ''),
