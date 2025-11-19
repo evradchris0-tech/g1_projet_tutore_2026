@@ -6,6 +6,7 @@ import {
   Delete,
   Body,
   Param,
+  Query,
 } from '@nestjs/common';
 import { AdminService } from './admin.service';
 import { Roles } from '../auth/decorators/roles.decorator';
@@ -43,4 +44,15 @@ export class AdminController {
   remove(@Param('id') id: string) {
     return this.service.remove(id);
   }
+
+  @Roles('ADMIN')
+  @Get("/search")
+async search(
+  @Query('search') search?: string,
+  @Query('access') access?: string,
+  @Query('page') page: number = 1,
+  @Query('limit') limit: number = 10,
+) {
+  return this.service.search({ search, access, page, limit });
+}
 }

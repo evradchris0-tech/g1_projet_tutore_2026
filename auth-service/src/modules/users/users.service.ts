@@ -40,4 +40,27 @@ export class UsersService {
     const result = await this.repo.delete(id);
     if (result.affected === 0) throw new NotFoundException('User not found');
   }
+
+  async search(query: any) {
+  const qb = this.repo.createQueryBuilder('user');
+
+  if (query.role) {
+    qb.andWhere('user.role = :role', { role: query.role });
+  }
+
+  if (query.username) {
+    qb.andWhere('LOWER(user.username) LIKE LOWER(:username)', { 
+      username: `%${query.username}%` 
+    });
+  }
+
+  if (query.isActive !== undefined) {
+    qb.andWhere('user.isActive = :active', { active: query.isActive === 'true' });
+  }
+
+  qb.orderBy('user.createdAt', 'DESC');
+
+  return qb.getMany();
+}
+
 }

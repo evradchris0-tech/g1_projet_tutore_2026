@@ -37,4 +37,68 @@ export class AgentService {
     const agent = await this.findOne(id);
     return this.repo.remove(agent);
   }
+
+  async searchAgents(filters: any) {
+    const {
+      search,
+      speciality,
+      supervisor,
+      isActive,
+      page,
+      limit,
+      sortBy,
+      order,
+    } = filters;
+
+    const qb = this.repo
+      .createQueryBuilder('agent')
+      .leftJoinAndSelect('agent.user', 'user');
+
+    // 🔍 Search
+    if (search) {
+      qb.andWhere(
+        `(LOWER(agent.nom) LIKE LOWER(:search)
+        OR LOWER(agent.prenom) LIKE LOWER(:search)
+        OR LOWER(agent.speciality) LIKE LOWER(:search)
+        OR LOWER(user.username) LIKE LOWER(:search)
+        OR agent.phone LIKE :search)`,
+        { search: `%${search}%` },
+      );
+    }
+
+    // 🎯 Filter: speciality
+    if (speciality) qb.andWhere('agent.speciality = :speciality', { speciality });
+
+    // 🎯 Filter: supervisor
+    if (supervisor !== undefined)
+      qb.andWhere('agent.IsSupervisor = :supervisor', {
+        supervisor: supervisor === 'true',
+      });
+
+    // 🎯 Filter: isActive (from User relation)
+    if (isActive !== undefined)
+      qb.andWhere('user.isActive = :isActive', {
+        isActive: isActive === 'true',
+      });
+
+    // 📄 Pagination
+    qb.skip((page - 1) * limit).take(limit);
+
+    // 🔽 Sorting
+    qb.orderBy(`agent.${sortBy}`, order);
+
+    const [data, total] = await qb.getManyAndCount();
+
+    return {
+      success: true,
+      message: 'Agents fetched successfully',
+      data,
+      pagination: {
+        total,
+        page,
+        limit,
+        pages: Math.ceil(total / limit),
+      },
+    };
+  }
 }
