@@ -3,7 +3,8 @@ import { AppModule } from './app.module';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 
 async function bootstrap() {
-  const app = await NestFactory.create(AppModule, { cors: true });
+  // 
+  const app = await NestFactory.create(AppModule, { cors: true }); 
 
   app.enableCors({
     origin: [
@@ -15,7 +16,7 @@ async function bootstrap() {
     methods: 'GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS',
     credentials: true,
     allowedHeaders: 'Content-Type, Authorization',
-    exposedHeaders: 'Authorization',
+    // exposedHeaders: 'Authorization',
   });
 
   const config = new DocumentBuilder()
