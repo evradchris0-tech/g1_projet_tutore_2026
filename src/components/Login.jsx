@@ -5,7 +5,6 @@ import { login } from '../api/auth'
 import '../styles/Login.css'
 import logo from '../assets/logo 1.png'
 import backgroundImage from '../assets/saintjean 1.png'
-import { AuthContext } from '../context/AuthProvider'
 
 function Login() {
   // const { login } = useContext(AuthContext);
@@ -22,9 +21,10 @@ function Login() {
     setError('')
     
     try {
-      await login(username, password)
+      const response = await login(username, password)
       localStorage.setItem('isAuthenticated', 'true')
       localStorage.setItem('username', user.username || username)
+      localStorage.setItem('token', response.data.token)
       navigate('/dashboard')
     } catch (error) {
       setError(error.response?.data?.message || 'Erreur de connexion. Vérifiez vos identifiants.')
