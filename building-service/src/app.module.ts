@@ -1,18 +1,14 @@
 import { Module } from '@nestjs/common';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
-import { AuthModule } from './modules/auth/auth.module';
-import { ConfigModule } from '@nestjs/config';
+import { BatimentController } from './batiment/batiment.controller';
+import { BatimentService } from './batiment/batiment.service';
+import { BatimentModule } from './batiment/batiment.module';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import { UsersModule } from './modules/users/users.module';
-import { AdminModule } from './modules/admin/admin.module';
-import { AgentModule } from './modules/agent/agent.module';
-import { OccupantModule } from './modules/occupant/occupant.module';
-
+import { ConfigModule } from '@nestjs/config';
 
 @Module({
-  imports: [
-    ConfigModule.forRoot({ isGlobal: true }),
+  imports: [ConfigModule.forRoot({ isGlobal: true }),
     TypeOrmModule.forRoot({
       type: 'postgres',
       host: process.env.DB_HOST,
@@ -22,13 +18,7 @@ import { OccupantModule } from './modules/occupant/occupant.module';
       database: process.env.DB_NAME,
       autoLoadEntities: true,
       synchronize: true,
-    }),
-    AuthModule,
-    UsersModule,
-    AgentModule,
-    OccupantModule,
-    AdminModule,
-  ],
+    }),BatimentModule],
   controllers: [AppController],
   providers: [AppService],
 })
