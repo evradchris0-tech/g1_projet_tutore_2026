@@ -37,4 +37,38 @@ export class AdminService {
     const admin = await this.findOne(id);
     return this.repo.remove(admin);
   }
+
+  async search(filters: any) {
+  const { search, access, page, limit } = filters;
+
+  const query = this.repo
+    .createQueryBuilder('admin')
+    .leftJoinAndSelect('admin.user', 'user')
+    .skip((page - 1) * limit)
+    .take(limit);
+
+  // 🔎 Search fields
+  if (search) {
+    query.andWhere(
+      '(user.username ILIKE :s OR admin.nom ILIKE :s OR admin.prenom ILIKE :s OR admin.phone ILIKE :s)',
+      { s: `%${search}%` },
+    );
+  }
+
+  // 🎯 Filter by access level
+  if (access) {
+    query.andWhere('admin.access = :access', { access });
+  }
+
+  const [data, total] = await query.getManyAndCount();
+
+  return {
+    success: true,
+    total,
+    page,
+    limit,
+    data,
+  };
+}
+
 }

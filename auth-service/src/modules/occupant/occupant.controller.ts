@@ -8,9 +8,11 @@ import {
   Param,
   Req,
   ForbiddenException,
+  Query,
 } from '@nestjs/common';
 import { OccupantService } from './occupant.service';
 import { Roles } from '../auth/decorators/roles.decorator';
+import { SearchOccupantDto } from './dtos/SearchOccupantDto';
 
 @Controller('occupants')
 export class OccupantController {
@@ -64,4 +66,11 @@ export class OccupantController {
   remove(@Param('id') id: string) {
     return this.service.remove(id);
   }
+
+  @Roles('ADMIN')
+  @Get('/search')
+search(@Query() query: SearchOccupantDto) {
+  return this.service.search(query);
+}
+
 }

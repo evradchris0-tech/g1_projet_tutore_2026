@@ -8,6 +8,7 @@ import {
   UseGuards,
   Req,
   ForbiddenException,
+  Query,
 } from '@nestjs/common';
 import { UsersService } from './users.service';
 import { UpdateUserDto } from '../auth/dtos/update-user.dto';
@@ -63,4 +64,10 @@ export class UsersController {
     }
     return this.usersService.delete(id);
   }
+
+  @Get('search')
+async searchUsers(@Query() query: any) {
+  return this.usersService.search(query);
+}
+
 }
