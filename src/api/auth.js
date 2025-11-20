@@ -17,7 +17,7 @@ export async function login(username, password) {
   try {
     const response = await api.post('/auth/login', { username, password });
     localStorage.setItem('token', response.data.token);
-    return response.data.user;
+    return response;
   } catch (error) {
     console.error('Erreur lors de la connexion:', error);
     throw error;

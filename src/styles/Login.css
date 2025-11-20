@@ -254,6 +254,51 @@
   box-shadow: 0 0 0 3px rgba(33, 150, 243, 0.3);
 }
 
+.login-links {
+  margin-top: 20px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 15px;
+}
+
+.link-button {
+  background: none;
+  border: none;
+  color: #2196f3;
+  font-size: 14px;
+  cursor: pointer;
+  text-decoration: none;
+  transition: color 0.3s ease;
+  padding: 0;
+}
+
+.link-button:hover {
+  color: #1976d2;
+  text-decoration: underline;
+}
+
+.forgot-password {
+  font-weight: 500;
+}
+
+.signup-section {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 14px;
+  color: #666;
+}
+
+.signup-link {
+  font-weight: 600;
+  color: #2196f3;
+}
+
+.signup-link:hover {
+  color: #1976d2;
+}
+
 /* Responsive */
 @media (max-width: 768px) {
   .login-form-container {

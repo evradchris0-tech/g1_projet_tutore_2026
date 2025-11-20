@@ -1,13 +1,10 @@
 import axios from 'axios';
 
 export const api = axios.create({
-  baseURL: 'https://immo360-auth-service.onrender.com',
-  // baseURL: 'http://localhost:3001',
-  // timeout: 5000,
+  baseURL: '/api',
   headers: {
     'Content-Type': 'application/json',
   },
-  withCredentials: true,
 });
 
 // Ajouter un intercepteur pour inclure le token d'authentification dans les en-têtes

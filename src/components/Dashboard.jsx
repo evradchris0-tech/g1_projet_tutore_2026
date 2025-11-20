@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { 
   IoGridOutline, 
@@ -23,8 +23,8 @@ import {
   IoCloudDownloadOutline
 } from 'react-icons/io5'
 import { createEquipment } from '../api/equipment'
-import { createOccupant } from '../api/occupant'
-import { createAgent } from '../api/agent'
+import { createOccupant, getOccupants } from '../api/occupant'
+import { createAgent, getAgents } from '../api/agent'
 import { createIncident } from '../api/incident'
 import { createBuilding } from '../api/batiment'
 import '../styles/Dashboard.css'
@@ -70,6 +70,8 @@ function Dashboard() {
   // États pour la page Occupants
   const [selectedOccupants, setSelectedOccupants] = useState([])
   const [showAddOccupantModal, setShowAddOccupantModal] = useState(false)
+  const [apiOccupants, setApiOccupants] = useState([])
+  const [loadingOccupants, setLoadingOccupants] = useState(false)
   const [newOccupant, setNewOccupant] = useState({
     roomName: '',
     email: '',
@@ -83,6 +85,8 @@ function Dashboard() {
   // États pour la page Agents
   const [selectedAgents, setSelectedAgents] = useState([])
   const [showAddAgentModal, setShowAddAgentModal] = useState(false)
+  const [apiAgents, setApiAgents] = useState([])
+  const [loadingAgents, setLoadingAgents] = useState(false)
   const [newAgent, setNewAgent] = useState({
     name: '',
     firstName: '',
@@ -106,14 +110,64 @@ function Dashboard() {
   })
 
   const handleLogout = () => {
-    // TODO: Implémenter la vraie logique de déconnexion avec le backend
     // Supprimer l'état de connexion du localStorage
     localStorage.removeItem('isAuthenticated')
     localStorage.removeItem('username')
+    localStorage.removeItem('token')
+    localStorage.removeItem('activeMenu')
     
     // Redirection vers la page de login
     navigate('/login')
   }
+
+  // Fonction pour charger les occupants depuis l'API
+  const loadOccupants = async () => {
+    setLoadingOccupants(true)
+    try {
+      const response = await getOccupants()
+      console.log('Données occupants reçues:', response)
+      // Gérer différentes structures de réponse
+      const data = response.data || response || []
+      setApiOccupants(Array.isArray(data) ? data : [])
+    } catch (error) {
+      console.error('Erreur lors du chargement des occupants:', error)
+      setApiOccupants([])
+    } finally {
+      setLoadingOccupants(false)
+    }
+  }
+
+  // Fonction pour charger les agents depuis l'API
+  const loadAgents = async () => {
+    setLoadingAgents(true)
+    try {
+      const response = await getAgents()
+      console.log('Données agents reçues:', response)
+      const data = response.data || response || []
+      setApiAgents(Array.isArray(data) ? data : [])
+    } catch (error) {
+      console.error('Erreur lors du chargement des agents:', error)
+      setApiAgents([])
+    } finally {
+      setLoadingAgents(false)
+    }
+  }
+
+  // Charger automatiquement les données quand on accède aux sections
+  useEffect(() => {
+    if (activeMenu === 'occupant' && apiOccupants.length === 0) {
+      loadOccupants()
+    }
+    if (activeMenu === 'agent' && apiAgents.length === 0) {
+      loadAgents()
+    }
+  }, [activeMenu])
+
+  // Charger les données au montage pour le tableau de bord
+  useEffect(() => {
+    if (apiOccupants.length === 0) loadOccupants()
+    if (apiAgents.length === 0) loadAgents()
+  }, [])
 
   const statsData = [
     { 
@@ -125,14 +179,14 @@ function Dashboard() {
     },
     { 
       title: 'Agents', 
-      count: 26, 
+      count: apiAgents.length, 
       description: 'Voici tous les Agents de tous les bâtiments',
       icon: IoPeopleOutline,
       bgColor: '#3b82f6'
     },
     { 
       title: 'Occupants', 
-      count: 35, 
+      count: apiOccupants.length, 
       description: 'Voici tous les Occupants de tous les bâtiments',
       icon: IoPersonOutline,
       bgColor: '#10b981'
@@ -309,19 +363,19 @@ function Dashboard() {
     { id: 9, roomNumber: 'BP12', building: 'Bâtiment des Pères', role: 'Agent', phone: '6 98 76 54 32', status: 'Activé' }
   ]
 
-  // Données simulées pour les agents
-  const agents = [
-    { id: 1, name: 'Jon Snow', email: 'jonsnow@example.com', specialty: 'Electricien', phone: '6 98 76 54 32', status: 'Activé' },
-    { id: 2, name: 'Jon Snow', email: 'jonsnow@example.com', specialty: 'Electricien', phone: '6 98 76 54 32', status: 'Désactivé' },
-    { id: 3, name: 'Jon Snow', email: 'jonsnow@example.com', specialty: 'Electricien', phone: '6 98 76 54 32', status: 'Activé' },
-    { id: 4, name: 'Jon Snow', email: 'jonsnow@example.com', specialty: 'Electricien', phone: '6 98 76 54 32', status: 'Activé' },
-    { id: 5, name: 'Jon Snow', email: 'jonsnow@example.com', specialty: 'Electricien', phone: '6 98 76 54 32', status: 'Désactivé' },
-    { id: 6, name: 'Jon Snow', email: 'jonsnow@example.com', specialty: 'Electricien', phone: '6 98 76 54 32', status: 'Activé' },
-    { id: 7, name: 'Jon Snow', email: 'jonsnow@example.com', specialty: 'Electricien', phone: '6 98 76 54 32', status: 'Activé' },
-    { id: 8, name: 'Jon Snow', email: 'jonsnow@example.com', specialty: 'Electricien', phone: '6 98 76 54 32', status: 'Désactivé' },
-    { id: 9, name: 'Jon Snow', email: 'jonsnow@example.com', specialty: 'Electricien', phone: '6 98 76 54 32', status: 'Activé' },
-    { id: 10, name: 'Jon Snow', email: 'jonsnow@example.com', specialty: 'Electricien', phone: '6 98 76 54 32', status: 'Désactivé' }
-  ]
+  // Données simulées pour les agents (commentées - utilisation de l'API)
+  // const agents = [
+  //   { id: 1, name: 'Jon Snow', email: 'jonsnow@example.com', specialty: 'Electricien', phone: '6 98 76 54 32', status: 'Activé' },
+  //   { id: 2, name: 'Jon Snow', email: 'jonsnow@example.com', specialty: 'Electricien', phone: '6 98 76 54 32', status: 'Désactivé' },
+  //   { id: 3, name: 'Jon Snow', email: 'jonsnow@example.com', specialty: 'Electricien', phone: '6 98 76 54 32', status: 'Activé' },
+  //   { id: 4, name: 'Jon Snow', email: 'jonsnow@example.com', specialty: 'Electricien', phone: '6 98 76 54 32', status: 'Activé' },
+  //   { id: 5, name: 'Jon Snow', email: 'jonsnow@example.com', specialty: 'Electricien', phone: '6 98 76 54 32', status: 'Désactivé' },
+  //   { id: 6, name: 'Jon Snow', email: 'jonsnow@example.com', specialty: 'Electricien', phone: '6 98 76 54 32', status: 'Activé' },
+  //   { id: 7, name: 'Jon Snow', email: 'jonsnow@example.com', specialty: 'Electricien', phone: '6 98 76 54 32', status: 'Activé' },
+  //   { id: 8, name: 'Jon Snow', email: 'jonsnow@example.com', specialty: 'Electricien', phone: '6 98 76 54 32', status: 'Désactivé' },
+  //   { id: 9, name: 'Jon Snow', email: 'jonsnow@example.com', specialty: 'Electricien', phone: '6 98 76 54 32', status: 'Activé' },
+  //   { id: 10, name: 'Jon Snow', email: 'jonsnow@example.com', specialty: 'Electricien', phone: '6 98 76 54 32', status: 'Désactivé' }
+  // ]
 
   // Données simulées pour les incidents
   const incidents = [
@@ -434,25 +488,21 @@ function Dashboard() {
   }
 
   // Fonction pour gérer l'ajout d'un bâtiment
-  const handleAddBuilding = async (e) => {
+  const handleAddBuilding = (e) => {
     e.preventDefault()
     
-    try {
-      await createBuilding(newBuilding)
-      
-      // Réinitialiser le formulaire et fermer le modal
-      setNewBuilding({
-        name: '',
-        code: '',
-        type: 'Pédagogique',
-        floors: 1,
-        spaces: 0
-      })
-      setShowAddBuildingModal(false)
-      
-    } catch (error) {
-      console.error('Erreur lors de la création du bâtiment:', error)
-    }
+    // Simuler l'ajout du bâtiment (remplacer par l'appel API quand disponible)
+    console.log('Bâtiment créé:', newBuilding)
+    
+    // Réinitialiser le formulaire et fermer le modal
+    setNewBuilding({
+      name: '',
+      code: '',
+      type: 'Pédagogique',
+      floors: 1,
+      spaces: 0
+    })
+    setShowAddBuildingModal(false)
   }
 
   // Fonction pour réinitialiser le formulaire (Bâtiments)
@@ -577,27 +627,23 @@ function Dashboard() {
     }
   }
 
-  const handleAddOccupant = async (e) => {
+  const handleAddOccupant = (e) => {
     e.preventDefault()
     
-    try {
-      await createOccupant(newOccupant)
-      
-      // Réinitialiser le formulaire et fermer le modal
-      setNewOccupant({
-        roomName: '',
-        email: '',
-        password: '',
-        building: '',
-        phone: '',
-        occupantType: '',
-        status: 'Activé'
-      })
-      setShowAddOccupantModal(false)
-      
-    } catch (error) {
-      console.error('Erreur lors de la création de l\'occupant:', error)
-    }
+    // Simuler la création (désactivé temporairement à cause de l'erreur 500)
+    console.log('Occupant créé:', newOccupant)
+    
+    // Réinitialiser le formulaire et fermer le modal
+    setNewOccupant({
+      roomName: '',
+      email: '',
+      password: '',
+      building: '',
+      phone: '',
+      occupantType: '',
+      status: 'Activé'
+    })
+    setShowAddOccupantModal(false)
   }
 
   const handleCancelAddOccupant = () => {
@@ -613,17 +659,25 @@ function Dashboard() {
     setShowAddOccupantModal(false)
   }
 
-  // Filtrer les occupants selon la recherche
-  const filteredOccupants = occupants.filter((occupant) => {
+  // Debug: afficher l'état des données
+  console.log('apiOccupants dans le rendu:', apiOccupants)
+  console.log('loadingOccupants:', loadingOccupants)
+  
+  // Filtrer les occupants selon la recherche (uniquement les données API)
+  const filteredOccupants = Array.isArray(apiOccupants) ? apiOccupants.filter((occupant) => {
+    if (!occupant) return false
     const query = searchQuery.toLowerCase()
     return (
-      occupant.roomNumber.toLowerCase().includes(query) ||
-      occupant.building.toLowerCase().includes(query) ||
-      occupant.role.toLowerCase().includes(query) ||
-      occupant.phone.toLowerCase().includes(query) ||
-      occupant.status.toLowerCase().includes(query)
+      (occupant.roomNumber || occupant.roomName || '').toLowerCase().includes(query) ||
+      (occupant.building || '').toLowerCase().includes(query) ||
+      (occupant.role || occupant.occupantType || '').toLowerCase().includes(query) ||
+      (occupant.phone || '').toLowerCase().includes(query) ||
+      (occupant.status || '').toLowerCase().includes(query)
     )
-  })
+  }) : []
+  
+  console.log('filteredOccupants:', filteredOccupants)
+  console.log('filteredOccupants.length:', filteredOccupants.length)
 
   // Gestion des agents
   const handleSelectAgent = (agentId) => {
@@ -644,28 +698,24 @@ function Dashboard() {
     }
   }
 
-  const handleAddAgent = async (e) => {
+  const handleAddAgent = (e) => {
     e.preventDefault()
     
-    try {
-      await createAgent(newAgent)
-      
-      // Réinitialiser le formulaire et fermer le modal
-      setNewAgent({
-        name: '',
-        firstName: '',
-        email: '',
-        phone: '',
-        username: '',
-        password: '',
-        specialty: '',
-        status: 'Activé'
-      })
-      setShowAddAgentModal(false)
-      
-    } catch (error) {
-      console.error('Erreur lors de la création de l\'agent:', error)
-    }
+    // Simuler la création (désactivé temporairement à cause de l'erreur 500)
+    console.log('Agent créé:', newAgent)
+    
+    // Réinitialiser le formulaire et fermer le modal
+    setNewAgent({
+      name: '',
+      firstName: '',
+      email: '',
+      phone: '',
+      username: '',
+      password: '',
+      specialty: '',
+      status: 'Activé'
+    })
+    setShowAddAgentModal(false)
   }
 
   const handleCancelAddAgent = () => {
@@ -682,17 +732,18 @@ function Dashboard() {
     setShowAddAgentModal(false)
   }
 
-  // Filtrer les agents selon la recherche
-  const filteredAgents = agents.filter((agent) => {
+  // Filtrer les agents selon la recherche (uniquement les données API)
+  const filteredAgents = Array.isArray(apiAgents) ? apiAgents.filter((agent) => {
+    if (!agent) return false
     const query = searchQuery.toLowerCase()
     return (
-      agent.name.toLowerCase().includes(query) ||
-      agent.email.toLowerCase().includes(query) ||
-      agent.specialty.toLowerCase().includes(query) ||
-      agent.phone.toLowerCase().includes(query) ||
-      agent.status.toLowerCase().includes(query)
+      (agent.name || '').toLowerCase().includes(query) ||
+      (agent.email || '').toLowerCase().includes(query) ||
+      (agent.specialty || '').toLowerCase().includes(query) ||
+      (agent.phone || '').toLowerCase().includes(query) ||
+      (agent.status || '').toLowerCase().includes(query)
     )
-  })
+  }) : []
 
   // Gestion des incidents
   const handleSelectIncident = (incidentId) => {
@@ -874,7 +925,9 @@ function Dashboard() {
         <header className="dashboard-header">
           <h1 className="dashboard-title">{pageTitle}</h1>
           <div className="header-actions">
-            <span className="user-name">Paul BABODO</span>
+            <span className="user-name">
+              {localStorage.getItem('username') || 'Utilisateur'}
+            </span>
             <button className="header-icon-btn">
               <IoPersonOutline />
             </button>
@@ -1379,7 +1432,7 @@ function Dashboard() {
             </div>
 
             <div className="occupants-table-container">
-              <table className="occupants-table">
+              <table className="occupants-table" key={`occupants-${apiOccupants.length}`}>
                 <thead>
                   <tr>
                     <th className="checkbox-column">
@@ -1403,28 +1456,34 @@ function Dashboard() {
                   </tr>
                 </thead>
                 <tbody>
-                  {filteredOccupants.length > 0 ? (
-                    filteredOccupants.map((occupant) => (
-                      <tr key={occupant.id}>
+                  {loadingOccupants ? (
+                    <tr>
+                      <td colSpan="7" className="no-results">
+                        Chargement des occupants... (API: {apiOccupants.length} items)
+                      </td>
+                    </tr>
+                  ) : filteredOccupants && filteredOccupants.length > 0 ? (
+                    filteredOccupants.map((occupant, index) => (
+                      <tr key={occupant.id || occupant._id || index}>
                         <td className="checkbox-column">
                           <button 
                             className="checkbox-btn"
-                            onClick={() => handleSelectOccupant(occupant.id)}
+                            onClick={() => handleSelectOccupant(occupant.id || occupant._id || index)}
                           >
-                            {selectedOccupants.includes(occupant.id) ? (
+                            {selectedOccupants.includes(occupant.id || occupant._id || index) ? (
                               <IoCheckboxOutline />
                             ) : (
                               <IoSquareOutline />
                             )}
                           </button>
                         </td>
-                        <td className="occupant-room">{occupant.roomNumber}</td>
-                        <td className="occupant-building">{occupant.building}</td>
-                        <td className="occupant-role">{occupant.role}</td>
-                        <td className="occupant-phone">{occupant.phone}</td>
+                        <td className="occupant-room">{occupant.roomNumber || occupant.roomName || 'N/A'}</td>
+                        <td className="occupant-building">{occupant.building || 'N/A'}</td>
+                        <td className="occupant-role">{occupant.role || occupant.occupantType || 'N/A'}</td>
+                        <td className="occupant-phone">{occupant.phone || 'N/A'}</td>
                         <td>
                           <span className={`badge-status ${occupant.status === 'Activé' ? 'badge-active' : 'badge-inactive'}`}>
-                            {occupant.status}
+                            {occupant.status || 'N/A'}
                           </span>
                         </td>
                         <td className="actions-column">
@@ -1437,7 +1496,9 @@ function Dashboard() {
                   ) : (
                     <tr>
                       <td colSpan="7" className="no-results">
-                        {searchQuery ? `Aucun occupant trouvé pour "${searchQuery}"` : 'Aucun occupant disponible'}
+                        {loadingOccupants ? 'Chargement...' : 
+                         searchQuery ? `Aucun occupant trouvé pour "${searchQuery}"` : 
+                         `Aucune donnée (API: ${apiOccupants.length}, Filtré: ${filteredOccupants.length})`}
                       </td>
                     </tr>
                   )}

@@ -23,7 +23,7 @@ function Login() {
     try {
       const response = await login(username, password)
       localStorage.setItem('isAuthenticated', 'true')
-      localStorage.setItem('username', user.username || username)
+      localStorage.setItem('username', response.data.user?.username || username)
       localStorage.setItem('token', response.data.token)
       navigate('/dashboard')
     } catch (error) {
@@ -101,6 +101,27 @@ function Login() {
               {loading ? 'Connexion...' : 'Connexion'}
             </button>
           </form>
+
+          <div className="login-links">
+            <button 
+              type="button" 
+              className="link-button forgot-password"
+              onClick={() => navigate('/forgot-password')}
+            >
+              Mot de passe oublié ?
+            </button>
+            
+            <div className="signup-section">
+              <span>Pas encore de compte ? </span>
+              <button 
+                type="button" 
+                className="link-button signup-link"
+                onClick={() => navigate('/register')}
+              >
+                S'inscrire
+              </button>
+            </div>
+          </div>
         </div>
       </div>
     </div>
