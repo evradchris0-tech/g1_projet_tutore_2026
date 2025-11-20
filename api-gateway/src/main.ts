@@ -3,23 +3,8 @@ import { AppModule } from './app.module';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 
 async function bootstrap() {
-  const app = await NestFactory.create(AppModule, { cors: true }); 
-  app.enableCors({
-  origin: [
-    'http://localhost:4200',       // Angular
-    'http://localhost:5173',       // React (local)
-    'http://127.0.0.1:5500',       // Static
-    'https://immo360-frontend.onrender.com', // <-- Replace with your real frontend URL
-  ],
-  methods: 'GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS',
-  credentials: true,
-  allowedHeaders: 'Content-Type, Authorization',
-  exposedHeaders: 'Authorization',
-
-  // 🔥 Required for Render (VERY IMPORTANT)
-  preflightContinue: false,
-  optionsSuccessStatus: 204,
-});
+  const app = await NestFactory.create(AppModule); 
+  
 
 
   const config = new DocumentBuilder()
