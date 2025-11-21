@@ -1,0 +1,12 @@
+# Node
+node_modules/
+npm-debug.log
+package-lock.json
+
+# Build / dist
+api-gateway/dist/
+auth-service/dist/
+
+# Cache / temp
+.cache/
+*.tmp
