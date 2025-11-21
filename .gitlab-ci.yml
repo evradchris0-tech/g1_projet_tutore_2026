@@ -1,7 +1,6 @@
 # ==================== CONFIGURATION RUNNER ====================
 default:
-  tags:
-    - backend
+  tags: []
 image: node:20-alpine
 
 # ==================== CACHE ====================
