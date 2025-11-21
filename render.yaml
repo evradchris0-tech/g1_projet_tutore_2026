@@ -1,5 +1,5 @@
 services:
-  # Auth Service avec PostgreSQL intégré
+  # Auth Service avec PostgreSQL intégré siuu message
   - type: web
     name: immo360-auth-service
     runtime: node
