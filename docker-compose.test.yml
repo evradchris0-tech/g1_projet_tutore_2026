@@ -1,0 +1,18 @@
+version: "3.8"
+
+services:
+  test:
+    build:
+      context: .
+      dockerfile: Dockerfile.test
+    container_name: immo360-frontend-test
+    volumes:
+      - ./test:/app/test
+      - ./lib:/app/lib
+      - test-results:/app/test-results
+    environment:
+      - FLUTTER_TEST_TIMEOUT=300
+    command: flutter test --reporter json > test-results/results.json || true
+
+volumes:
+  test-results:

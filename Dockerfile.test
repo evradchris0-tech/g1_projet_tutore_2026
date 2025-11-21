@@ -1,0 +1,19 @@
+# Dockerfile pour les tests unitaires et widgets
+# Ces tests ne nécessitent pas d'émulateur Android
+
+FROM ghcr.io/cirruslabs/flutter:stable
+
+WORKDIR /app
+
+# Copy pubspec files first for better caching
+COPY pubspec.yaml pubspec.lock ./
+
+# Get dependencies
+RUN flutter pub get
+
+# Copy source code and tests
+COPY . .
+
+# Run tests
+CMD ["flutter", "test"]
+
