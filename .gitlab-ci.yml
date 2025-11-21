@@ -5,18 +5,17 @@ stages:
 variables:
   NODE_ENV: "production"
   VITE_API_BASE_URL: "https://immo360-api-gateway.onrender.com/api"
-  # accélère npm install en désactivant la progress bar
   NPM_CONFIG_PROGRESS: false
-  # npm ci sera plus rapide
   CI: true
 
-# cache pour accélérer l'installation des dépendances
+# Mise en cache pour accélérer les builds suivants
 cache:
   key: ${CI_COMMIT_REF_SLUG}
   paths:
     - node_modules/
     - .npm
 
+# Étape Build
 build:
   stage: build
   tags:
@@ -24,11 +23,11 @@ build:
   image: node:20-bullseye
   script:
     - echo "🔧 Configuration de l'environnement de production..."
-    - echo VITE_API_BASE_URL=$VITE_API_BASE_URL > .env.production
+    - echo "VITE_API_BASE_URL=$VITE_API_BASE_URL" > .env.production
     - echo "📦 Installation des dépendances (incluant devDependencies)..."
     - npm ci
     - echo "🏗️ Build du projet React..."
-    - npx vite build --emptyOutDir
+    - npm run build  # utilise vite depuis devDependencies
   artifacts:
     paths:
       - dist/
@@ -39,6 +38,7 @@ build:
     - web
     - /^release\/.*$/
 
+# Étape Déploiement sur GitLab Pages
 pages:
   stage: deploy
   tags:
