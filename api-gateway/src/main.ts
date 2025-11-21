@@ -4,16 +4,7 @@ import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule); 
-    app.enableCors({
-    origin: [
-      'https://g1-projet-tutore-2026-aedc9c.gitlab.io',
-      'http://localhost:3000',
-      'http://localhost:5173'
-    ],
-    credentials: true,
-    methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
-    allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'],
-  });
+  
 
 
   const config = new DocumentBuilder()
