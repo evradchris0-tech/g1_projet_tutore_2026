@@ -32,14 +32,3 @@ pages:
       - public
   only:
     - web
-```
-
-### 5. **`.gitignore`** (vérifier que les fichiers .env ne sont pas commités)
-Ajoute ces lignes si elles n'y sont pas déjà :
-```
-# Environment files
-.env
-.env.local
-.env.development
-.env.production
-.env.*.local
