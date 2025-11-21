@@ -1,4 +1,7 @@
-# Pipeline CI/CD Backend - IMMO360 (Max Speed & Future-Proof)
+# ==================== CONFIGURATION RUNNER ====================
+default:
+  tags:
+    - backend
 image: node:20-alpine
 
 # ==================== CACHE ====================
@@ -12,6 +15,7 @@ cache:
     - auth-service/node_modules/
   policy: pull-push
 
+# ==================== VARIABLES ====================
 variables:
   NODE_ENV: test
   DB_HOST: postgres
@@ -23,6 +27,7 @@ variables:
   PORT_AUTH: "3001"
   PORT_GATEWAY: "3000"
 
+# ==================== SERVICES ====================
 services:
   - name: postgres:15-alpine
     alias: postgres
@@ -39,16 +44,11 @@ stages:
   - build
   - deploy_staging
 
-# ==================== GLOBAL BEFORE SCRIPT ====================
-before_script:
-  - echo "Pré-pull Docker pour limiter le download sur connexion lente"
-  - docker pull node:20-alpine || true
-
 # ==================== INSTALL ====================
 install_api_gateway:
   stage: install
   script:
-    - echo "Pipeline max speed activé pour API Gateway"
+    - echo "Installation des dépendances API Gateway"
     - cd api-gateway && npm ci --prefer-offline --no-audit
   artifacts:
     paths:
@@ -58,6 +58,7 @@ install_api_gateway:
 install_auth_service:
   stage: install
   script:
+    - echo "Installation des dépendances Auth Service"
     - cd auth-service && npm ci --prefer-offline --no-audit
   artifacts:
     paths:
@@ -140,20 +141,21 @@ deploy_staging:
   stage: deploy_staging
   image: alpine:latest
   before_script:
-    - apk add --no-cache openssh-client rsync
+    - apk add --no-cache openssh-client
     - eval $(ssh-agent -s)
     - echo "$SSH_PRIVATE_KEY" | tr -d '\r' | ssh-add -
     - mkdir -p ~/.ssh
     - chmod 700 ~/.ssh
     - ssh-keyscan -H $STAGING_SERVER >> ~/.ssh/known_hosts
   script:
-    - ssh $STAGING_USER@$STAGING_SERVER << 'EOF'
-        cd /var/www/immo360-backend
-        git pull origin develop
-        cd api-gateway && npm ci && npm run build && pm2 restart api-gateway
-        cd ../auth-service && npm ci && npm run build && pm2 restart auth-service
-        echo "Déploiement staging terminé!"
-      EOF
+    - |
+      ssh -o StrictHostKeyChecking=no $STAGING_USER@$STAGING_SERVER "
+        cd /var/www/immo360-backend &&
+        git pull origin develop &&
+        cd api-gateway && npm ci && npm run build && pm2 restart api-gateway &&
+        cd ../auth-service && npm ci && npm run build && pm2 restart auth-service &&
+        echo 'Déploiement staging terminé avec succès!'
+      "
   environment:
     name: staging
     url: https://staging-api.immo360.com
