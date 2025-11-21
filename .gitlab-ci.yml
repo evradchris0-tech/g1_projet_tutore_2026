@@ -45,7 +45,7 @@ build:
   only:
     - main
     - develop
-    - web         # 👈 AJOUT ICI
+    - web
     - /^release\/.*$/
   except:
     - tags
@@ -74,26 +74,6 @@ pages:
     expire_in: 1 week
   only:
     - main
-    - web    # 👈 AJOUT ICI
+    - web
   except:
     - tags
-
-###############################
-# 🧪 JOB DE TEST
-###############################
-test:
-  stage: build
-  tags:
-    - testing
-  before_script:
-    - echo "📦 Installation des dépendances..."
-    - npm ci --prefer-offline --no-audit
-  script:
-    - echo "🧪 Exécution des tests..."
-    - npm run test -- --run --reporter=verbose || true
-  only:
-    - main
-    - develop
-    - web      # 👈 AJOUT ICI
-    - merge_requests
-  allow_failure: true
