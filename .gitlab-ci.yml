@@ -7,19 +7,17 @@ variables:
   NPM_CONFIG_PROGRESS: false
   CI: true
 
-# Mise en cache pour accélérer les builds suivants
 cache:
   key: ${CI_COMMIT_REF_SLUG}
   paths:
     - node_modules/
     - .npm
 
-# Étape Build
 build:
   stage: build
   tags:
     - web
-  image: node:20-bullseye
+  image: node:20-alpine  # Plus légère et généralement plus disponible
   script:
     - echo "🔧 Configuration de l'environnement de production..."
     - echo "VITE_API_BASE_URL=$VITE_API_BASE_URL" > .env.production
@@ -37,12 +35,11 @@ build:
     - web
     - /^release\/.*$/
 
-# Étape Déploiement sur GitLab Pages
 pages:
   stage: deploy
   tags:
     - web
-  image: node:20-bullseye
+  image: node:20-alpine  # Même image
   dependencies:
     - build
   script:
