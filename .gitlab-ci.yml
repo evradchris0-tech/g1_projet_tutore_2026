@@ -2,44 +2,86 @@ stages:
   - build
   - deploy
 
+# Cache pour accélérer les builds
 cache:
+  key: ${CI_COMMIT_REF_SLUG}
   paths:
     - node_modules/
+  policy: pull-push
 
+# Variables d'environnement
+variables:
+  NODE_ENV: "production"
+  VITE_API_BASE_URL: "https://immo360-api-gateway.onrender.com/api"
+
+# Job de build
 build:
   stage: build
-  image: node:18
+  image: node:18-alpine
+  tags:
+    - web
+  before_script:
+    - echo "📦 Installation des dépendances..."
+    - npm ci --prefer-offline --no-audit
   script:
-    - npm install
-    - echo "VITE_API_BASE_URL=https://immo360-api-gateway.onrender.com/api" > .env.production
+    - echo "🔧 Configuration de l'environnement de production..."
+    - echo "VITE_API_BASE_URL=$VITE_API_BASE_URL" > .env.production
+    - echo "📁 Contenu du fichier .env.production :"
+    - cat .env.production
+    - echo "🏗️ Build du projet React..."
     - npm run build
+    - echo "✅ Build terminé avec succès !"
+    - ls -la dist/
   artifacts:
     paths:
       - dist/
     expire_in: 1 week
   only:
-    - web
     - main
+    - develop
+    - /^release\/.*$/
+  except:
+    - tags
 
+# Job de déploiement sur GitLab Pages
 pages:
   stage: deploy
+  image: alpine:latest
+  tags:
+    - web
   dependencies:
     - build
+  before_script:
+    - echo "📤 Préparation du déploiement..."
   script:
+    - echo "🚀 Déploiement sur GitLab Pages..."
+    - rm -rf public
     - mv dist public
+    - echo "📋 Contenu du dossier public :"
+    - ls -la public/
+    - echo "✅ Déploiement prêt !"
   artifacts:
     paths:
       - public
+    expire_in: 1 week
   only:
-    - web
-```
+    - main
+  except:
+    - tags
 
-### 5. **`.gitignore`** (vérifier que les fichiers .env ne sont pas commités)
-Ajoute ces lignes si elles n'y sont pas déjà :
-```
-# Environment files
-.env
-.env.local
-.env.development
-.env.production
-.env.*.local
+# Job optionnel : Tests (si tu en as)
+test:
+  stage: build
+  image: node:18-alpine
+  tags:
+    - testing
+  before_script:
+    - npm ci --prefer-offline --no-audit
+  script:
+    - echo "🧪 Exécution des tests..."
+    - npm run test -- --run --reporter=verbose || true
+  only:
+    - main
+    - develop
+    - merge_requests
+  allow_failure: true
