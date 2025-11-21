@@ -39,6 +39,10 @@ install_api_gateway:
     - cd api-gateway && npm ci --prefer-offline --no-audit
   cache:
     <<: *cache_global
+  artifacts:
+    paths:
+      - api-gateway/node_modules
+    expire_in: 1h
 
 install_auth_service:
   stage: install
@@ -46,6 +50,10 @@ install_auth_service:
     - cd auth-service && npm ci --prefer-offline --no-audit
   cache:
     <<: *cache_global
+  artifacts:
+    paths:
+      - auth-service/node_modules
+    expire_in: 1h
 
 # ==================== LINT ====================
 lint_api_gateway:
@@ -54,7 +62,7 @@ lint_api_gateway:
     - install_api_gateway
   script:
     - cd api-gateway
-    - npm ci --prefer-offline --no-audit      # ⚡ installer vite les dépendances avant lint
+    - npm ci --prefer-offline --no-audit  # ⚡ install rapide
     - npm run lint
   cache:
     <<: *cache_global
@@ -78,7 +86,9 @@ test_api_gateway:
   dependencies:
     - install_api_gateway
   script:
-    - cd api-gateway && npm run test:cov
+    - cd api-gateway
+    - npm ci --prefer-offline --no-audit
+    - npm run test:cov
   cache:
     <<: *cache_global
   artifacts:
@@ -95,7 +105,9 @@ test_auth_service:
   dependencies:
     - install_auth_service
   script:
-    - cd auth-service && npm run test:cov
+    - cd auth-service
+    - npm ci --prefer-offline --no-audit
+    - npm run test:cov
   cache:
     <<: *cache_global
   artifacts:
@@ -113,7 +125,9 @@ build_api_gateway:
   dependencies:
     - install_api_gateway
   script:
-    - cd api-gateway && npm run build
+    - cd api-gateway
+    - npm ci --prefer-offline --no-audit
+    - npm run build
   cache:
     <<: *cache_global
   artifacts:
@@ -126,7 +140,9 @@ build_auth_service:
   dependencies:
     - install_auth_service
   script:
-    - cd auth-service && npm run build
+    - cd auth-service
+    - npm ci --prefer-offline --no-audit
+    - npm run build
   cache:
     <<: *cache_global
   artifacts:

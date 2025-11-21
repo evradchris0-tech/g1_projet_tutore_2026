@@ -6,15 +6,13 @@ async function bootstrap() {
   const app = await NestFactory.create(AppModule, { cors: true });
 
   app.enableCors({
-  origin: [
-    'https://g1-projet-tutore-2026-aedc9c.gitlab.io', // ton front hébergé
-    'http://localhost:4200',                          // front local
-  ],
-  methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
-  credentials: true,
-});
-  
-
+    origin: [
+      'https://g1-projet-tutore-2026-aedc9c.gitlab.io', // ton front hébergé
+      'http://localhost:4200', // front local
+    ],
+    methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
+    credentials: true,
+  });
 
   const config = new DocumentBuilder()
     .setTitle('IMMO360 API Docs')
