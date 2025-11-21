@@ -9,18 +9,17 @@ cache:
     - node_modules/
   policy: pull-push
 
-# Variables d'environnement
 variables:
   NODE_ENV: "production"
   VITE_API_BASE_URL: "https://immo360-api-gateway.onrender.com/api"
 
 ###############################
-# 🏗️ JOB DE BUILD (Windows Shell)
+# 🏗️ JOB DE BUILD
 ###############################
 build:
   stage: build
   tags:
-    - web # Ton runner Windows possède ce tag
+    - web
   before_script:
     - echo "🔧 Vérification de Node.js..."
     - node --version || echo "Node.js non trouvé"
@@ -46,17 +45,18 @@ build:
   only:
     - main
     - develop
+    - web         # 👈 AJOUT ICI
     - /^release\/.*$/
   except:
     - tags
 
 ###############################
-# 🚀 JOB DE DEPLOY (Windows Shell)
+# 🚀 JOB DE DEPLOY
 ###############################
 pages:
   stage: deploy
   tags:
-    - web # Le même runner Windows exécutera ce job
+    - web
   dependencies:
     - build
   before_script:
@@ -74,16 +74,17 @@ pages:
     expire_in: 1 week
   only:
     - main
+    - web    # 👈 AJOUT ICI
   except:
     - tags
 
 ###############################
-# 🧪 JOB DE TEST (Windows Shell)
+# 🧪 JOB DE TEST
 ###############################
 test:
   stage: build
   tags:
-    - testing # Ton runner Windows a ce tag
+    - testing
   before_script:
     - echo "📦 Installation des dépendances..."
     - npm ci --prefer-offline --no-audit
@@ -93,5 +94,6 @@ test:
   only:
     - main
     - develop
+    - web      # 👈 AJOUT ICI
     - merge_requests
   allow_failure: true
