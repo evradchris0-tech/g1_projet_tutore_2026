@@ -6,7 +6,6 @@ variables:
   NODE_ENV: "production"
   VITE_API_BASE_URL: "https://immo360-api-gateway.onrender.com/api"
 
-# Cache pour accélérer les builds
 cache:
   key: ${CI_COMMIT_REF_SLUG}
   paths:
@@ -20,9 +19,7 @@ build:
   script:
     - echo "🔧 Configuration de l'environnement de production..."
     - echo VITE_API_BASE_URL=$VITE_API_BASE_URL > .env.production
-    - echo "📦 Installation des dépendances..."
     - npm ci
-    - echo "🏗️ Build du projet React..."
     - npm run build
   artifacts:
     paths:
@@ -42,7 +39,6 @@ pages:
   dependencies:
     - build
   script:
-    - echo "📦 Déploiement sur GitLab Pages..."
     - rm -rf public || true
     - mv dist public
   artifacts:
