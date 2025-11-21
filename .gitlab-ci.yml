@@ -2,42 +2,28 @@ stages:
   - build
   - deploy
 
-# Cache pour accélérer les builds
-cache:
-  key: ${CI_COMMIT_REF_SLUG}
-  paths:
-    - node_modules/
-  policy: pull-push
-
 variables:
   NODE_ENV: "production"
   VITE_API_BASE_URL: "https://immo360-api-gateway.onrender.com/api"
 
-###############################
-# 🏗️ JOB DE BUILD
-###############################
 build:
   stage: build
   tags:
     - web
   before_script:
-    - echo "🔧 Vérification de Node.js..."
-    - node --version || echo "Node.js non trouvé"
+    - Write-Host "🔧 Vérification de Node.js..."
+    - if (Get-Command node -ErrorAction SilentlyContinue) { node --version } else { Write-Host "Node.js non trouvé" }
     - if (!(Get-Command node -ErrorAction SilentlyContinue)) {
-        echo '📥 Installation de Node.js via winget...';
-        winget install OpenJS.NodeJS.LTS --silent;
+        Write-Host '📥 Installation de Node.js via winget...'
+        winget install OpenJS.NodeJS.LTS --silent
       }
-    - echo "📦 Installation des dépendances..."
-    - npm ci --prefer-offline --no-audit
+    - Write-Host "📦 Installation des dépendances..."
+    - npm install
   script:
-    - echo "🔧 Configuration de l'environnement de production..."
-    - echo "VITE_API_BASE_URL=$VITE_API_BASE_URL" > .env.production
-    - echo "📁 Contenu de .env.production :"
-    - type .env.production
-    - echo "🏗️ Build du projet React..."
+    - Write-Host "🔧 Configuration de l'environnement de production..."
+    - "echo VITE_API_BASE_URL=$VITE_API_BASE_URL > .env.production"
+    - Write-Host "🏗️ Build du projet React..."
     - npm run build
-    - echo "✅ Build terminé avec succès !"
-    - dir dist
   artifacts:
     paths:
       - dist/
@@ -47,27 +33,16 @@ build:
     - develop
     - web
     - /^release\/.*$/
-  except:
-    - tags
 
-###############################
-# 🚀 JOB DE DEPLOY
-###############################
 pages:
   stage: deploy
   tags:
     - web
   dependencies:
     - build
-  before_script:
-    - echo "📤 Préparation du déploiement..."
   script:
-    - echo "🚀 Déploiement sur GitLab Pages..."
     - if (Test-Path public) { Remove-Item -Recurse -Force public }
     - Move-Item dist public
-    - echo "📋 Contenu du dossier public :"
-    - dir public
-    - echo "✅ Déploiement prêt !"
   artifacts:
     paths:
       - public
@@ -75,5 +50,3 @@ pages:
   only:
     - main
     - web
-  except:
-    - tags
