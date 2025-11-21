@@ -14,24 +14,31 @@ variables:
   NODE_ENV: "production"
   VITE_API_BASE_URL: "https://immo360-api-gateway.onrender.com/api"
 
-# Job de build
+###############################
+# 🏗️ JOB DE BUILD (Windows Shell)
+###############################
 build:
   stage: build
-  image: node:18-alpine
   tags:
-    - web
+    - web # Ton runner Windows possède ce tag
   before_script:
+    - echo "🔧 Vérification de Node.js..."
+    - node --version || echo "Node.js non trouvé"
+    - if (!(Get-Command node -ErrorAction SilentlyContinue)) {
+        echo '📥 Installation de Node.js via winget...';
+        winget install OpenJS.NodeJS.LTS --silent;
+      }
     - echo "📦 Installation des dépendances..."
     - npm ci --prefer-offline --no-audit
   script:
     - echo "🔧 Configuration de l'environnement de production..."
     - echo "VITE_API_BASE_URL=$VITE_API_BASE_URL" > .env.production
-    - echo "📁 Contenu du fichier .env.production :"
-    - cat .env.production
+    - echo "📁 Contenu de .env.production :"
+    - type .env.production
     - echo "🏗️ Build du projet React..."
     - npm run build
     - echo "✅ Build terminé avec succès !"
-    - ls -la dist/
+    - dir dist
   artifacts:
     paths:
       - dist/
@@ -43,22 +50,23 @@ build:
   except:
     - tags
 
-# Job de déploiement sur GitLab Pages
+###############################
+# 🚀 JOB DE DEPLOY (Windows Shell)
+###############################
 pages:
   stage: deploy
-  image: alpine:latest
   tags:
-    - web
+    - web # Le même runner Windows exécutera ce job
   dependencies:
     - build
   before_script:
     - echo "📤 Préparation du déploiement..."
   script:
     - echo "🚀 Déploiement sur GitLab Pages..."
-    - rm -rf public
-    - mv dist public
+    - if (Test-Path public) { Remove-Item -Recurse -Force public }
+    - Move-Item dist public
     - echo "📋 Contenu du dossier public :"
-    - ls -la public/
+    - dir public
     - echo "✅ Déploiement prêt !"
   artifacts:
     paths:
@@ -69,13 +77,15 @@ pages:
   except:
     - tags
 
-# Job optionnel : Tests (si tu en as)
+###############################
+# 🧪 JOB DE TEST (Windows Shell)
+###############################
 test:
   stage: build
-  image: node:18-alpine
   tags:
-    - testing
+    - testing # Ton runner Windows a ce tag
   before_script:
+    - echo "📦 Installation des dépendances..."
     - npm ci --prefer-offline --no-audit
   script:
     - echo "🧪 Exécution des tests..."
