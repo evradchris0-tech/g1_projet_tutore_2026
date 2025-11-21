@@ -1,16 +1,21 @@
-# ==================== CONFIGURATION RUNNER ====================
-default:
-  tags:
-    - backend
-image: node:20-alpine
-
-# ==================== CACHE ====================
-cache:
+# ==================== CACHE GLOBAL INTELLIGENT ====================
+.cache_global: &cache_global
   key:
     files:
       - api-gateway/package-lock.json
       - auth-service/package-lock.json
+  paths:
+    - api-gateway/node_modules/
+    - auth-service/node_modules/
   policy: pull-push
+
+# ==================== CONFIGURATION RUNNER ====================
+default:
+  tags:
+    - backend
+  image: node:20-alpine
+  cache:
+    <<: *cache_global
 
 # ==================== VARIABLES ====================
 variables:
@@ -44,53 +49,44 @@ stages:
 # ==================== INSTALL ====================
 install_api_gateway:
   stage: install
-  tags:
-    - backend
   script:
     - echo "Installation des dépendances API Gateway"
     - cd api-gateway && npm ci --prefer-offline --no-audit
-  artifacts:
-    expire_in: 1h
 
 install_auth_service:
   stage: install
-  tags:
-    - backend
   script:
     - echo "Installation des dépendances Auth Service"
     - cd auth-service && npm ci --prefer-offline --no-audit
-  artifacts:
-    expire_in: 1h
 
 # ==================== LINT ====================
 lint_api_gateway:
   stage: lint
-  tags:
-    - backend
   dependencies:
     - install_api_gateway
   script:
     - cd api-gateway && npm run lint
+  cache:
+    <<: *cache_global
+    policy: pull
 
 lint_auth_service:
   stage: lint
-  tags:
-    - backend
   dependencies:
     - install_auth_service
   script:
     - cd auth-service && npm run lint
+  cache:
+    <<: *cache_global
+    policy: pull
 
 # ==================== TEST ====================
 test_api_gateway:
   stage: test
-  tags:
-    - backend
   dependencies:
     - install_api_gateway
   script:
-    - cd api-gateway
-    - npm run test:cov
+    - cd api-gateway && npm run test:cov
   artifacts:
     paths:
       - api-gateway/coverage/cobertura-coverage.xml
@@ -102,13 +98,10 @@ test_api_gateway:
 
 test_auth_service:
   stage: test
-  tags:
-    - backend
   dependencies:
     - install_auth_service
   script:
-    - cd auth-service
-    - npm run test:cov
+    - cd auth-service && npm run test:cov
   artifacts:
     paths:
       - auth-service/coverage/cobertura-coverage.xml
@@ -121,8 +114,6 @@ test_auth_service:
 # ==================== BUILD ====================
 build_api_gateway:
   stage: build
-  tags:
-    - backend
   dependencies:
     - install_api_gateway
   script:
@@ -134,8 +125,6 @@ build_api_gateway:
 
 build_auth_service:
   stage: build
-  tags:
-    - backend
   dependencies:
     - install_auth_service
   script:
@@ -158,8 +147,7 @@ deploy_staging:
     - mkdir -p ~/.ssh
     - chmod 700 ~/.ssh
     - ssh-keyscan -H $STAGING_SERVER >> ~/.ssh/known_hosts
-  script:
-    - |
+  script: |
       ssh -o StrictHostKeyChecking=no $STAGING_USER@$STAGING_SERVER "
         cd /var/www/immo360-backend &&
         git pull origin develop &&
