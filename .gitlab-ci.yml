@@ -1,0 +1,45 @@
+stages:
+  - build
+  - deploy
+
+cache:
+  paths:
+    - node_modules/
+
+build:
+  stage: build
+  image: node:18
+  script:
+    - npm install
+    - echo "VITE_API_BASE_URL=https://immo360-api-gateway.onrender.com/api" > .env.production
+    - npm run build
+  artifacts:
+    paths:
+      - dist/
+    expire_in: 1 week
+  only:
+    - web
+    - main
+
+pages:
+  stage: deploy
+  dependencies:
+    - build
+  script:
+    - mv dist public
+  artifacts:
+    paths:
+      - public
+  only:
+    - web
+```
+
+### 5. **`.gitignore`** (vérifier que les fichiers .env ne sont pas commités)
+Ajoute ces lignes si elles n'y sont pas déjà :
+```
+# Environment files
+.env
+.env.local
+.env.development
+.env.production
+.env.*.local
