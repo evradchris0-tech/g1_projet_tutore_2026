@@ -1,12 +1,12 @@
-# ==================== CACHE GLOBAL INTELLIGENT ====================
+# ==================== CACHE GLOBAL LÉGER ====================
 .cache_global: &cache_global
   key:
     files:
       - api-gateway/package-lock.json
       - auth-service/package-lock.json
   paths:
-    - api-gateway/node_modules/
-    - auth-service/node_modules/
+    # cache npm pour accélérer npm ci
+    - .npm
   policy: pull-push
 
 # ==================== CONFIGURATION RUNNER ====================
@@ -20,23 +20,9 @@ default:
 # ==================== VARIABLES ====================
 variables:
   NODE_ENV: test
-  DB_HOST: postgres
-  DB_PORT: "5432"
-  DB_USER: postgres
-  DB_PASS: testpassword
-  DB_NAME: immo360_test
-  JWT_SECRET: test_jwt_secret_for_ci
   PORT_AUTH: "3001"
   PORT_GATEWAY: "3000"
-
-# ==================== SERVICES ====================
-services:
-  - name: postgres:15-alpine
-    alias: postgres
-    variables:
-      POSTGRES_DB: immo360_test
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: testpassword
+  JWT_SECRET: test_jwt_secret_for_ci
 
 # ==================== STAGES ====================
 stages:
@@ -50,14 +36,16 @@ stages:
 install_api_gateway:
   stage: install
   script:
-    - echo "Installation des dépendances API Gateway"
     - cd api-gateway && npm ci --prefer-offline --no-audit
+  cache:
+    <<: *cache_global
 
 install_auth_service:
   stage: install
   script:
-    - echo "Installation des dépendances Auth Service"
     - cd auth-service && npm ci --prefer-offline --no-audit
+  cache:
+    <<: *cache_global
 
 # ==================== LINT ====================
 lint_api_gateway:
@@ -87,6 +75,8 @@ test_api_gateway:
     - install_api_gateway
   script:
     - cd api-gateway && npm run test:cov
+  cache:
+    <<: *cache_global
   artifacts:
     paths:
       - api-gateway/coverage/cobertura-coverage.xml
@@ -102,6 +92,8 @@ test_auth_service:
     - install_auth_service
   script:
     - cd auth-service && npm run test:cov
+  cache:
+    <<: *cache_global
   artifacts:
     paths:
       - auth-service/coverage/cobertura-coverage.xml
@@ -118,6 +110,8 @@ build_api_gateway:
     - install_api_gateway
   script:
     - cd api-gateway && npm run build
+  cache:
+    <<: *cache_global
   artifacts:
     paths:
       - api-gateway/dist/
@@ -129,6 +123,8 @@ build_auth_service:
     - install_auth_service
   script:
     - cd auth-service && npm run build
+  cache:
+    <<: *cache_global
   artifacts:
     paths:
       - auth-service/dist/
