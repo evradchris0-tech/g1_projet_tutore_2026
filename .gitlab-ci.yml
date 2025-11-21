@@ -10,22 +10,17 @@ build:
   stage: build
   tags:
     - web
-  before_script:
-    - Write-Host "🔧 Vérification de Node.js..."
-    - if (Get-Command node -ErrorAction SilentlyContinue) { node --version } else { Write-Host "Node.js non trouvé" }
-    - if (!(Get-Command node -ErrorAction SilentlyContinue)) {
-        Write-Host '📥 Installation de Node.js via winget...'
-        winget install OpenJS.NodeJS.LTS --silent
-      }
-    - Write-Host "📦 Installation des dépendances..."
-    - npm install
-    - Write-Host "📦 Installation des dépendances..."
-    - npm ci
-
+  image: node:20-bullseye
+  cache:
+    key: ${CI_COMMIT_REF_SLUG}
+    paths:
+      - node_modules/
   script:
-    - Write-Host "🔧 Configuration de l'environnement de production..."
-    - "echo VITE_API_BASE_URL=$VITE_API_BASE_URL > .env.production"
-    - Write-Host "🏗️ Build du projet React..."
+    - echo "🔧 Configuration de l'environnement de production..."
+    - echo VITE_API_BASE_URL=$VITE_API_BASE_URL > .env.production
+    - echo "📦 Installation des dépendances..."
+    - npm ci
+    - echo "🏗️ Build du projet React..."
     - npm run build
   artifacts:
     paths:
@@ -44,8 +39,8 @@ pages:
   dependencies:
     - build
   script:
-    - if (Test-Path public) { Remove-Item -Recurse -Force public }
-    - Move-Item dist public
+    - rm -rf public || true
+    - mv dist public
   artifacts:
     paths:
       - public
