@@ -6,19 +6,17 @@ variables:
   NODE_ENV: "production"
   VITE_API_BASE_URL: "https://immo360-api-gateway.onrender.com/api"
 
+# Cache pour accélérer les builds
+cache:
+  key: ${CI_COMMIT_REF_SLUG}
+  paths:
+    - node_modules/
+
 build:
   stage: build
   tags:
     - web
   image: node:20-bullseye
-  cache:
-    key: ${CI_COMMIT_REF_SLUG}
-    paths:
-      - node_modules/
-  before_script:
-    - echo "🔧 Vérification de Node.js dans le conteneur..."
-    - node --version
-    - npm --version
   script:
     - echo "🔧 Configuration de l'environnement de production..."
     - echo VITE_API_BASE_URL=$VITE_API_BASE_URL > .env.production
@@ -40,9 +38,17 @@ pages:
   stage: deploy
   tags:
     - web
+  image: node:20-bullseye
   dependencies:
     - build
   script:
     - echo "📦 Déploiement sur GitLab Pages..."
     - rm -rf public || true
-    - mv di
+    - mv dist public
+  artifacts:
+    paths:
+      - public
+    expire_in: 1 week
+  only:
+    - main
+    - web
