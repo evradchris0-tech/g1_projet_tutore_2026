@@ -10,9 +10,6 @@ cache:
     files:
       - api-gateway/package-lock.json
       - auth-service/package-lock.json
-  paths:
-    - api-gateway/node_modules/
-    - auth-service/node_modules/
   policy: pull-push
 
 # ==================== VARIABLES ====================
@@ -51,8 +48,6 @@ install_api_gateway:
     - echo "Installation des dépendances API Gateway"
     - cd api-gateway && npm ci --prefer-offline --no-audit
   artifacts:
-    paths:
-      - api-gateway/node_modules/
     expire_in: 1h
 
 install_auth_service:
@@ -61,8 +56,6 @@ install_auth_service:
     - echo "Installation des dépendances Auth Service"
     - cd auth-service && npm ci --prefer-offline --no-audit
   artifacts:
-    paths:
-      - auth-service/node_modules/
     expire_in: 1h
 
 # ==================== LINT ====================
