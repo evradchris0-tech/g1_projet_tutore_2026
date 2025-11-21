@@ -3,7 +3,16 @@ import { AppModule } from './app.module';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 
 async function bootstrap() {
-  const app = await NestFactory.create(AppModule); 
+  const app = await NestFactory.create(AppModule, { cors: true });
+
+  app.enableCors({
+  origin: [
+    'https://g1-projet-tutore-2026-aedc9c.gitlab.io', // ton front hébergé
+    'http://localhost:4200',                          // front local
+  ],
+  methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
+  credentials: true,
+});
   
 
 
