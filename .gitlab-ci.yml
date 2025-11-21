@@ -53,7 +53,9 @@ lint_api_gateway:
   dependencies:
     - install_api_gateway
   script:
-    - cd api-gateway && npm run lint
+    - cd api-gateway
+    - npm ci --prefer-offline --no-audit      # ⚡ installer vite les dépendances avant lint
+    - npm run lint
   cache:
     <<: *cache_global
     policy: pull
@@ -63,7 +65,9 @@ lint_auth_service:
   dependencies:
     - install_auth_service
   script:
-    - cd auth-service && npm run lint
+    - cd auth-service
+    - npm ci --prefer-offline --no-audit
+    - npm run lint
   cache:
     <<: *cache_global
     policy: pull
