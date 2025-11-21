@@ -21,7 +21,7 @@ build:
     - echo "📦 Installation des dépendances..."
     - npm ci
     - echo "🏗️ Build du projet React..."
-    - npm run build
+    - npx vite build
   artifacts:
     paths:
       - dist/
@@ -39,6 +39,7 @@ pages:
   dependencies:
     - build
   script:
+    - echo "📦 Déploiement sur GitLab Pages..."
     - rm -rf public || true
     - mv dist public
   artifacts:
