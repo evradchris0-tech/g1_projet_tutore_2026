@@ -80,7 +80,7 @@ function Register() {
 
         <div className="register-form-container">
           <h1 className="register-title">Créer un compte administrateur</h1>
-          <p className="register-subtitle">Gestions d'équipements de IUSJ</p>
+          <p className="register-subtitle">Gestions d&apos;équipements de IUSJ</p>
 
           {error && (
             <div className="error-message" style={{color: '#ff4444', marginBottom: '1rem', textAlign: 'center'}}>
@@ -91,7 +91,7 @@ function Register() {
           <form onSubmit={handleSubmit} className="register-form">
             <div className="form-row">
               <div className="input-group">
-                <label htmlFor="username">Nom d'utilisateur</label>
+                <label htmlFor="username">Nom d&apos;utilisateur</label>
                 <div className="input-wrapper">
                   <input
                     type="text"

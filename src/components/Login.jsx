@@ -1,4 +1,4 @@
-import { useContext, useState } from 'react'
+import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { IoPersonOutline, IoLockClosedOutline } from 'react-icons/io5'
 import { login } from '../api/auth'
@@ -10,7 +10,7 @@ function Login() {
   // const { login } = useContext(AuthContext);
   const [username, setUsername] = useState('')
   const [password, setPassword] = useState('')
-  const [showPassword, setShowPassword] = useState(false)
+  const [showPassword, _setShowPassword] = useState(false)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const navigate = useNavigate()
@@ -54,7 +54,7 @@ function Login() {
 
         <div className="login-form-container">
           <h1 className="login-title">Connectez-vous à la plateforme</h1>
-          <p className="login-subtitle">Gestions d'équipements de IUSJ</p>
+          <p className="login-subtitle">Gestions d&apos;équipements de IUSJ</p>
 
           {error && (
             <div className="error-message" style={{color: '#ff4444', marginBottom: '1rem', textAlign: 'center'}}>
@@ -64,7 +64,7 @@ function Login() {
 
           <form onSubmit={handleSubmit} className="login-form" autoComplete="off">
             <div className="input-group">
-              <label htmlFor="username">Nom de l'utilisateur</label>
+              <label htmlFor="username">Nom de l&apos;utilisateur</label>
               <div className="input-wrapper">
                 <input
                   type="text"
@@ -118,7 +118,7 @@ function Login() {
                 className="link-button signup-link"
                 onClick={() => navigate('/register')}
               >
-                S'inscrire
+                S&apos;inscrire
               </button>
             </div>
           </div>
