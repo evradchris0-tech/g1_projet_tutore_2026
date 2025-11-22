@@ -1,55 +1,245 @@
+# ==================== PIPELINE CONFIGURATION ====================
+# Pipeline GitLab CI/CD pour Frontend React/Vite
+
+# ==================== VARIABLES GLOBALES ====================
+variables:
+  # Configuration Node.js
+  NODE_VERSION: "20"
+  NPM_CONFIG_CACHE: "$CI_PROJECT_DIR/.npm"
+  NPM_CONFIG_PROGRESS: "false"
+  
+  # Configuration de build
+  VITE_API_BASE_URL: "https://immo360-api-gateway.onrender.com/api"
+  CI: "true"
+  
+  # Configuration Netlify
+  NETLIFY_SITE_ID: "$NETLIFY_SITE_ID"  # À définir dans les variables CI/CD
+  NETLIFY_AUTH_TOKEN: "$NETLIFY_AUTH_TOKEN"  # À définir dans les variables CI/CD
+
+# ==================== CACHE GLOBAL ====================
+.cache_template: &cache_config
+  key:
+    files:
+      - package-lock.json
+  paths:
+    - node_modules/
+    - .npm/
+  policy: pull-push
+
+# ==================== IMAGE PAR DÉFAUT ====================
+default:
+  image: node:${NODE_VERSION}-alpine
+  tags:
+    - docker
+  cache:
+    <<: *cache_config
+
+# ==================== STAGES ====================
 stages:
+  - setup
+  - quality
+  - test
   - build
   - deploy
 
-variables:
-  VITE_API_BASE_URL: "https://immo360-api-gateway.onrender.com/api"
-  NPM_CONFIG_PROGRESS: false
-  CI: true
-
-cache:
-  key: ${CI_COMMIT_REF_SLUG}
-  paths:
-    - node_modules/
-    - .npm
-
-build:
-  stage: build
-  tags:
-    - web
-  image: node:20-alpine  # Plus légère et généralement plus disponible
+# ==================== STAGE: SETUP ====================
+install_dependencies:
+  stage: setup
   script:
-    - echo "🔧 Configuration de l'environnement de production..."
-    - echo "VITE_API_BASE_URL=$VITE_API_BASE_URL" > .env.production
     - echo "📦 Installation des dépendances..."
-    - npm ci
-    - echo "🏗️ Build du projet React..."
+    - npm ci --prefer-offline --no-audit
+    - echo "✅ Dépendances installées avec succès"
+  artifacts:
+    paths:
+      - node_modules/
+    expire_in: 1h
+  cache:
+    <<: *cache_config
+
+# ==================== STAGE: QUALITY ====================
+lint:
+  stage: quality
+  dependencies:
+    - install_dependencies
+  before_script:
+    - echo "🔍 Vérification de la qualité du code..."
+  script:
+    - npm run lint
+  allow_failure: false
+  cache:
+    <<: *cache_config
+    policy: pull
+
+code_format_check:
+  stage: quality
+  dependencies:
+    - install_dependencies
+  script:
+    - echo "📝 Vérification du formatage du code..."
+    - npm run format:check
+  allow_failure: true
+  cache:
+    <<: *cache_config
+    policy: pull
+
+# ==================== STAGE: TEST ====================
+unit_tests:
+  stage: test
+  dependencies:
+    - install_dependencies
+  before_script:
+    - echo "🧪 Exécution des tests unitaires..."
+  script:
+    - npm run test:unit
+  coverage: '/All files[^|]*\|[^|]*\s+([\d\.]+)/'
+  artifacts:
+    when: always
+    paths:
+      - coverage/
+    reports:
+      coverage_report:
+        coverage_format: cobertura
+        path: coverage/cobertura-coverage.xml
+    expire_in: 7d
+  cache:
+    <<: *cache_config
+    policy: pull
+
+integration_tests:
+  stage: test
+  dependencies:
+    - install_dependencies
+  script:
+    - echo "🔗 Exécution des tests d'intégration..."
+    - npm run test:integration
+  allow_failure: true
+  cache:
+    <<: *cache_config
+    policy: pull
+
+# ==================== STAGE: BUILD ====================
+build_app:
+  stage: build
+  dependencies:
+    - install_dependencies
+  before_script:
+    - echo "🏗️ Configuration de l'environnement de build..."
+    - echo "VITE_API_BASE_URL=$VITE_API_BASE_URL" > .env.production
+  script:
+    - echo "🔨 Build de l'application..."
     - npm run build
+    - echo "📊 Taille du bundle:"
+    - du -sh dist/
   artifacts:
     paths:
       - dist/
     expire_in: 1 week
+  cache:
+    <<: *cache_config
+    policy: pull
   only:
     - main
     - develop
-    - web
     - /^release\/.*$/
 
-pages:
-  stage: deploy
-  tags:
-    - web
-  image: node:20-alpine  # Même image
+# Build de preview pour les merge requests
+build_preview:
+  stage: build
   dependencies:
-    - build
+    - install_dependencies
+  before_script:
+    - echo "VITE_API_BASE_URL=$VITE_API_BASE_URL" > .env.production
   script:
-    - echo "📦 Déploiement sur GitLab Pages..."
-    - rm -rf public || true
-    - mv dist public
+    - npm run build
   artifacts:
     paths:
-      - public
-    expire_in: 1 week
+      - dist/
+    expire_in: 1 day
+  cache:
+    <<: *cache_config
+    policy: pull
+  only:
+    - merge_requests
+
+# ==================== STAGE: DEPLOY ====================
+.deploy_template: &deploy_config
+  stage: deploy
+  image: node:${NODE_VERSION}-alpine
+  dependencies:
+    - build_app
+  before_script:
+    - echo "🚀 Préparation du déploiement..."
+    - npm install -g netlify-cli
+  cache:
+    <<: *cache_config
+    policy: pull
+
+# Déploiement en production
+deploy_production:
+  <<: *deploy_config
+  script:
+    - echo "🌐 Déploiement en production sur Netlify..."
+    - netlify deploy --prod --dir=dist --site=$NETLIFY_SITE_ID --auth=$NETLIFY_AUTH_TOKEN
+    - echo "✅ Déploiement en production terminé!"
+  environment:
+    name: production
+    url: https://votre-site.netlify.app
   only:
     - main
-    - web
+  when: manual
+
+# Déploiement en staging
+deploy_staging:
+  <<: *deploy_config
+  script:
+    - echo "🧪 Déploiement en staging sur Netlify..."
+    - netlify deploy --dir=dist --site=$NETLIFY_SITE_ID --auth=$NETLIFY_AUTH_TOKEN
+    - echo "✅ Déploiement en staging terminé!"
+  environment:
+    name: staging
+    url: https://staging--votre-site.netlify.app
+  only:
+    - develop
+  when: on_success
+
+# Déploiement de preview pour les merge requests
+deploy_preview:
+  <<: *deploy_config
+  dependencies:
+    - build_preview
+  script:
+    - echo "👀 Déploiement de la preview..."
+    - netlify deploy --dir=dist --site=$NETLIFY_SITE_ID --auth=$NETLIFY_AUTH_TOKEN --alias=mr-$CI_MERGE_REQUEST_IID
+    - echo "✅ Preview déployée!"
+  environment:
+    name: preview/mr-$CI_MERGE_REQUEST_IID
+    url: https://mr-$CI_MERGE_REQUEST_IID--votre-site.netlify.app
+    on_stop: cleanup_preview
+    auto_stop_in: 1 week
+  only:
+    - merge_requests
+
+# Nettoyage des previews
+cleanup_preview:
+  stage: deploy
+  image: node:${NODE_VERSION}-alpine
+  before_script:
+    - npm install -g netlify-cli
+  script:
+    - echo "🧹 Nettoyage de la preview..."
+    - netlify sites:delete --site-id=$NETLIFY_SITE_ID --force || true
+  environment:
+    name: preview/mr-$CI_MERGE_REQUEST_IID
+    action: stop
+  when: manual
+  only:
+    - merge_requests
+
+# ==================== RÈGLES ADDITIONNELLES ====================
+# N'exécuter le pipeline que pour certains changements
+workflow:
+  rules:
+    - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
+    - if: '$CI_COMMIT_BRANCH == "main"'
+    - if: '$CI_COMMIT_BRANCH == "develop"'
+    - if: '$CI_COMMIT_TAG'
