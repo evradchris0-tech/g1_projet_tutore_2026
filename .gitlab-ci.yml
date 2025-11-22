@@ -5,7 +5,6 @@
       - api-gateway/package-lock.json
       - auth-service/package-lock.json
   paths:
-    # cache npm pour accélérer npm ci
     - .npm
   policy: pull-push
 
@@ -13,7 +12,6 @@
 default:
   tags:
     - backend
-  image: node:20-alpine
   cache:
     <<: *cache_global
 
@@ -23,20 +21,22 @@ variables:
   PORT_AUTH: "3001"
   PORT_GATEWAY: "3000"
   JWT_SECRET: test_jwt_secret_for_ci
+  IMAGE_API_GATEWAY: "registry.gitlab.com/g1_projet_tutore_2026/g1_projet_tutore_2026:api-gateway"
+  IMAGE_AUTH_SERVICE: "registry.gitlab.com/g1_projet_tutore_2026/g1_projet_tutore_2026:auth-service"
 
 # ==================== STAGES ====================
 stages:
   - install
   - lint
   - test
-  - build
   - deploy_staging
 
 # ==================== INSTALL ====================
 install_api_gateway:
   stage: install
+  image: $IMAGE_API_GATEWAY
   script:
-    - cd api-gateway && npm ci --prefer-offline --no-audit
+    - echo "API Gateway dependencies are already in the Docker image."
   cache:
     <<: *cache_global
   artifacts:
@@ -46,8 +46,9 @@ install_api_gateway:
 
 install_auth_service:
   stage: install
+  image: $IMAGE_AUTH_SERVICE
   script:
-    - cd auth-service && npm ci --prefer-offline --no-audit
+    - echo "Auth Service dependencies are already in the Docker image."
   cache:
     <<: *cache_global
   artifacts:
@@ -58,39 +59,22 @@ install_auth_service:
 # ==================== LINT ====================
 lint_api_gateway:
   stage: lint
-  dependencies:
-    - install_api_gateway
+  image: $IMAGE_API_GATEWAY
   script:
-    - cd api-gateway
-    - npm ci --prefer-offline --no-audit
     - npm run lint
-  cache:
-    <<: *cache_global
-    policy: pull
 
 lint_auth_service:
   stage: lint
-  dependencies:
-    - install_auth_service
+  image: $IMAGE_AUTH_SERVICE
   script:
-    - cd auth-service
-    - npm ci --prefer-offline --no-audit
     - npm run lint
-  cache:
-    <<: *cache_global
-    policy: pull
 
 # ==================== TEST ====================
 test_api_gateway:
   stage: test
-  dependencies:
-    - install_api_gateway
+  image: $IMAGE_API_GATEWAY
   script:
-    - cd api-gateway
-    - npm ci --prefer-offline --no-audit
     - npm run test:cov
-  cache:
-    <<: *cache_global
   artifacts:
     paths:
       - api-gateway/coverage/cobertura-coverage.xml
@@ -102,14 +86,9 @@ test_api_gateway:
 
 test_auth_service:
   stage: test
-  dependencies:
-    - install_auth_service
+  image: $IMAGE_AUTH_SERVICE
   script:
-    - cd auth-service
-    - npm ci --prefer-offline --no-audit
     - npm run test:cov
-  cache:
-    <<: *cache_global
   artifacts:
     paths:
       - auth-service/coverage/cobertura-coverage.xml
@@ -119,68 +98,30 @@ test_auth_service:
         coverage_format: cobertura
         path: auth-service/coverage/cobertura-coverage.xml
 
-# ==================== BUILD ====================
-build_api_gateway:
-  stage: build
-  dependencies:
-    - install_api_gateway
-  script:
-    - cd api-gateway
-    - npm run build
-  cache:
-    <<: *cache_global
-  artifacts:
-    paths:
-      - api-gateway/dist/
-    expire_in: 1d
-
-build_auth_service:
-  stage: build
-  dependencies:
-    - install_auth_service
-  script:
-    - cd auth-service
-    - npm run build
-  cache:
-    <<: *cache_global
-  artifacts:
-    paths:
-      - auth-service/dist/
-    expire_in: 1d
-
 # ==================== DEPLOY STAGING ====================
 deploy_staging:
   stage: deploy_staging
   tags:
     - backend
-  image: alpine:latest
-  dependencies:
-    - build_api_gateway
-    - build_auth_service
+  image: docker:latest
+  services:
+    - docker:dind
   before_script:
-    - apk add --no-cache openssh-client
-    - eval $(ssh-agent -s)
-    - echo "$SSH_PRIVATE_KEY" | tr -d '\r' | ssh-add -
-    - mkdir -p ~/.ssh
-    - chmod 700 ~/.ssh
-    - ssh-keyscan -H $STAGING_SERVER >> ~/.ssh/known_hosts
-  script: |
-      # Créer un dossier temporaire sur le serveur pour recevoir les artifacts
-      ssh -o StrictHostKeyChecking=no $STAGING_USER@$STAGING_SERVER "
-        mkdir -p /var/www/immo360-backend/tmp_deploy
-      "
-      # Copier les artifacts buildés
-      scp -r api-gateway/dist $STAGING_USER@$STAGING_SERVER:/var/www/immo360-backend/tmp_deploy/api-gateway
-      scp -r auth-service/dist $STAGING_USER@$STAGING_SERVER:/var/www/immo360-backend/tmp_deploy/auth-service
+    - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
+  script:
+    # Pull des images testées et buildées
+    - docker pull $IMAGE_API_GATEWAY
+    - docker pull $IMAGE_AUTH_SERVICE
 
-      # Déplacer les builds dans le dossier final et redémarrer pm2
-      ssh -o StrictHostKeyChecking=no $STAGING_USER@$STAGING_SERVER "
-        mv /var/www/immo360-backend/tmp_deploy/api-gateway/* /var/www/immo360-backend/api-gateway/
-        mv /var/www/immo360-backend/tmp_deploy/auth-service/* /var/www/immo360-backend/auth-service/
-        rm -rf /var/www/immo360-backend/tmp_deploy
-        pm2 restart api-gateway
-        pm2 restart auth-service
-        echo 'Déploiement staging terminé avec succès !'
+    # Déploiement sur le serveur staging via SSH
+    - ssh $STAGING_USER@$STAGING_SERVER "
+        docker stop api-gateway || true
+        docker rm api-gateway || true
+        docker run -d --name api-gateway -p $PORT_GATEWAY:3000 $IMAGE_API_GATEWAY
+
+        docker stop auth-service || true
+        docker rm auth-service || true
+        docker run -d --name auth-service -p $PORT_AUTH:3001 $IMAGE_AUTH_SERVICE
       "
   environment:
     name: staging
