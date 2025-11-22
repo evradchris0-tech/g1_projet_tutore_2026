@@ -301,9 +301,6 @@ rollback_staging:
         pm2 restart api-gateway auth-service
         echo '⏮️  Rollback effectué - Services redémarrés'
       "
-  environment:
-    name: staging
-    action: rollback
   when: manual
   only:
     - develop
@@ -340,9 +337,6 @@ rollback_production:
         pm2 restart api-gateway auth-service
         echo '⏮️  Rollback PRODUCTION effectué'
       "
-  environment:
-    name: production
-    action: rollback
   when: manual
   only:
     - main
