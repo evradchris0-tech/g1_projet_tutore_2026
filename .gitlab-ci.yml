@@ -1,31 +1,3 @@
-# ==================== CACHE NPM GLOBAL ====================
-.cache_npm: &cache_npm
-  key:
-    files:
-      - api-gateway/package-lock.json
-      - auth-service/package-lock.json
-  paths:
-    - .npm
-  policy: pull-push
-
-# ==================== TEMPLATES ====================
-.node_template: &node_template
-  image: node:20-alpine
-  cache:
-    <<: *cache_npm
-  before_script:
-    - npm config set cache .npm --global
-
-.docker_template: &docker_template
-  image: docker:24
-  services:
-    - docker:24-dind
-  variables:
-    DOCKER_BUILDKIT: 1
-    DOCKER_DRIVER: overlay2
-  before_script:
-    - echo "$CI_REGISTRY_PASSWORD" | docker login -u "$CI_REGISTRY_USER" --password-stdin $DOCKER_REGISTRY
-
 # ==================== VARIABLES ====================
 variables:
   NODE_ENV: test
@@ -33,213 +5,82 @@ variables:
   PORT_GATEWAY: "3000"
   JWT_SECRET: test_jwt_secret_for_ci
   DOCKER_REGISTRY: registry.gitlab.com
-  DOCKER_IMAGE_BASE: $DOCKER_REGISTRY/$CI_PROJECT_PATH
-  IMAGE_TAG: $CI_COMMIT_SHORT_SHA
+  DOCKER_IMAGE: $DOCKER_REGISTRY/g1_projet_tutore_2026/g1_projet_tutore_2026
 
 # ==================== STAGES ====================
 stages:
   - lint
   - test
   - build
-  - docker
   - deploy_staging
-  - deploy_production
 
-# ==================== LINT (parallèle avec cache) ====================
+# ==================== LINT ====================
 lint_api_gateway:
-  <<: *node_template
   stage: lint
+  image: node:20-alpine
   script:
     - cd api-gateway
-    - npm ci --prefer-offline --no-audit --cache ../.npm
+    - npm ci --prefer-offline --no-audit
     - npm run lint
-  cache:
-    <<: *cache_npm
-    policy: pull
 
 lint_auth_service:
-  <<: *node_template
   stage: lint
+  image: node:20-alpine
   script:
     - cd auth-service
-    - npm ci --prefer-offline --no-audit --cache ../.npm
+    - npm ci --prefer-offline --no-audit
     - npm run lint
-  cache:
-    <<: *cache_npm
-    policy: pull
 
-# ==================== TEST (avec coverage) ====================
+# ==================== TEST ====================
 test_api_gateway:
-  <<: *node_template
   stage: test
+  image: node:20-alpine
   script:
     - cd api-gateway
-    - npm ci --prefer-offline --no-audit --cache ../.npm
+    - npm ci --prefer-offline --no-audit
     - npm run test:cov
-  coverage: '/All files[^|]*\|[^|]*\s+([\d\.]+)/'
   artifacts:
     reports:
-      coverage_report:
-        coverage_format: cobertura
-        path: api-gateway/coverage/cobertura-coverage.xml
-    paths:
-      - api-gateway/coverage/
-    expire_in: 30 days
+      cobertura: api-gateway/coverage/cobertura-coverage.xml
 
 test_auth_service:
-  <<: *node_template
   stage: test
+  image: node:20-alpine
   script:
     - cd auth-service
-    - npm ci --prefer-offline --no-audit --cache ../.npm
+    - npm ci --prefer-offline --no-audit
     - npm run test:cov
-  coverage: '/All files[^|]*\|[^|]*\s+([\d\.]+)/'
   artifacts:
     reports:
-      coverage_report:
-        coverage_format: cobertura
-        path: auth-service/coverage/cobertura-coverage.xml
-    paths:
-      - auth-service/coverage/
-    expire_in: 30 days
+      cobertura: auth-service/coverage/cobertura-coverage.xml
 
-# ==================== BUILD (TypeScript) ====================
+# ==================== BUILD IMAGES ====================
 build_api_gateway:
-  <<: *node_template
   stage: build
+  image: docker:24-dind
+  services:
+    - docker:24-dind
   script:
-    - cd api-gateway
-    - npm ci --prefer-offline --no-audit --cache ../.npm
-    - npm run build
-  artifacts:
-    paths:
-      - api-gateway/dist/
-    expire_in: 1 day
+    - docker login -u "$CI_REGISTRY_USER" -p "$CI_REGISTRY_PASSWORD" $DOCKER_REGISTRY
+    - docker build -t $DOCKER_IMAGE:api-gateway --build-arg SERVICE_NAME=api-gateway .
+    - docker push $DOCKER_IMAGE:api-gateway
 
 build_auth_service:
-  <<: *node_template
   stage: build
+  image: docker:24-dind
+  services:
+    - docker:24-dind
   script:
-    - cd auth-service
-    - npm ci --prefer-offline --no-audit --cache ../.npm
-    - npm run build
-  artifacts:
-    paths:
-      - auth-service/dist/
-    expire_in: 1 day
+    - docker login -u "$CI_REGISTRY_USER" -p "$CI_REGISTRY_PASSWORD" $DOCKER_REGISTRY
+    - docker build -t $DOCKER_IMAGE:auth-service --build-arg SERVICE_NAME=auth-service .
+    - docker push $DOCKER_IMAGE:auth-service
 
-# ==================== DOCKER BUILD (avec cache BuildKit) ====================
-docker_api_gateway:
-  <<: *docker_template
-  stage: docker
-  script:
-    - |
-      docker build \
-        --build-arg SERVICE_NAME=api-gateway \
-        --build-arg SERVICE_PORT=3000 \
-        --cache-from $DOCKER_IMAGE_BASE/api-gateway:latest \
-        --tag $DOCKER_IMAGE_BASE/api-gateway:$IMAGE_TAG \
-        --tag $DOCKER_IMAGE_BASE/api-gateway:latest \
-        --file Dockerfile \
-        .
-    - docker push $DOCKER_IMAGE_BASE/api-gateway:$IMAGE_TAG
-    - docker push $DOCKER_IMAGE_BASE/api-gateway:latest
-  only:
-    - develop
-    - main
-
-docker_auth_service:
-  <<: *docker_template
-  stage: docker
-  script:
-    - |
-      docker build \
-        --build-arg SERVICE_NAME=auth-service \
-        --build-arg SERVICE_PORT=3001 \
-        --cache-from $DOCKER_IMAGE_BASE/auth-service:latest \
-        --tag $DOCKER_IMAGE_BASE/auth-service:$IMAGE_TAG \
-        --tag $DOCKER_IMAGE_BASE/auth-service:latest \
-        --file Dockerfile \
-        .
-    - docker push $DOCKER_IMAGE_BASE/auth-service:$IMAGE_TAG
-    - docker push $DOCKER_IMAGE_BASE/auth-service:latest
-  only:
-    - develop
-    - main
-
-# ==================== DEPLOY STAGING (docker-compose) ====================
+# ==================== DEPLOY STAGING ====================
 deploy_staging:
   stage: deploy_staging
   image: alpine:latest
-  dependencies: []
-  before_script:
-    - apk add --no-cache openssh-client docker-cli docker-cli-compose
-    - eval $(ssh-agent -s)
-    - echo "$SSH_PRIVATE_KEY" | tr -d '\r' | ssh-add -
-    - mkdir -p ~/.ssh
-    - chmod 700 ~/.ssh
-    - ssh-keyscan -H $STAGING_SERVER >> ~/.ssh/known_hosts
-  script:
-    - |
-      # Copier docker-compose.yml et .env sur le serveur
-      scp docker-compose.yml $STAGING_USER@$STAGING_SERVER:/var/www/immo360-backend/
-      scp .env.staging $STAGING_USER@$STAGING_SERVER:/var/www/immo360-backend/.env
-      
-      # Créer un docker-compose.override.yml avec les images du registry
-      cat > docker-compose.override.yml <<EOF
-      version: '3.8'
-      services:
-        api-gateway:
-          image: $DOCKER_IMAGE_BASE/api-gateway:$IMAGE_TAG
-        auth-service:
-          image: $DOCKER_IMAGE_BASE/auth-service:$IMAGE_TAG
-      EOF
-      
-      scp docker-compose.override.yml $STAGING_USER@$STAGING_SERVER:/var/www/immo360-backend/
-      
-      # Déployer avec docker-compose
-      ssh $STAGING_USER@$STAGING_SERVER "
-        cd /var/www/immo360-backend
-        
-        # Login au registry
-        echo '$CI_REGISTRY_PASSWORD' | docker login -u '$CI_REGISTRY_USER' --password-stdin $DOCKER_REGISTRY
-        
-        # Pull les nouvelles images
-        docker-compose pull api-gateway auth-service
-        
-        # Redémarrer avec zero-downtime (recreate)
-        docker-compose up -d --force-recreate --no-build api-gateway auth-service
-        
-        # Attendre que les services soient healthy
-        echo 'Attente du healthcheck...'
-        sleep 10
-        
-        # Vérifier le statut
-        docker-compose ps
-        
-        # Healthcheck manuel
-        docker exec immo360-api-gateway wget -q -O- http://localhost:3000/health || echo 'API Gateway healthcheck failed'
-        docker exec immo360-auth-service wget -q -O- http://localhost:3001/health || echo 'Auth Service healthcheck failed'
-        
-        # Nettoyer les anciennes images
-        docker image prune -f
-        
-        echo '✅ Déploiement staging terminé avec succès !'
-        echo 'Image déployée: $IMAGE_TAG'
-      "
-  environment:
-    name: staging
-    url: https://staging-api.immo360.com
-    on_stop: stop_staging
-  only:
-    - develop
-  when: manual
-
-# ==================== ROLLBACK STAGING ====================
-stop_staging:
-  stage: deploy_staging
-  image: alpine:latest
-  dependencies: []
+  tags:
+    - backend
   before_script:
     - apk add --no-cache openssh-client
     - eval $(ssh-agent -s)
@@ -247,70 +88,20 @@ stop_staging:
     - mkdir -p ~/.ssh
     - chmod 700 ~/.ssh
     - ssh-keyscan -H $STAGING_SERVER >> ~/.ssh/known_hosts
-  script:
-    - |
-      ssh $STAGING_USER@$STAGING_SERVER "
-        cd /var/www/immo360-backend
-        docker-compose down
-        echo '⏹️ Staging arrêté'
-      "
+  script: |
+    ssh -o StrictHostKeyChecking=no $STAGING_USER@$STAGING_SERVER "
+      docker pull $DOCKER_IMAGE:api-gateway &&
+      docker pull $DOCKER_IMAGE:auth-service &&
+      docker stop api-gateway || true &&
+      docker rm api-gateway || true &&
+      docker run -d --name api-gateway -p $PORT_GATEWAY:3000 $DOCKER_IMAGE:api-gateway &&
+      docker stop auth-service || true &&
+      docker rm auth-service || true &&
+      docker run -d --name auth-service -p $PORT_AUTH:3001 $DOCKER_IMAGE:auth-service
+    "
   environment:
     name: staging
-    action: stop
-  when: manual
-
-# ==================== DEPLOY PRODUCTION ====================
-deploy_production:
-  stage: deploy_production
-  image: alpine:latest
-  dependencies: []
-  before_script:
-    - apk add --no-cache openssh-client docker-cli docker-cli-compose
-    - eval $(ssh-agent -s)
-    - echo "$SSH_PRIVATE_KEY_PROD" | tr -d '\r' | ssh-add -
-    - mkdir -p ~/.ssh
-    - chmod 700 ~/.ssh
-    - ssh-keyscan -H $PRODUCTION_SERVER >> ~/.ssh/known_hosts
-  script:
-    - |
-      scp docker-compose.yml $PROD_USER@$PRODUCTION_SERVER:/var/www/immo360-backend/
-      scp .env.production $PROD_USER@$PRODUCTION_SERVER:/var/www/immo360-backend/.env
-      
-      cat > docker-compose.override.yml <<EOF
-      version: '3.8'
-      services:
-        api-gateway:
-          image: $DOCKER_IMAGE_BASE/api-gateway:$IMAGE_TAG
-        auth-service:
-          image: $DOCKER_IMAGE_BASE/auth-service:$IMAGE_TAG
-      EOF
-      
-      scp docker-compose.override.yml $PROD_USER@$PRODUCTION_SERVER:/var/www/immo360-backend/
-      
-      ssh $PROD_USER@$PRODUCTION_SERVER "
-        cd /var/www/immo360-backend
-        
-        echo '$CI_REGISTRY_PASSWORD' | docker login -u '$CI_REGISTRY_USER' --password-stdin $DOCKER_REGISTRY
-        
-        docker-compose pull api-gateway auth-service
-        docker-compose up -d --force-recreate --no-build api-gateway auth-service
-        
-        echo 'Attente du healthcheck...'
-        sleep 15
-        
-        docker-compose ps
-        
-        docker exec immo360-api-gateway wget -q -O- http://localhost:3000/health || echo 'ERREUR: API Gateway healthcheck failed'
-        docker exec immo360-auth-service wget -q -O- http://localhost:3001/health || echo 'ERREUR: Auth Service healthcheck failed'
-        
-        docker image prune -f
-        
-        echo '✅ Déploiement PRODUCTION terminé !'
-        echo 'Version déployée: $IMAGE_TAG'
-      "
-  environment:
-    name: production
-    url: https://api.immo360.com
+    url: https://staging-api.immo360.com
   only:
-    - main
+    - develop
   when: manual
