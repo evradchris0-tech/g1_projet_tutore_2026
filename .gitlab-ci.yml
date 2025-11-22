@@ -1,86 +1,141 @@
+# ==================== CACHE GLOBAL ====================
+.cache_global: &cache_global
+  key:
+    files:
+      - api-gateway/package-lock.json
+      - auth-service/package-lock.json
+  paths:
+    - .npm
+  policy: pull-push
+
+# ==================== DEFAULT RUNNER ====================
+default:
+  tags:
+    - backend
+  image: node:20-alpine
+  cache:
+    <<: *cache_global
+
 # ==================== VARIABLES ====================
 variables:
   NODE_ENV: test
   PORT_AUTH: "3001"
   PORT_GATEWAY: "3000"
   JWT_SECRET: test_jwt_secret_for_ci
-  DOCKER_REGISTRY: registry.gitlab.com
-  DOCKER_IMAGE: $DOCKER_REGISTRY/g1_projet_tutore_2026/g1_projet_tutore_2026
 
 # ==================== STAGES ====================
 stages:
+  - install
   - lint
   - test
   - build
   - deploy_staging
 
+# ==================== INSTALL ====================
+install_api_gateway:
+  stage: install
+  script:
+    - cd api-gateway && npm ci --prefer-offline --no-audit
+  cache:
+    <<: *cache_global
+  artifacts:
+    paths:
+      - api-gateway/node_modules
+    expire_in: 1h
+
+install_auth_service:
+  stage: install
+  script:
+    - cd auth-service && npm ci --prefer-offline --no-audit
+  cache:
+    <<: *cache_global
+  artifacts:
+    paths:
+      - auth-service/node_modules
+    expire_in: 1h
+
 # ==================== LINT ====================
 lint_api_gateway:
   stage: lint
-  image: node:20-alpine
+  dependencies:
+    - install_api_gateway
   script:
     - cd api-gateway
-    - npm ci --prefer-offline --no-audit
     - npm run lint
 
 lint_auth_service:
   stage: lint
-  image: node:20-alpine
+  dependencies:
+    - install_auth_service
   script:
     - cd auth-service
-    - npm ci --prefer-offline --no-audit
     - npm run lint
 
 # ==================== TEST ====================
 test_api_gateway:
   stage: test
-  image: node:20-alpine
+  dependencies:
+    - install_api_gateway
   script:
     - cd api-gateway
-    - npm ci --prefer-offline --no-audit
     - npm run test:cov
   artifacts:
+    paths:
+      - api-gateway/coverage/cobertura-coverage.xml
+    expire_in: 7d
     reports:
-      cobertura: api-gateway/coverage/cobertura-coverage.xml
+      coverage_report:
+        coverage_format: cobertura
+        path: api-gateway/coverage/cobertura-coverage.xml
 
 test_auth_service:
   stage: test
-  image: node:20-alpine
+  dependencies:
+    - install_auth_service
   script:
     - cd auth-service
-    - npm ci --prefer-offline --no-audit
     - npm run test:cov
   artifacts:
+    paths:
+      - auth-service/coverage/cobertura-coverage.xml
+    expire_in: 7d
     reports:
-      cobertura: auth-service/coverage/cobertura-coverage.xml
+      coverage_report:
+        coverage_format: cobertura
+        path: auth-service/coverage/cobertura-coverage.xml
 
-# ==================== BUILD IMAGES ====================
+# ==================== BUILD ====================
 build_api_gateway:
   stage: build
-  image: docker:24-dind
-  services:
-    - docker:24-dind
+  dependencies:
+    - install_api_gateway
   script:
-    - docker login -u "$CI_REGISTRY_USER" -p "$CI_REGISTRY_PASSWORD" $DOCKER_REGISTRY
-    - docker build -t $DOCKER_IMAGE:api-gateway --build-arg SERVICE_NAME=api-gateway .
-    - docker push $DOCKER_IMAGE:api-gateway
+    - cd api-gateway && npm run build
+  artifacts:
+    paths:
+      - api-gateway/dist/
+    expire_in: 1d
 
 build_auth_service:
   stage: build
-  image: docker:24-dind
-  services:
-    - docker:24-dind
+  dependencies:
+    - install_auth_service
   script:
-    - docker login -u "$CI_REGISTRY_USER" -p "$CI_REGISTRY_PASSWORD" $DOCKER_REGISTRY
-    - docker build -t $DOCKER_IMAGE:auth-service --build-arg SERVICE_NAME=auth-service .
-    - docker push $DOCKER_IMAGE:auth-service
+    - cd auth-service && npm run build
+  artifacts:
+    paths:
+      - auth-service/dist/
+    expire_in: 1d
 
 # ==================== DEPLOY STAGING ====================
 deploy_staging:
   stage: deploy_staging
-  image: alpine:latest
   tags:
     - backend
+  image: registry.gitlab.com/g1_projet_tutore_2026/g1_projet_tutore_2026:api-gateway
+  dependencies:
+    - build_api_gateway
+    - build_auth_service
   before_script:
     - apk add --no-cache openssh-client
     - eval $(ssh-agent -s)
@@ -89,16 +144,22 @@ deploy_staging:
     - chmod 700 ~/.ssh
     - ssh-keyscan -H $STAGING_SERVER >> ~/.ssh/known_hosts
   script: |
-    ssh -o StrictHostKeyChecking=no $STAGING_USER@$STAGING_SERVER "
-      docker pull $DOCKER_IMAGE:api-gateway &&
-      docker pull $DOCKER_IMAGE:auth-service &&
-      docker stop api-gateway || true &&
-      docker rm api-gateway || true &&
-      docker run -d --name api-gateway -p $PORT_GATEWAY:3000 $DOCKER_IMAGE:api-gateway &&
-      docker stop auth-service || true &&
-      docker rm auth-service || true &&
-      docker run -d --name auth-service -p $PORT_AUTH:3001 $DOCKER_IMAGE:auth-service
-    "
+      # Créer un dossier temporaire sur le serveur pour recevoir les artifacts
+      ssh -o StrictHostKeyChecking=no $STAGING_USER@$STAGING_SERVER "mkdir -p /var/www/immo360-backend/tmp_deploy"
+      
+      # Copier les artifacts buildés
+      scp -r api-gateway/dist $STAGING_USER@$STAGING_SERVER:/var/www/immo360-backend/tmp_deploy/api-gateway
+      scp -r auth-service/dist $STAGING_USER@$STAGING_SERVER:/var/www/immo360-backend/tmp_deploy/auth-service
+
+      # Déplacer les builds dans le dossier final et redémarrer pm2
+      ssh -o StrictHostKeyChecking=no $STAGING_USER@$STAGING_SERVER "
+        mv /var/www/immo360-backend/tmp_deploy/api-gateway/* /var/www/immo360-backend/api-gateway/
+        mv /var/www/immo360-backend/tmp_deploy/auth-service/* /var/www/immo360-backend/auth-service/
+        rm -rf /var/www/immo360-backend/tmp_deploy
+        pm2 restart api-gateway
+        pm2 restart auth-service
+        echo 'Déploiement staging terminé avec succès !'
+      "
   environment:
     name: staging
     url: https://staging-api.immo360.com
