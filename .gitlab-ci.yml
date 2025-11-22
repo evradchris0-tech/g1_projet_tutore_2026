@@ -1,342 +1,168 @@
-# ==================== VARIABLES GLOBALES ====================
+# ==================== CACHE GLOBAL ====================
+.cache_global: &cache_global
+  key:
+    files:
+      - api-gateway/package-lock.json
+      - auth-service/package-lock.json
+  paths:
+    - .npm
+  policy: pull-push
+
+# ==================== DEFAULT RUNNER ====================
+default:
+  tags:
+    - backend
+  image: node:20-alpine
+  cache:
+    <<: *cache_global
+
+# ==================== VARIABLES ====================
 variables:
   NODE_ENV: test
   PORT_AUTH: "3001"
   PORT_GATEWAY: "3000"
   JWT_SECRET: test_jwt_secret_for_ci
-  NPM_CONFIG_CACHE: "$CI_PROJECT_DIR/.npm"
-  
-# ==================== WORKFLOW ====================
-workflow:
-  rules:
-    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
-    - if: $CI_COMMIT_BRANCH == "develop"
-    - if: $CI_COMMIT_BRANCH == "main"
-    - if: $CI_COMMIT_TAG
-
-# ==================== CACHE STRATEGIES ====================
-.cache_npm: &cache_npm
-  key:
-    files:
-      - "**/package-lock.json"
-  paths:
-    - .npm
-  policy: pull-push
-
-# ==================== TEMPLATES ====================
-.node_template: &node_template
-  image: node:20-alpine
-  tags:
-    - backend
-  before_script:
-    - npm config set cache $NPM_CONFIG_CACHE --global
-
-.service_template: &service_template
-  <<: *node_template
-  parallel:
-    matrix:
-      - SERVICE: ["api-gateway", "auth-service"]
-  cache:
-    <<: *cache_npm
 
 # ==================== STAGES ====================
 stages:
   - install
-  - quality
-  - security
+  - lint
   - test
   - build
-  - deploy
+  - deploy_staging
 
 # ==================== INSTALL ====================
-install:
-  <<: *service_template
+install_api_gateway:
   stage: install
   script:
-    - cd $SERVICE
-    - npm ci --prefer-offline --no-audit --cache $NPM_CONFIG_CACHE
-
-# ==================== QUALITY ====================
-lint:
-  <<: *service_template
-  stage: quality
-  needs:
-    - install
-  script:
-    - cd $SERVICE
-    - npm ci --prefer-offline --no-audit --cache $NPM_CONFIG_CACHE
-    - npm run lint
-  allow_failure: false
-
-format_check:
-  <<: *service_template
-  stage: quality
-  needs:
-    - install
-  script:
-    - cd $SERVICE
-    - npm ci --prefer-offline --no-audit --cache $NPM_CONFIG_CACHE
-    - npm run format:check || echo "Pas de script format:check"
-  allow_failure: true
-
-# ==================== SECURITY ====================
-dependency_scan:
-  <<: *service_template
-  stage: security
-  needs:
-    - install
-  script:
-    - cd $SERVICE
-    - npm ci --prefer-offline --no-audit --cache $NPM_CONFIG_CACHE
-    - npm audit --audit-level=moderate || true
-  allow_failure: true
-
-secrets_detection:
-  stage: security
-  image: alpine:latest
-  script:
-    - apk add --no-cache git
-    - git ls-files | grep -v "node_modules\|.npm" | xargs grep -iE "(password|secret|key|token)\s*[=:]" || true
-  allow_failure: true
-  needs: []
-
-# ==================== TEST ====================
-test:
-  <<: *service_template
-  stage: test
-  needs:
-    - install
-  script:
-    - cd $SERVICE
-    - npm ci --prefer-offline --no-audit --cache $NPM_CONFIG_CACHE
-    - npm run test:cov
-  coverage: '/All files[^|]*\|[^|]*\s+([\d\.]+)/'
+    - cd api-gateway && npm ci --prefer-offline --no-audit
+  cache:
+    <<: *cache_global
   artifacts:
     paths:
-      - $SERVICE/coverage/
+      - api-gateway/node_modules
+    expire_in: 1h
+
+install_auth_service:
+  stage: install
+  script:
+    - cd auth-service && npm ci --prefer-offline --no-audit
+  cache:
+    <<: *cache_global
+  artifacts:
+    paths:
+      - auth-service/node_modules
+    expire_in: 1h
+
+# ==================== LINT ====================
+lint_api_gateway:
+  stage: lint
+  dependencies:
+    - install_api_gateway
+  script:
+    - cd api-gateway
+    - npm run lint
+
+lint_auth_service:
+  stage: lint
+  dependencies:
+    - install_auth_service
+  script:
+    - cd auth-service
+    - npm run lint
+
+# ==================== TEST ====================
+test_api_gateway:
+  stage: test
+  dependencies:
+    - install_api_gateway
+  script:
+    - cd api-gateway
+    - npm run test:cov
+  artifacts:
+    paths:
+      - api-gateway/coverage/cobertura-coverage.xml
+    expire_in: 7d
     reports:
       coverage_report:
         coverage_format: cobertura
-        path: $SERVICE/coverage/cobertura-coverage.xml
-    expire_in: 7d
-    when: always
+        path: api-gateway/coverage/cobertura-coverage.xml
 
-# ==================== BUILD ====================
-build:
-  <<: *service_template
-  stage: build
-  needs:
-    - job: install
-    - job: test
-      artifacts: false
-    - job: lint
-      artifacts: false
+test_auth_service:
+  stage: test
+  dependencies:
+    - install_auth_service
   script:
-    - cd $SERVICE
-    - npm ci --prefer-offline --no-audit --cache $NPM_CONFIG_CACHE
-    - npm run build
-    - echo "Build version $(node -p "require('./package.json').version")"
+    - cd auth-service
+    - npm run test:cov
   artifacts:
     paths:
-      - $SERVICE/dist/
-      - $SERVICE/package.json
-      - $SERVICE/package-lock.json
+      - auth-service/coverage/cobertura-coverage.xml
     expire_in: 7d
-  only:
-    - develop
-    - main
-    - tags
+    reports:
+      coverage_report:
+        coverage_format: cobertura
+        path: auth-service/coverage/cobertura-coverage.xml
+
+# ==================== BUILD ====================
+build_api_gateway:
+  stage: build
+  dependencies:
+    - install_api_gateway
+  script:
+    - cd api-gateway && npm run build
+  artifacts:
+    paths:
+      - api-gateway/dist/
+    expire_in: 1d
+
+build_auth_service:
+  stage: build
+  dependencies:
+    - install_auth_service
+  script:
+    - cd auth-service && npm run build
+  artifacts:
+    paths:
+      - auth-service/dist/
+    expire_in: 1d
 
 # ==================== DEPLOY STAGING ====================
-.deploy_template: &deploy_template
-  stage: deploy
-  image: alpine:latest
+deploy_staging:
+  stage: deploy_staging
+  tags:
+    - backend
+  image: registry.gitlab.com/g1_projet_tutore_2026/g1_projet_tutore_2026:api-gateway
+  dependencies:
+    - build_api_gateway
+    - build_auth_service
   before_script:
-    - apk add --no-cache openssh-client rsync
+    - apk add --no-cache openssh-client
     - eval $(ssh-agent -s)
     - echo "$SSH_PRIVATE_KEY" | tr -d '\r' | ssh-add -
-    - mkdir -p ~/.ssh && chmod 700 ~/.ssh
+    - mkdir -p ~/.ssh
+    - chmod 700 ~/.ssh
     - ssh-keyscan -H $STAGING_SERVER >> ~/.ssh/known_hosts
-    - chmod 644 ~/.ssh/known_hosts
+  script: |
+      # Créer un dossier temporaire sur le serveur pour recevoir les artifacts
+      ssh -o StrictHostKeyChecking=no $STAGING_USER@$STAGING_SERVER "mkdir -p /var/www/immo360-backend/tmp_deploy"
+      
+      # Copier les artifacts buildés
+      scp -r api-gateway/dist $STAGING_USER@$STAGING_SERVER:/var/www/immo360-backend/tmp_deploy/api-gateway
+      scp -r auth-service/dist $STAGING_USER@$STAGING_SERVER:/var/www/immo360-backend/tmp_deploy/auth-service
 
-deploy_staging:
-  <<: *deploy_template
-  needs:
-    - job: build
-      artifacts: true
-  script:
-    - |
-      # Fonction de déploiement pour un service
-      deploy_service() {
-        local service=$1
-        echo "🚀 Déploiement de $service..."
-        
-        # Créer la structure de dossiers sur le serveur
-        ssh $STAGING_USER@$STAGING_SERVER "mkdir -p /var/www/immo360-backend/$service/{dist,logs}"
-        
-        # Copier les fichiers buildés avec rsync (plus efficace que scp)
-        rsync -avz --delete \
-          $service/dist/ \
-          $STAGING_USER@$STAGING_SERVER:/var/www/immo360-backend/$service/dist/
-        
-        # Copier package.json et package-lock.json
-        rsync -avz \
-          $service/package*.json \
-          $STAGING_USER@$STAGING_SERVER:/var/www/immo360-backend/$service/
-        
-        echo "✅ $service déployé avec succès"
-      }
-      
-      # Déployer les deux services
-      deploy_service "api-gateway"
-      deploy_service "auth-service"
-      
-      # Installer les dépendances de production et redémarrer sur le serveur
-      ssh $STAGING_USER@$STAGING_SERVER "
-        echo '📦 Installation des dépendances de production...'
-        
-        cd /var/www/immo360-backend/api-gateway
-        npm ci --only=production --prefer-offline
-        
-        cd /var/www/immo360-backend/auth-service
-        npm ci --only=production --prefer-offline
-        
-        echo '🔄 Redémarrage des services...'
-        pm2 restart api-gateway --update-env || pm2 start dist/main.js --name api-gateway
-        pm2 restart auth-service --update-env || pm2 start dist/main.js --name auth-service
-        
-        pm2 save
-        
-        echo '✨ Déploiement staging terminé avec succès !'
+      # Déplacer les builds dans le dossier final et redémarrer pm2
+      ssh -o StrictHostKeyChecking=no $STAGING_USER@$STAGING_SERVER "
+        mv /var/www/immo360-backend/tmp_deploy/api-gateway/* /var/www/immo360-backend/api-gateway/
+        mv /var/www/immo360-backend/tmp_deploy/auth-service/* /var/www/immo360-backend/auth-service/
+        rm -rf /var/www/immo360-backend/tmp_deploy
+        pm2 restart api-gateway
+        pm2 restart auth-service
+        echo 'Déploiement staging terminé avec succès !'
       "
   environment:
     name: staging
     url: https://staging-api.immo360.com
-    deployment_tier: staging
-    on_stop: stop_staging
   only:
     - develop
   when: manual
-
-stop_staging:
-  stage: deploy
-  image: alpine:latest
-  script:
-    - echo "Arrêt de l'environnement staging"
-  environment:
-    name: staging
-    action: stop
-  when: manual
-  only:
-    - develop
-
-# ==================== DEPLOY PRODUCTION ====================
-deploy_production:
-  <<: *deploy_template
-  needs:
-    - job: build
-      artifacts: true
-  script:
-    - |
-      deploy_service() {
-        local service=$1
-        echo "🚀 Déploiement PRODUCTION de $service..."
-        
-        ssh $PROD_USER@$PROD_SERVER "mkdir -p /var/www/immo360-backend/$service/{dist,logs,backup}"
-        
-        # Backup de l'ancienne version
-        ssh $PROD_USER@$PROD_SERVER "
-          if [ -d /var/www/immo360-backend/$service/dist ]; then
-            cp -r /var/www/immo360-backend/$service/dist /var/www/immo360-backend/$service/backup/dist_\$(date +%Y%m%d_%H%M%S)
-            echo '💾 Backup créé'
-          fi
-        "
-        
-        rsync -avz --delete \
-          $service/dist/ \
-          $PROD_USER@$PROD_SERVER:/var/www/immo360-backend/$service/dist/
-        
-        rsync -avz \
-          $service/package*.json \
-          $PROD_USER@$PROD_SERVER:/var/www/immo360-backend/$service/
-        
-        echo "✅ $service déployé avec succès"
-      }
-      
-      deploy_service "api-gateway"
-      deploy_service "auth-service"
-      
-      ssh $PROD_USER@$PROD_SERVER "
-        cd /var/www/immo360-backend/api-gateway && npm ci --only=production
-        cd /var/www/immo360-backend/auth-service && npm ci --only=production
-        
-        pm2 restart api-gateway --update-env
-        pm2 restart auth-service --update-env
-        pm2 save
-        
-        echo '✨ Déploiement PRODUCTION terminé !'
-      "
-  environment:
-    name: production
-    url: https://api.immo360.com
-    deployment_tier: production
-  only:
-    - main
-    - tags
-  when: manual
-
-# ==================== ROLLBACK ====================
-rollback_staging:
-  stage: deploy
-  image: alpine:latest
-  before_script:
-    - apk add --no-cache openssh-client
-    - eval $(ssh-agent -s)
-    - echo "$SSH_PRIVATE_KEY" | tr -d '\r' | ssh-add -
-    - mkdir -p ~/.ssh && chmod 700 ~/.ssh
-    - ssh-keyscan -H $STAGING_SERVER >> ~/.ssh/known_hosts
-  script:
-    - |
-      ssh $STAGING_USER@$STAGING_SERVER "
-        pm2 restart api-gateway auth-service
-        echo '⏮️  Rollback effectué - Services redémarrés'
-      "
-  when: manual
-  only:
-    - develop
-
-rollback_production:
-  stage: deploy
-  image: alpine:latest
-  before_script:
-    - apk add --no-cache openssh-client
-    - eval $(ssh-agent -s)
-    - echo "$SSH_PRIVATE_KEY" | tr -d '\r' | ssh-add -
-    - mkdir -p ~/.ssh && chmod 700 ~/.ssh
-    - ssh-keyscan -H $PROD_SERVER >> ~/.ssh/known_hosts
-  script:
-    - |
-      ssh $PROD_USER@$PROD_SERVER "
-        # Restaurer le dernier backup
-        cd /var/www/immo360-backend/api-gateway
-        LAST_BACKUP=\$(ls -t backup/ | head -1)
-        if [ -n \"\$LAST_BACKUP\" ]; then
-          rm -rf dist
-          cp -r backup/\$LAST_BACKUP dist
-          echo '💾 Backup restauré: \$LAST_BACKUP'
-        fi
-        
-        cd /var/www/immo360-backend/auth-service
-        LAST_BACKUP=\$(ls -t backup/ | head -1)
-        if [ -n \"\$LAST_BACKUP\" ]; then
-          rm -rf dist
-          cp -r backup/\$LAST_BACKUP dist
-          echo '💾 Backup restauré: \$LAST_BACKUP'
-        fi
-        
-        pm2 restart api-gateway auth-service
-        echo '⏮️  Rollback PRODUCTION effectué'
-      "
-  when: manual
-  only:
-    - main
