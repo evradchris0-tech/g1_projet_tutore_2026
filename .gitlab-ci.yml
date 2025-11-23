@@ -84,19 +84,19 @@ unit_tests:
     <<: *cache_config
     policy: pull
 
-#integration_tests:
- # stage: test
-  #before_script:
-   # - npm ci --prefer-offline --no-audit
-  #script:
-   # - echo "🔗 Exécution des tests d'intégration..."
-    #- npm run test:integration
-  #allow_failure: true
-  #cache:
-   # <<: *cache_config
-    #policy: pull
+integration_tests:
+  stage: test
+  before_script:
+    - npm ci --prefer-offline --no-audit
+  script:
+    - echo "🔗 Exécution des tests d'intégration..."
+    - npm run test:integration
+  allow_failure: true
+  cache:
+    <<: *cache_config
+    policy: pull
 
-# ==================== STAGE: BUILD Stage ====================
+# ==================== STAGE: BUILD ====================
 build_app:
   stage: build
   before_script:
@@ -158,7 +158,7 @@ deploy_production:
     - echo "✅ Déploiement en production terminé!"
   environment:
     name: production
-    url: https://votre-site.netlify.app
+    url: https://g1-projet-tutore-2026.netlify.app
   only:
     - main
   when: manual
@@ -173,7 +173,7 @@ deploy_staging:
     - echo "✅ Déploiement en staging terminé!"
   environment:
     name: staging
-    url: https://staging--votre-site.netlify.app
+    url: https://staging--g1-projet-tutore-2026.netlify.app
   only:
     - develop
   when: on_success
@@ -188,7 +188,7 @@ deploy_preview:
     - echo "✅ Preview déployée!"
   environment:
     name: preview/mr-$CI_MERGE_REQUEST_IID
-    url: https://mr-$CI_MERGE_REQUEST_IID--votre-site.netlify.app
+    url: https://mr-$CI_MERGE_REQUEST_IID--g1-projet-tutore-2026.netlify.app
     on_stop: cleanup_preview
     auto_stop_in: 1 week
   only:
@@ -209,7 +209,7 @@ cleanup_preview:
   only:
     - merge_requests
 
-# ==================== RÈGLES ADDITIONNELLES //////====================
+# ==================== RÈGLES ADDITIONNELLES ====================
 workflow:
   rules:
     - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
