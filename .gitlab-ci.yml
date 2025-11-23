@@ -96,7 +96,7 @@ unit_tests:
    # <<: *cache_config
     #policy: pull
 
-# ==================== STAGE: BUILD ====================
+# ==================== STAGE: BUILD Stage build====================
 build_app:
   stage: build
   before_script:
