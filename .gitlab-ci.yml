@@ -4,18 +4,13 @@
 
 # ==================== VARIABLES GLOBALES ====================
 variables:
-  # Configuration Node.js
   NODE_VERSION: "20"
   NPM_CONFIG_CACHE: "$CI_PROJECT_DIR/.npm"
   NPM_CONFIG_PROGRESS: "false"
-  
-  # Configuration de build
   VITE_API_BASE_URL: "https://immo360-api-gateway.onrender.com/api"
   CI: "true"
-  
-  # Configuration Netlify
-  NETLIFY_SITE_ID: "$NETLIFY_SITE_ID"  # À définir dans les variables CI/CD
-  NETLIFY_AUTH_TOKEN: "$NETLIFY_AUTH_TOKEN"  # À définir dans les variables CI/CD
+  NETLIFY_SITE_ID: "$NETLIFY_SITE_ID"
+  NETLIFY_AUTH_TOKEN: "$NETLIFY_AUTH_TOKEN"
 
 # ==================== CACHE GLOBAL ====================
 .cache_template: &cache_config
@@ -37,34 +32,18 @@ default:
 
 # ==================== STAGES ====================
 stages:
-  - setup
   - quality
   - test
   - build
   - deploy
 
-# ==================== STAGE: SETUP ====================
-install_dependencies:
-  stage: setup
-  script:
-    - echo "📦 Installation des dépendances..."
-    - npm ci --prefer-offline --no-audit
-    - echo "✅ Dépendances installées avec succès"
-  artifacts:
-    paths:
-      - node_modules/
-    expire_in: 1h
-  cache:
-    <<: *cache_config
-
 # ==================== STAGE: QUALITY ====================
 lint:
   stage: quality
-  dependencies:
-    - install_dependencies
   before_script:
-    - echo "🔍 Vérification de la qualité du code..."
+    - npm ci --prefer-offline --no-audit
   script:
+    - echo "🔍 Vérification de la qualité du code..."
     - npm run lint
   allow_failure: false
   cache:
@@ -73,8 +52,8 @@ lint:
 
 code_format_check:
   stage: quality
-  dependencies:
-    - install_dependencies
+  before_script:
+    - npm ci --prefer-offline --no-audit
   script:
     - echo "📝 Vérification du formatage du code..."
     - npm run format:check
@@ -86,11 +65,10 @@ code_format_check:
 # ==================== STAGE: TEST ====================
 unit_tests:
   stage: test
-  dependencies:
-    - install_dependencies
   before_script:
-    - echo "🧪 Exécution des tests unitaires..."
+    - npm ci --prefer-offline --no-audit
   script:
+    - echo "🧪 Exécution des tests unitaires..."
     - npm run test:unit
   coverage: '/All files[^|]*\|[^|]*\s+([\d\.]+)/'
   artifacts:
@@ -108,8 +86,8 @@ unit_tests:
 
 integration_tests:
   stage: test
-  dependencies:
-    - install_dependencies
+  before_script:
+    - npm ci --prefer-offline --no-audit
   script:
     - echo "🔗 Exécution des tests d'intégration..."
     - npm run test:integration
@@ -121,9 +99,8 @@ integration_tests:
 # ==================== STAGE: BUILD ====================
 build_app:
   stage: build
-  dependencies:
-    - install_dependencies
   before_script:
+    - npm ci --prefer-offline --no-audit
     - echo "🏗️ Configuration de l'environnement de build..."
     - echo "VITE_API_BASE_URL=$VITE_API_BASE_URL" > .env.production
   script:
@@ -143,12 +120,10 @@ build_app:
     - develop
     - /^release\/.*$/
 
-# Build de preview pour les merge requests
 build_preview:
   stage: build
-  dependencies:
-    - install_dependencies
   before_script:
+    - npm ci --prefer-offline --no-audit
     - echo "VITE_API_BASE_URL=$VITE_API_BASE_URL" > .env.production
   script:
     - npm run build
@@ -166,8 +141,6 @@ build_preview:
 .deploy_template: &deploy_config
   stage: deploy
   image: node:${NODE_VERSION}-alpine
-  dependencies:
-    - build_app
   before_script:
     - echo "🚀 Préparation du déploiement..."
     - npm install -g netlify-cli
@@ -175,9 +148,10 @@ build_preview:
     <<: *cache_config
     policy: pull
 
-# Déploiement en production
 deploy_production:
   <<: *deploy_config
+  dependencies:
+    - build_app
   script:
     - echo "🌐 Déploiement en production sur Netlify..."
     - netlify deploy --prod --dir=dist --site=$NETLIFY_SITE_ID --auth=$NETLIFY_AUTH_TOKEN
@@ -189,9 +163,10 @@ deploy_production:
     - main
   when: manual
 
-# Déploiement en staging
 deploy_staging:
   <<: *deploy_config
+  dependencies:
+    - build_app
   script:
     - echo "🧪 Déploiement en staging sur Netlify..."
     - netlify deploy --dir=dist --site=$NETLIFY_SITE_ID --auth=$NETLIFY_AUTH_TOKEN
@@ -203,7 +178,6 @@ deploy_staging:
     - develop
   when: on_success
 
-# Déploiement de preview pour les merge requests
 deploy_preview:
   <<: *deploy_config
   dependencies:
@@ -220,7 +194,6 @@ deploy_preview:
   only:
     - merge_requests
 
-# Nettoyage des previews
 cleanup_preview:
   stage: deploy
   image: node:${NODE_VERSION}-alpine
@@ -237,7 +210,6 @@ cleanup_preview:
     - merge_requests
 
 # ==================== RÈGLES ADDITIONNELLES ====================
-# N'exécuter le pipeline que pour certains changements
 workflow:
   rules:
     - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
