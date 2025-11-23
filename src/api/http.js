@@ -25,7 +25,7 @@
 //   const token = localStorage.getItem('token');
 //   const publicEndpoints = ['/auth/register', '/auth/login'];
 //   const isPublicEndpoint = publicEndpoints.some(endpoint => config.url === endpoint);
-  
+
 //   if (token && !isPublicEndpoint) {
 //     config.headers.Authorization = `Bearer ${token}`;
 //   }
@@ -38,27 +38,24 @@
 // //   // getProfile: () => api.get('/auth/profile'),
 // // };
 
-
-
 // // export default api;
 
-
-import axios from 'axios';
+import axios from 'axios'
 
 export const api = axios.create({
   baseURL: import.meta.env.VITE_API_BASE_URL || '/api',
   headers: {
     'Content-Type': 'application/json',
   },
-});
+})
 
 api.interceptors.request.use((config) => {
-  const token = localStorage.getItem('token');
-  const publicEndpoints = ['/auth/register', '/auth/login'];
-  const isPublicEndpoint = publicEndpoints.some(endpoint => config.url === endpoint);
-  
+  const token = localStorage.getItem('token')
+  const publicEndpoints = ['/auth/register', '/auth/login']
+  const isPublicEndpoint = publicEndpoints.some((endpoint) => config.url === endpoint)
+
   if (token && !isPublicEndpoint) {
-    config.headers.Authorization = `Bearer ${token}`;
+    config.headers.Authorization = `Bearer ${token}`
   }
-  return config;
-});
+  return config
+})

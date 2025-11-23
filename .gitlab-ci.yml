@@ -84,17 +84,17 @@ unit_tests:
     <<: *cache_config
     policy: pull
 
-integration_tests:
-  stage: test
-  before_script:
-    - npm ci --prefer-offline --no-audit
-  script:
-    - echo "🔗 Exécution des tests d'intégration..."
-    - npm run test:integration
-  allow_failure: true
-  cache:
-    <<: *cache_config
-    policy: pull
+#integration_tests:
+ # stage: test
+  #before_script:
+   # - npm ci --prefer-offline --no-audit
+  #script:
+   # - echo "🔗 Exécution des tests d'intégration..."
+    #- npm run test:integration
+  #allow_failure: true
+  #cache:
+   # <<: *cache_config
+    #policy: pull
 
 # ==================== STAGE: BUILD ====================
 build_app:

@@ -19,7 +19,7 @@ function Login() {
     e.preventDefault()
     setLoading(true)
     setError('')
-    
+
     try {
       const response = await login(username, password)
       localStorage.setItem('isAuthenticated', 'true')
@@ -46,7 +46,7 @@ function Login() {
           <div className="cyber-square cyber-square-6"></div>
         </div>
       </div>
-      
+
       <div className="login-content">
         <div className="logo-section">
           <img src={logo} alt="IMMO360 CAMEROUN" className="logo-image" />
@@ -57,7 +57,10 @@ function Login() {
           <p className="login-subtitle">Gestions d&apos;équipements de IUSJ</p>
 
           {error && (
-            <div className="error-message" style={{color: '#ff4444', marginBottom: '1rem', textAlign: 'center'}}>
+            <div
+              className="error-message"
+              style={{ color: '#ff4444', marginBottom: '1rem', textAlign: 'center' }}
+            >
               {error}
             </div>
           )}
@@ -103,18 +106,18 @@ function Login() {
           </form>
 
           <div className="login-links">
-            <button 
-              type="button" 
+            <button
+              type="button"
               className="link-button forgot-password"
               onClick={() => navigate('/forgot-password')}
             >
               Mot de passe oublié ?
             </button>
-            
+
             <div className="signup-section">
               <span>Pas encore de compte ? </span>
-              <button 
-                type="button" 
+              <button
+                type="button"
                 className="link-button signup-link"
                 onClick={() => navigate('/register')}
               >
@@ -129,4 +132,3 @@ function Login() {
 }
 
 export default Login
-

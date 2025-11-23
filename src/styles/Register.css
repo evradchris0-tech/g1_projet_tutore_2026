@@ -90,7 +90,8 @@
 }
 
 @keyframes float {
-  0%, 100% {
+  0%,
+  100% {
     transform: translateY(0px) rotate(0deg);
   }
   50% {
@@ -261,11 +262,11 @@
     padding: 2rem;
     margin: 1rem;
   }
-  
+
   .form-row {
     grid-template-columns: 1fr;
   }
-  
+
   .register-title {
     font-size: 1.5rem;
   }

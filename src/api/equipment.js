@@ -6,7 +6,7 @@ export async function createEquipment(equipmentData) {
     const response = await api.post('/equipments', equipmentData)
     return response.data
   } catch (error) {
-    console.error('Erreur lors de la création de l\'équipement:', error)
+    console.error("Erreur lors de la création de l'équipement:", error)
     throw error
   }
 }
@@ -28,7 +28,7 @@ export async function updateEquipment(equipmentId, equipmentData) {
     const response = await api.put(`/equipments/${equipmentId}`, equipmentData)
     return response.data
   } catch (error) {
-    console.error('Erreur lors de la mise à jour de l\'équipement:', error)
+    console.error("Erreur lors de la mise à jour de l'équipement:", error)
     throw error
   }
 }
@@ -39,7 +39,7 @@ export async function deleteEquipment(equipmentId) {
     const response = await api.delete(`/equipments/${equipmentId}`)
     return response.data
   } catch (error) {
-    console.error('Erreur lors de la suppression de l\'équipement:', error)
+    console.error("Erreur lors de la suppression de l'équipement:", error)
     throw error
   }
 }
@@ -50,7 +50,7 @@ export async function getEquipmentById(equipmentId) {
     const response = await api.get(`/equipments/${equipmentId}`)
     return response.data
   } catch (error) {
-    console.error('Erreur lors de la récupération de l\'équipement:', error)
+    console.error("Erreur lors de la récupération de l'équipement:", error)
     throw error
   }
 }
@@ -59,7 +59,7 @@ export async function getEquipmentById(equipmentId) {
 export async function searchEquipmentsByName(name) {
   try {
     const response = await api.get(`/equipments/search`, {
-      params: { name }
+      params: { name },
     })
     return response.data
   } catch (error) {
