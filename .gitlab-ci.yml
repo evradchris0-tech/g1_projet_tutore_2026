@@ -87,19 +87,26 @@ install_dependencies:
 lint:
   stage: quality
   <<: *node_job
-  dependencies:
-    - install_dependencies
+  needs: 
+    - job: install_dependencies
+      artifacts: true
   script:
     - echo "🔍 Vérification de la qualité du code..."
     - npm run lint
     - echo "✅ Lint réussi"
   allow_failure: false
+  retry:
+    max: 1
+    when:
+      - runner_system_failure
+      - stuck_or_timeout_failure
 
 format_check:
   stage: quality
   <<: *node_job
-  dependencies:
-    - install_dependencies
+  needs: 
+    - job: install_dependencies
+      artifacts: true
   script:
     - echo "📝 Vérification du formatage du code..."
     - npm run format:check
@@ -109,8 +116,9 @@ format_check:
 type_check:
   stage: quality
   <<: *node_job
-  dependencies:
-    - install_dependencies
+  needs: 
+    - job: install_dependencies
+      artifacts: true
   script:
     - echo "🔤 Vérification des types TypeScript..."
     - npm run type-check || echo "⚠️ Type check non configuré, ignoré"
@@ -120,19 +128,24 @@ type_check:
 security_audit:
   stage: security
   <<: *node_job
-  dependencies:
-    - install_dependencies
+  needs: 
+    - job: install_dependencies
+      artifacts: true
   script:
     - echo "🔒 Audit de sécurité des dépendances..."
     - npm audit --audit-level=moderate || true
     - echo "✅ Audit de sécurité terminé"
   allow_failure: true
+  retry:
+    max: 1
+    when: runner_system_failure
 
 dependency_check:
   stage: security
   <<: *node_job
-  dependencies:
-    - install_dependencies
+  needs: 
+    - job: install_dependencies
+      artifacts: true
   script:
     - echo "📊 Vérification des dépendances obsolètes..."
     - npm outdated || true
@@ -143,8 +156,9 @@ dependency_check:
 unit_tests:
   stage: test
   <<: *node_job
-  dependencies:
-    - install_dependencies
+  needs:
+    - job: install_dependencies
+      artifacts: true
   script:
     - echo "🧪 Exécution des tests unitaires..."
     - npm run test:unit
@@ -160,16 +174,25 @@ unit_tests:
         coverage_format: cobertura
         path: coverage/cobertura-coverage.xml
     expire_in: 7d
+  retry:
+    max: 2
+    when:
+      - runner_system_failure
+      - stuck_or_timeout_failure
 
 integration_tests:
   stage: test
   <<: *node_job
-  dependencies:
-    - install_dependencies
+  needs:
+    - job: install_dependencies
+      artifacts: true
   script:
     - echo "🔗 Exécution des tests d'intégration..."
     - npm run test:integration || echo "⚠️ Tests d'intégration non configurés"
   allow_failure: true
+  retry:
+    max: 1
+    when: runner_system_failure
 
 # ==================== STAGE: BUILD ====================
 build_production:
@@ -246,15 +269,22 @@ build_preview:
 .deploy_render: &deploy_render
   stage: deploy
   image: curlimages/curl:latest
+  needs: []
   dependencies: []
   cache: {}
   before_script:
     - echo "🚀 Préparation du déploiement sur Render..."
+  retry:
+    max: 2
+    when:
+      - api_failure
+      - runner_system_failure
 
 deploy_production:
   <<: *deploy_render
-  dependencies:
-    - build_production
+  needs:
+    - job: build_production
+      artifacts: false
   script:
     - |
       echo "🌐 Déploiement en PRODUCTION sur Render..."
@@ -285,8 +315,9 @@ deploy_production:
 
 deploy_staging:
   <<: *deploy_render
-  dependencies:
-    - build_staging
+  needs:
+    - job: build_staging
+      artifacts: false
   script:
     - |
       echo "🧪 Déploiement en STAGING sur Render..."
@@ -316,8 +347,9 @@ deploy_staging:
 
 deploy_preview:
   <<: *deploy_render
-  dependencies:
-    - build_preview
+  needs:
+    - job: build_preview
+      artifacts: false
   script:
     - |
       echo "👀 Déploiement de la PREVIEW pour MR !${CI_MERGE_REQUEST_IID}..."
@@ -413,7 +445,7 @@ notify_failure:
     - merge_requests
 
 # ==================== WORKFLOW RULES ====================
-workflow:node
+workflow:
   rules:
     # Merge Requests
     - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
