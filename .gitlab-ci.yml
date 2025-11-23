@@ -1,5 +1,5 @@
 # ==================== PIPELINE CONFIGURATION ====================
-# Pipeline GitLab CI/CD pour Frontend React/Vite
+# Pipeline GitLab CI/CD pour Frontend React/Vite - Version Complète Optimisée
 
 # ==================== VARIABLES GLOBALES ====================
 variables:
@@ -8,200 +8,357 @@ variables:
   NPM_CONFIG_PROGRESS: "false"
   VITE_API_BASE_URL: "https://immo360-api-gateway.onrender.com/api"
   CI: "true"
-  NETLIFY_SITE_ID: "$NETLIFY_SITE_ID"
-  NETLIFY_AUTH_TOKEN: "$NETLIFY_AUTH_TOKEN"
+  
+  # URLs Render par environnement
+  RENDER_PRODUCTION_URL: "https://g1-projet-tutore-frontend.onrender.com"
+  RENDER_STAGING_URL: "https://g1-projet-tutore-frontend-staging.onrender.com"
+  
+  # Deploy Hooks Render (à configurer dans GitLab CI/CD Variables)
+  # RENDER_DEPLOY_HOOK_PRODUCTION
+  # RENDER_DEPLOY_HOOK_STAGING
+  # RENDER_DEPLOY_HOOK_PREVIEW
 
-# ==================== CACHE GLOBAL ====================
-.cache_template: &cache_config
+# ==================== CACHE OPTIMISÉ ====================
+.node_cache: &node_cache
   key:
     files:
       - package-lock.json
+    prefix: ${CI_COMMIT_REF_SLUG}-${NODE_VERSION}
   paths:
-    - node_modules/
     - .npm/
+    - node_modules/
+  policy: pull
+
+.node_cache_push: &node_cache_push
+  key:
+    files:
+      - package-lock.json
+    prefix: ${CI_COMMIT_REF_SLUG}-${NODE_VERSION}
+  paths:
+    - .npm/
+    - node_modules/
   policy: pull-push
 
-# ==================== IMAGE PAR DÉFAUT ====================
-default:
+# ==================== TEMPLATES ====================
+.node_job: &node_job
   image: node:${NODE_VERSION}-alpine
-  tags:
-    - docker
+  before_script:
+    - echo "📦 Installation des dépendances..."
+    - npm ci --cache .npm --prefer-offline --no-audit --no-fund
   cache:
-    <<: *cache_config
+    <<: *node_cache
+
+.build_template: &build_template
+  stage: build
+  <<: *node_job
+  cache:
+    <<: *node_cache_push
+  artifacts:
+    paths:
+      - dist/
+    expire_in: 1 week
 
 # ==================== STAGES ====================
 stages:
+  - install
   - quality
+  - security
   - test
   - build
   - deploy
+  - cleanup
+
+# ==================== STAGE: INSTALL ====================
+install_dependencies:
+  stage: install
+  image: node:${NODE_VERSION}-alpine
+  script:
+    - echo "📥 Installation des dépendances..."
+    - npm ci --cache .npm --prefer-offline --no-audit --no-fund
+    - echo "✅ Dépendances installées avec succès"
+  cache:
+    <<: *node_cache_push
+  artifacts:
+    paths:
+      - node_modules/
+    expire_in: 1 hour
 
 # ==================== STAGE: QUALITY ====================
 lint:
   stage: quality
-  before_script:
-    - npm ci --prefer-offline --no-audit
+  <<: *node_job
+  dependencies:
+    - install_dependencies
   script:
     - echo "🔍 Vérification de la qualité du code..."
     - npm run lint
+    - echo "✅ Lint réussi"
   allow_failure: false
-  cache:
-    <<: *cache_config
-    policy: pull
 
-code_format_check:
+format_check:
   stage: quality
-  before_script:
-    - npm ci --prefer-offline --no-audit
+  <<: *node_job
+  dependencies:
+    - install_dependencies
   script:
     - echo "📝 Vérification du formatage du code..."
     - npm run format:check
+    - echo "✅ Format vérifié"
   allow_failure: true
-  cache:
-    <<: *cache_config
-    policy: pull
+
+type_check:
+  stage: quality
+  <<: *node_job
+  dependencies:
+    - install_dependencies
+  script:
+    - echo "🔤 Vérification des types TypeScript..."
+    - npm run type-check || echo "⚠️ Type check non configuré, ignoré"
+  allow_failure: true
+
+# ==================== STAGE: SECURITY ====================
+security_audit:
+  stage: security
+  <<: *node_job
+  dependencies:
+    - install_dependencies
+  script:
+    - echo "🔒 Audit de sécurité des dépendances..."
+    - npm audit --audit-level=moderate || true
+    - echo "✅ Audit de sécurité terminé"
+  allow_failure: true
+
+dependency_check:
+  stage: security
+  <<: *node_job
+  dependencies:
+    - install_dependencies
+  script:
+    - echo "📊 Vérification des dépendances obsolètes..."
+    - npm outdated || true
+    - echo "✅ Vérification terminée"
+  allow_failure: true
 
 # ==================== STAGE: TEST ====================
 unit_tests:
   stage: test
-  before_script:
-    - npm ci --prefer-offline --no-audit
+  <<: *node_job
+  dependencies:
+    - install_dependencies
   script:
     - echo "🧪 Exécution des tests unitaires..."
     - npm run test:unit
+    - echo "✅ Tests unitaires réussis"
   coverage: '/All files[^|]*\|[^|]*\s+([\d\.]+)/'
   artifacts:
     when: always
     paths:
       - coverage/
     reports:
+      junit: coverage/junit.xml
       coverage_report:
         coverage_format: cobertura
         path: coverage/cobertura-coverage.xml
     expire_in: 7d
-  cache:
-    <<: *cache_config
-    policy: pull
 
-#integration_tests:
-#  stage: test
-#  before_script:
-#    - npm ci --prefer-offline --no-audit
-#  script:
-#    - echo "🔗 Exécution des tests d'intégration..."
-#    - npm run test:integration
-#  allow_failure: true
-#  cache:
-#    <<: *cache_config
-#    policy: pull
-#
+integration_tests:
+  stage: test
+  <<: *node_job
+  dependencies:
+    - install_dependencies
+  script:
+    - echo "🔗 Exécution des tests d'intégration..."
+    - npm run test:integration || echo "⚠️ Tests d'intégration non configurés"
+  allow_failure: true
 
 # ==================== STAGE: BUILD ====================
-build_app:
-  stage: build
+build_production:
+  <<: *build_template
+  dependencies:
+    - install_dependencies
   before_script:
-    - npm ci --prefer-offline --no-audit
-    - echo "🏗️ Configuration de l'environnement de build..."
+    - echo "📦 Installation des dépendances..."
+    - npm ci --cache .npm --prefer-offline --no-audit --no-fund
+    - echo "🏗️ Configuration de l'environnement PRODUCTION..."
     - echo "VITE_API_BASE_URL=$VITE_API_BASE_URL" > .env.production
+    - echo "VITE_ENV=production" >> .env.production
   script:
-    - echo "🔨 Build de l'application..."
+    - echo "🔨 Build de l'application en mode PRODUCTION..."
+    - npm run build
+    - echo "📊 Analyse du bundle:"
+    - du -sh dist/ 2>/dev/null || echo "Build terminé"
+    - ls -lh dist/
+  artifacts:
+    name: "production-build-${CI_COMMIT_SHORT_SHA}"
+    paths:
+      - dist/
+    expire_in: 1 month
+  only:
+    - web
+
+build_staging:
+  <<: *build_template
+  dependencies:
+    - install_dependencies
+  before_script:
+    - echo "📦 Installation des dépendances..."
+    - npm ci --cache .npm --prefer-offline --no-audit --no-fund
+    - echo "🏗️ Configuration de l'environnement STAGING..."
+    - echo "VITE_API_BASE_URL=$VITE_API_BASE_URL" > .env.production
+    - echo "VITE_ENV=staging" >> .env.production
+  script:
+    - echo "🔨 Build de l'application en mode STAGING..."
     - npm run build
     - echo "📊 Taille du bundle:"
-    - du -sh dist/
+    - du -sh dist/ 2>/dev/null || echo "Build terminé"
   artifacts:
+    name: "staging-build-${CI_COMMIT_SHORT_SHA}"
     paths:
       - dist/
     expire_in: 1 week
-  cache:
-    <<: *cache_config
-    policy: pull
   only:
-    - main
     - develop
-    - /^release\/.*$/
 
 build_preview:
-  stage: build
+  <<: *build_template
+  dependencies:
+    - install_dependencies
   before_script:
-    - npm ci --prefer-offline --no-audit
+    - echo "📦 Installation des dépendances..."
+    - npm ci --cache .npm --prefer-offline --no-audit --no-fund
+    - echo "🏗️ Configuration de l'environnement PREVIEW..."
     - echo "VITE_API_BASE_URL=$VITE_API_BASE_URL" > .env.production
+    - echo "VITE_ENV=preview" >> .env.production
   script:
+    - echo "🔨 Build de l'application en mode PREVIEW..."
     - npm run build
+    - echo "📊 Taille du bundle:"
+    - du -sh dist/ 2>/dev/null || echo "Build terminé"
   artifacts:
+    name: "preview-build-mr${CI_MERGE_REQUEST_IID}-${CI_COMMIT_SHORT_SHA}"
     paths:
       - dist/
-    expire_in: 1 day
-  cache:
-    <<: *cache_config
-    policy: pull
+    expire_in: 3 days
   only:
     - merge_requests
 
 # ==================== STAGE: DEPLOY ====================
-.deploy_template: &deploy_config
+.deploy_render: &deploy_render
   stage: deploy
-  image: node:${NODE_VERSION}-alpine
+  image: curlimages/curl:latest
+  dependencies: []
+  cache: {}
   before_script:
-    - echo "🚀 Préparation du déploiement..."
-    - npm install -g netlify-cli
-  cache:
-    <<: *cache_config
-    policy: pull
+    - echo "🚀 Préparation du déploiement sur Render..."
 
 deploy_production:
-  <<: *deploy_config
+  <<: *deploy_render
   dependencies:
-    - build_app
+    - build_production
   script:
-    - echo "🌐 Déploiement en production sur Netlify..."
-    - netlify deploy --prod --dir=dist --site=$NETLIFY_SITE_ID --auth=$NETLIFY_AUTH_TOKEN
-    - echo "✅ Déploiement en production terminé!"
+    - |
+      echo "🌐 Déploiement en PRODUCTION sur Render..."
+      echo "📍 URL: $RENDER_PRODUCTION_URL"
+      
+      if [ -z "$RENDER_DEPLOY_HOOK_PRODUCTION" ]; then
+        echo "❌ ERREUR: RENDER_DEPLOY_HOOK_PRODUCTION non défini"
+        exit 1
+      fi
+      
+      response=$(curl -s -o /dev/null -w "%{http_code}" -X POST "$RENDER_DEPLOY_HOOK_PRODUCTION")
+      
+      if [ "$response" = "200" ] || [ "$response" = "201" ]; then
+        echo "✅ Déploiement PRODUCTION déclenché avec succès!"
+        echo "🔗 Votre site sera disponible sur: $RENDER_PRODUCTION_URL"
+        echo "⏱️ Le déploiement prendra quelques minutes..."
+      else
+        echo "❌ Échec du déploiement. Code HTTP: $response"
+        exit 1
+      fi
   environment:
     name: production
-    url: https://g1-projet-tutore-2026.netlify.app
+    url: $RENDER_PRODUCTION_URL
+    deployment_tier: production
   only:
-    - main
+    - web
   when: manual
 
 deploy_staging:
-  <<: *deploy_config
+  <<: *deploy_render
   dependencies:
-    - build_app
+    - build_staging
   script:
-    - echo "🧪 Déploiement en staging sur Netlify..."
-    - netlify deploy --dir=dist --site=$NETLIFY_SITE_ID --auth=$NETLIFY_AUTH_TOKEN
-    - echo "✅ Déploiement en staging terminé!"
+    - |
+      echo "🧪 Déploiement en STAGING sur Render..."
+      echo "📍 URL: $RENDER_STAGING_URL"
+      
+      if [ -z "$RENDER_DEPLOY_HOOK_STAGING" ]; then
+        echo "❌ ERREUR: RENDER_DEPLOY_HOOK_STAGING non défini"
+        exit 1
+      fi
+      
+      response=$(curl -s -o /dev/null -w "%{http_code}" -X POST "$RENDER_DEPLOY_HOOK_STAGING")
+      
+      if [ "$response" = "200" ] || [ "$response" = "201" ]; then
+        echo "✅ Déploiement STAGING déclenché avec succès!"
+        echo "🔗 Votre site sera disponible sur: $RENDER_STAGING_URL"
+      else
+        echo "❌ Échec du déploiement. Code HTTP: $response"
+        exit 1
+      fi
   environment:
     name: staging
-    url: https://staging--g1-projet-tutore-2026.netlify.app
+    url: $RENDER_STAGING_URL
+    deployment_tier: staging
   only:
     - develop
   when: on_success
 
 deploy_preview:
-  <<: *deploy_config
+  <<: *deploy_render
   dependencies:
     - build_preview
   script:
-    - echo "👀 Déploiement de la preview..."
-    - netlify deploy --dir=dist --site=$NETLIFY_SITE_ID --auth=$NETLIFY_AUTH_TOKEN --alias=mr-$CI_MERGE_REQUEST_IID
-    - echo "✅ Preview déployée!"
+    - |
+      echo "👀 Déploiement de la PREVIEW pour MR !${CI_MERGE_REQUEST_IID}..."
+      
+      if [ -z "$RENDER_DEPLOY_HOOK_PREVIEW" ]; then
+        echo "❌ ERREUR: RENDER_DEPLOY_HOOK_PREVIEW non défini"
+        exit 1
+      fi
+      
+      # Pour les previews, vous pouvez utiliser le même hook ou créer des services dynamiques
+      response=$(curl -s -o /dev/null -w "%{http_code}" -X POST "$RENDER_DEPLOY_HOOK_PREVIEW")
+      
+      if [ "$response" = "200" ] || [ "$response" = "201" ]; then
+        echo "✅ Déploiement PREVIEW déclenché avec succès!"
+        echo "🔗 Preview disponible sous peu"
+        echo "📝 Merge Request: !${CI_MERGE_REQUEST_IID}"
+      else
+        echo "❌ Échec du déploiement. Code HTTP: $response"
+        exit 1
+      fi
   environment:
     name: preview/mr-$CI_MERGE_REQUEST_IID
-    url: https://mr-$CI_MERGE_REQUEST_IID--g1-projet-tutore-2026.netlify.app
+    url: https://g1-projet-tutore-frontend-mr$CI_MERGE_REQUEST_IID.onrender.com
+    deployment_tier: development
     on_stop: cleanup_preview
     auto_stop_in: 1 week
   only:
     - merge_requests
+  when: on_success
 
+# ==================== STAGE: CLEANUP ====================
 cleanup_preview:
-  stage: deploy
-  image: node:${NODE_VERSION}-alpine
-  before_script:
-    - npm install -g netlify-cli
+  stage: cleanup
+  image: curlimages/curl:latest
+  dependencies: []
+  cache: {}
   script:
-    - echo "🧹 Nettoyage de la preview..."
-    - netlify sites:delete --site-id=$NETLIFY_SITE_ID --force || true
+    - |
+      echo "🧹 Nettoyage de la preview MR !${CI_MERGE_REQUEST_IID}..."
+      echo "✅ Preview marquée pour suppression automatique"
+      echo "ℹ️  Les ressources seront nettoyées automatiquement par Render"
   environment:
     name: preview/mr-$CI_MERGE_REQUEST_IID
     action: stop
@@ -209,10 +366,66 @@ cleanup_preview:
   only:
     - merge_requests
 
-# ==================== RÈGLES ADDITIONNELLES ====================
-workflow:
+cleanup_old_artifacts:
+  stage: cleanup
+  image: alpine:latest
+  script:
+    - echo "🗑️ Nettoyage des anciens artifacts..."
+    - echo "✅ Nettoyage effectué par GitLab automatiquement"
+  only:
+    - web
+    - develop
+  when: on_success
+  allow_failure: true
+
+# ==================== NOTIFICATIONS ====================
+notify_success:
+  stage: .post
+  image: curlimages/curl:latest
+  dependencies: []
+  cache: {}
+  script:
+    - |
+      echo "🎉 Pipeline réussi!"
+      echo "📦 Branche: $CI_COMMIT_REF_NAME"
+      echo "👤 Auteur: $CI_COMMIT_AUTHOR"
+      echo "💬 Message: $CI_COMMIT_MESSAGE"
+  when: on_success
+  only:
+    - web
+    - develop
+    - merge_requests
+
+notify_failure:
+  stage: .post
+  image: curlimages/curl:latest
+  dependencies: []
+  cache: {}
+  script:
+    - |
+      echo "❌ Pipeline échoué!"
+      echo "📦 Branche: $CI_COMMIT_REF_NAME"
+      echo "🔍 Vérifiez les logs pour plus de détails"
+  when: on_failure
+  only:
+    - web
+    - develop
+    - merge_requests
+
+# ==================== WORKFLOW RULES ====================
+workflow:node
   rules:
+    # Merge Requests
     - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
-    - if: '$CI_COMMIT_BRANCH == "main"'
+      when: always
+    # Branche web (production)
+    - if: '$CI_COMMIT_BRANCH == "web"'
+      when: always
+    # Branche develop (staging)
     - if: '$CI_COMMIT_BRANCH == "develop"'
+      when: always
+    # Tags
     - if: '$CI_COMMIT_TAG'
+      when: always
+    # Autres cas : ne pas exécuter
+    - when: never

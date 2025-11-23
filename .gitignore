@@ -26,3 +26,19 @@ dist-ssr
 
 # Local Netlify folder
 .netlify
+# Dependencies
+node_modules/
+.npm/
+
+# Build
+dist/
+dist-ssr/
+
+# Cache
+.cache/
+.vite/
+
+# Environment
+.env
+.env.local
+.env.production.local
