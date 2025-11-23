@@ -1,6 +1,5 @@
 # ==================== PIPELINE CONFIGURATION ====================
 # Pipeline GitLab CI/CD pour Frontend React/Vite
-# Déploiement sur Netlify
 
 # ==================== VARIABLES GLOBALES ====================
 variables:
