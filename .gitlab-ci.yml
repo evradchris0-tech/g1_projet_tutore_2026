@@ -26,7 +26,6 @@ variables:
     prefix: ${CI_COMMIT_REF_SLUG}-${NODE_VERSION}
   paths:
     - .npm/
-    - node_modules/
   policy: pull
 
 .node_cache_push: &node_cache_push
@@ -36,7 +35,6 @@ variables:
     prefix: ${CI_COMMIT_REF_SLUG}-${NODE_VERSION}
   paths:
     - .npm/
-    - node_modules/
   policy: pull-push
 
 # ==================== TEMPLATES ====================
@@ -83,7 +81,7 @@ install_dependencies:
       - node_modules/
     expire_in: 1 hour
 
-# ==================== STAGE: QUALITY ====================
+# ==================== STAGE: QUALITY POPPOP====================
 lint:
   stage: quality
   <<: *node_job
