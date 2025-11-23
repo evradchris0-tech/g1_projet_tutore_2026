@@ -8,6 +8,7 @@ async function bootstrap() {
   app.enableCors({
     origin: [
       'https://g1-projet-tutore-2026-aedc9c.gitlab.io', // ton front hébergé
+      'https://g1-projet-tutore-frontend.onrender.com', // front render
       'http://localhost:4200', // front local
     ],
     methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',

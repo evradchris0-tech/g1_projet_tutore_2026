@@ -6,6 +6,15 @@ import { BatimentService } from './batiment/batiment.service';
 import { BatimentModule } from './batiment/batiment.module';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { ConfigModule } from '@nestjs/config';
+import { EtageController } from './etage/etage.controller';
+import { EspaceController } from './espace/espace.controller';
+import { EspaceService } from './espace/espace.service';
+import { EtageService } from './etage/etage.service';
+import { EspaceModule } from './espace/espace.module';
+import { EtageModule } from './etage/etage.module';
+import { EquipementService } from './equipement/equipement.service';
+import { EquipementController } from './equipement/equipement.controller';
+import { EquipementModule } from './equipement/equipement.module';
 
 @Module({
   imports: [ConfigModule.forRoot({ isGlobal: true }),
@@ -18,8 +27,8 @@ import { ConfigModule } from '@nestjs/config';
       database: process.env.DB_NAME,
       autoLoadEntities: true,
       synchronize: true,
-    }),BatimentModule],
-  controllers: [AppController],
-  providers: [AppService],
+    }),BatimentModule, EspaceModule, EtageModule, EquipementModule],
+  controllers: [AppController, EtageController, EspaceController, EquipementController],
+  providers: [AppService, EspaceService, EtageService, EquipementService],
 })
 export class AppModule {}
