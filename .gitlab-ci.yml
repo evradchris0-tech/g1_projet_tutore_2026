@@ -81,7 +81,7 @@ install_dependencies:
       - node_modules/
     expire_in: 1 hour
 
-# ==================== STAGE: QUALITY ====================
+# ==================== STAGE: QUALITY ============
 lint:
   stage: quality
   <<: *node_job
