@@ -3,18 +3,13 @@
 
 # ==================== VARIABLES GLOBALES ====================
 variables:
-  # Configuration Node.js
   NODE_VERSION: "20"
   NPM_CONFIG_CACHE: "$CI_PROJECT_DIR/.npm"
   NPM_CONFIG_PROGRESS: "false"
-  
-  # Configuration de build
   VITE_API_BASE_URL: "https://immo360-api-gateway.onrender.com/api"
   CI: "true"
-  
-  # Configuration Netlify
-  NETLIFY_SITE_ID: "$NETLIFY_SITE_ID"  # À définir dans les variables CI/CD
-  NETLIFY_AUTH_TOKEN: "$NETLIFY_AUTH_TOKEN"  # À définir dans les variables CI/CD
+  NETLIFY_SITE_ID: "$NETLIFY_SITE_ID"
+  NETLIFY_AUTH_TOKEN: "$NETLIFY_AUTH_TOKEN"
 
 # ==================== CACHE GLOBAL ====================
 .cache_template: &cache_config
@@ -45,6 +40,10 @@ stages:
 # ==================== STAGE: SETUP ====================
 install_dependencies:
   stage: setup
+  tags:
+    - web
+    - frontend
+    - docker
   script:
     - echo "📦 Installation des dépendances..."
     - npm ci --prefer-offline --no-audit
@@ -59,6 +58,10 @@ install_dependencies:
 # ==================== STAGE: QUALITY ====================
 lint:
   stage: quality
+  tags:
+    - web
+    - frontend
+    - docker
   dependencies:
     - install_dependencies
   before_script:
@@ -72,6 +75,10 @@ lint:
 
 code_format_check:
   stage: quality
+  tags:
+    - web
+    - frontend
+    - docker
   dependencies:
     - install_dependencies
   script:
@@ -85,6 +92,10 @@ code_format_check:
 # ==================== STAGE: TEST ====================
 unit_tests:
   stage: test
+  tags:
+    - web
+    - frontend
+    - docker
   dependencies:
     - install_dependencies
   before_script:
@@ -107,6 +118,10 @@ unit_tests:
 
 integration_tests:
   stage: test
+  tags:
+    - web
+    - frontend
+    - docker
   dependencies:
     - install_dependencies
   script:
@@ -120,6 +135,10 @@ integration_tests:
 # ==================== STAGE: BUILD ====================
 build_app:
   stage: build
+  tags:
+    - web
+    - frontend
+    - docker
   dependencies:
     - install_dependencies
   before_script:
@@ -142,9 +161,12 @@ build_app:
     - develop
     - /^release\/.*$/
 
-# Build de preview pour les merge requests
 build_preview:
   stage: build
+  tags:
+    - web
+    - frontend
+    - docker
   dependencies:
     - install_dependencies
   before_script:
@@ -167,6 +189,10 @@ build_preview:
   image: node:${NODE_VERSION}-alpine
   dependencies:
     - build_app
+  tags:
+    - web
+    - frontend
+    - docker
   before_script:
     - echo "🚀 Préparation du déploiement..."
     - npm install -g netlify-cli
@@ -174,7 +200,6 @@ build_preview:
     <<: *cache_config
     policy: pull
 
-# Déploiement en production
 deploy_production:
   <<: *deploy_config
   script:
@@ -188,7 +213,6 @@ deploy_production:
     - main
   when: manual
 
-# Déploiement en staging
 deploy_staging:
   <<: *deploy_config
   script:
@@ -202,7 +226,6 @@ deploy_staging:
     - develop
   when: on_success
 
-# Déploiement de preview pour les merge requests
 deploy_preview:
   <<: *deploy_config
   dependencies:
@@ -219,10 +242,13 @@ deploy_preview:
   only:
     - merge_requests
 
-# Nettoyage des previews
 cleanup_preview:
   stage: deploy
   image: node:${NODE_VERSION}-alpine
+  tags:
+    - web
+    - frontend
+    - docker
   before_script:
     - npm install -g netlify-cli
   script:
@@ -236,7 +262,6 @@ cleanup_preview:
     - merge_requests
 
 # ==================== RÈGLES ADDITIONNELLES ====================
-# N'exécuter le pipeline que pour certains changements
 workflow:
   rules:
     - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
