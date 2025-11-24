@@ -6,12 +6,12 @@ import '../../models/incident_model.dart';
 import '../../models/building_model.dart';
 
 class ApiService {
-  // Pour Android Emulator, utiliser 10.0.2.2 au lieu de localhost
+  // Pour Android Emulator, utiliser 10.0.2.2
   // Pour iOS Simulator et Web, utiliser localhost
   // Pour appareil physique, utiliser l'IP de votre machine
   static String get baseUrl {
     if (kIsWeb) {
-      return 'http://localhost:3000';
+      return 'http://10.0.2.2:3000';
     }
     if (Platform.isAndroid) {
       // Android Emulator utilise 10.0.2.2 pour accéder à localhost de la machine hôte

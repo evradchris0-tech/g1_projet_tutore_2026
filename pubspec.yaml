@@ -40,14 +40,13 @@ dependencies:
   crypto: ^3.0.3
 
   # Notifications
-  flutter_local_notifications: ^16.3.0
+  flutter_local_notifications: ^17.0.0
   firebase_messaging: ^14.7.9
   firebase_core: ^2.24.2
 
   # Camera & Media
   image_picker: ^1.0.7
   camera: ^0.10.5+9
-  file_picker: ^8.0.0
 
   # Maps & Location
   google_maps_flutter: ^2.5.3
