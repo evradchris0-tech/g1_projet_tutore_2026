@@ -1,0 +1,18 @@
+{
+  "compilerOptions": {
+    "target": "es2020",
+    "module": "esnext",
+    "lib": ["dom", "dom.iterable", "esnext"],
+    "allowJs": true,                 // Permet de checker les fichiers JS
+    "checkJs": false,                // Pas d’erreurs pour JS
+    "jsx": "react-jsx",              // Support JSX moderne
+    "strict": false,                 // Désactive tous les checks stricts
+    "noEmit": true,                  // Pas de fichiers générés
+    "esModuleInterop": true,
+    "forceConsistentCasingInFileNames": true,
+    "skipLibCheck": true
+  },
+  "include": ["src/**/*"],
+  "exclude": ["node_modules", "dist"]
+}
+///ok

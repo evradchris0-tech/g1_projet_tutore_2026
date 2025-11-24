@@ -6,7 +6,7 @@ export async function createIncident(incidentData) {
     const response = await api.post('/incidents', incidentData)
     return response.data
   } catch (error) {
-    console.error('Erreur lors de la création de l\'incident:', error)
+    console.error("Erreur lors de la création de l'incident:", error)
     throw error
   }
 }
@@ -28,7 +28,7 @@ export async function updateIncident(incidentId, incidentData) {
     const response = await api.put(`/incidents/${incidentId}`, incidentData)
     return response.data
   } catch (error) {
-    console.error('Erreur lors de la mise à jour de l\'incident:', error)
+    console.error("Erreur lors de la mise à jour de l'incident:", error)
     throw error
   }
 }
@@ -39,7 +39,7 @@ export async function deleteIncident(incidentId) {
     const response = await api.delete(`/incidents/${incidentId}`)
     return response.data
   } catch (error) {
-    console.error('Erreur lors de la suppression de l\'incident:', error)
+    console.error("Erreur lors de la suppression de l'incident:", error)
     throw error
   }
 }
@@ -50,7 +50,7 @@ export async function getIncidentById(incidentId) {
     const response = await api.get(`/incidents/${incidentId}`)
     return response.data
   } catch (error) {
-    console.error('Erreur lors de la récupération de l\'incident:', error)
+    console.error("Erreur lors de la récupération de l'incident:", error)
     throw error
   }
 }
@@ -59,7 +59,7 @@ export async function getIncidentById(incidentId) {
 export async function searchIncidentsByTitle(title) {
   try {
     const response = await api.get(`/incidents/search`, {
-      params: { title }
+      params: { title },
     })
     return response.data
   } catch (error) {
@@ -72,7 +72,7 @@ export async function searchIncidentsByTitle(title) {
 export async function searchIncidentsByStatus(status) {
   try {
     const response = await api.get(`/incidents/search`, {
-      params: { status }
+      params: { status },
     })
     return response.data
   } catch (error) {
@@ -85,7 +85,7 @@ export async function searchIncidentsByStatus(status) {
 export async function searchIncidentsByPriority(priority) {
   try {
     const response = await api.get(`/incidents/search`, {
-      params: { priority }
+      params: { priority },
     })
     return response.data
   } catch (error) {
@@ -98,7 +98,7 @@ export async function searchIncidentsByPriority(priority) {
 export async function searchIncidentsByCreationDate(creationDate) {
   try {
     const response = await api.get(`/incidents/search`, {
-      params: { creationDate }
+      params: { creationDate },
     })
     return response.data
   } catch (error) {
@@ -111,7 +111,7 @@ export async function searchIncidentsByCreationDate(creationDate) {
 export async function searchIncidentsByResolutionDate(resolutionDate) {
   try {
     const response = await api.get(`/incidents/search`, {
-      params: { resolutionDate }
+      params: { resolutionDate },
     })
     return response.data
   } catch (error) {

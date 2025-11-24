@@ -59,7 +59,7 @@ export async function getBuildingById(buildingId) {
 export async function searchBuildingsByName(name) {
   try {
     const response = await api.get(`/buildings/search`, {
-      params: { name }
+      params: { name },
     })
     return response.data
   } catch (error) {

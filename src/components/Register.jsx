@@ -1,6 +1,11 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { IoPersonOutline, IoLockClosedOutline, IoCallOutline, IoIdCardOutline } from 'react-icons/io5'
+import {
+  IoPersonOutline,
+  IoLockClosedOutline,
+  IoCallOutline,
+  IoIdCardOutline,
+} from 'react-icons/io5'
 import { register } from '../api/auth'
 import '../styles/Register.css'
 import logo from '../assets/logo 1.png'
@@ -15,7 +20,11 @@ function Register() {
     nom: '',
     prenom: '',
     phone: '',
+<<<<<<< HEAD
     access: ''
+=======
+    access: 'ADMIN',
+>>>>>>> 97a3049bb2eada32451b50c58738a847a56db0f9
   })
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
@@ -24,7 +33,7 @@ function Register() {
   const handleChange = (e) => {
     setFormData({
       ...formData,
-      [e.target.name]: e.target.value
+      [e.target.name]: e.target.value,
     })
   }
 
@@ -32,7 +41,7 @@ function Register() {
     e.preventDefault()
     setLoading(true)
     setError('')
-    
+
     if (formData.password !== formData.confirmPassword) {
       setError('Les mots de passe ne correspondent pas')
       setLoading(false)
@@ -47,13 +56,13 @@ function Register() {
         nom: formData.nom,
         prenom: formData.prenom,
         phone: formData.phone,
-        access: formData.access
+        access: formData.access,
       }
-      
+
       await register(userData)
       navigate('/Dashboard')
     } catch (error) {
-      setError(error.response?.data?.message || 'Erreur lors de l\'inscription.')
+      setError(error.response?.data?.message || "Erreur lors de l'inscription.")
     } finally {
       setLoading(false)
     }
@@ -72,7 +81,7 @@ function Register() {
           <div className="cyber-square cyber-square-6"></div>
         </div>
       </div>
-      
+
       <div className="register-content">
         <div className="logo-section">
           <img src={logo} alt="IMMO360 CAMEROUN" className="logo-image" />
@@ -80,10 +89,13 @@ function Register() {
 
         <div className="register-form-container">
           <h1 className="register-title">Créer un compte administrateur</h1>
-          <p className="register-subtitle">Gestions d'équipements de IUSJ</p>
+          <p className="register-subtitle">Gestions d&apos;équipements de IUSJ</p>
 
           {error && (
-            <div className="error-message" style={{color: '#ff4444', marginBottom: '1rem', textAlign: 'center'}}>
+            <div
+              className="error-message"
+              style={{ color: '#ff4444', marginBottom: '1rem', textAlign: 'center' }}
+            >
               {error}
             </div>
           )}
@@ -91,7 +103,7 @@ function Register() {
           <form onSubmit={handleSubmit} className="register-form">
             <div className="form-row">
               <div className="input-group">
-                <label htmlFor="username">Nom d'utilisateur</label>
+                <label htmlFor="username">Nom d&apos;utilisateur</label>
                 <div className="input-wrapper">
                   <input
                     type="text"
@@ -226,11 +238,16 @@ function Register() {
             </div>
 
             <button type="submit" className="register-button" disabled={loading}>
-              {loading ? 'Inscription...' : 'S\'inscrire'}
+              {loading ? 'Inscription...' : "S'inscrire"}
             </button>
 
             <div className="login-link">
-              <p>Déjà un compte ? <button type="button" onClick={() => navigate('/login')} className="link-button">Se connecter</button></p>
+              <p>
+                Déjà un compte ?{' '}
+                <button type="button" onClick={() => navigate('/login')} className="link-button">
+                  Se connecter
+                </button>
+              </p>
             </div>
           </form>
         </div>

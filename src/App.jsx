@@ -10,33 +10,28 @@ function App() {
 
   return (
     <Routes>
-      <Route 
-        path="/" 
-        element={<Navigate to={isAuthenticated ? "/dashboard" : "/login"} replace />} 
+      <Route
+        path="/"
+        element={<Navigate to={isAuthenticated ? '/dashboard' : '/login'} replace />}
       />
-      <Route 
-        path="/login" 
-        element={
-          isAuthenticated ? <Navigate to="/dashboard" replace /> : <Login />
-        } 
+      <Route
+        path="/login"
+        element={isAuthenticated ? <Navigate to="/dashboard" replace /> : <Login />}
       />
-      <Route 
-        path="/register" 
-        element={
-          isAuthenticated ? <Navigate to="/dashboard" replace /> : <Register />
-        } 
+      <Route
+        path="/register"
+        element={isAuthenticated ? <Navigate to="/dashboard" replace /> : <Register />}
       />
-      <Route 
-        path="/dashboard" 
+      <Route
+        path="/dashboard"
         element={
           <ProtectedRoute>
             <Dashboard />
           </ProtectedRoute>
-        } 
+        }
       />
     </Routes>
   )
 }
 
 export default App
-

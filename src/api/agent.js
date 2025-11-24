@@ -6,7 +6,7 @@ export async function createAgent(agentData) {
     const response = await api.post('/agents', agentData)
     return response.data
   } catch (error) {
-    console.error('Erreur lors de la création de l\'agent:', error)
+    console.error("Erreur lors de la création de l'agent:", error)
     throw error
   }
 }
@@ -28,7 +28,7 @@ export async function updateAgent(agentId, agentData) {
     const response = await api.put(`/agents/${agentId}`, agentData)
     return response.data
   } catch (error) {
-    console.error('Erreur lors de la mise à jour de l\'agent:', error)
+    console.error("Erreur lors de la mise à jour de l'agent:", error)
     throw error
   }
 }
@@ -39,7 +39,7 @@ export async function deleteAgent(agentId) {
     const response = await api.delete(`/agents/${agentId}`)
     return response.data
   } catch (error) {
-    console.error('Erreur lors de la suppression de l\'agent:', error)
+    console.error("Erreur lors de la suppression de l'agent:", error)
     throw error
   }
 }
@@ -50,7 +50,7 @@ export async function getAgentById(agentId) {
     const response = await api.get(`/agents/${agentId}`)
     return response.data
   } catch (error) {
-    console.error('Erreur lors de la récupération de l\'agent:', error)
+    console.error("Erreur lors de la récupération de l'agent:", error)
     throw error
   }
 }
@@ -59,7 +59,7 @@ export async function getAgentById(agentId) {
 export async function searchAgentsByName(name) {
   try {
     const response = await api.get(`/agents/search`, {
-      params: { name }
+      params: { name },
     })
     return response.data
   } catch (error) {

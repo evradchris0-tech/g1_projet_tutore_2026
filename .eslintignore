@@ -1,0 +1,21 @@
+# Dependencies
+node_modules/
+
+# Build outputs
+dist/
+build/
+
+# Coverage reports
+coverage/
+
+# Test files
+*.test.js
+*.test.jsx
+*.spec.js
+*.spec.jsx
+
+# Config files
+vite.config.js
+vitest.config.js
+.eslintrc.cjs
+setup-pipeline.ps1

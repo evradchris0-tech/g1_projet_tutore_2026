@@ -1,55 +1,268 @@
-stages:
-  - build
-  - deploy
+# ==================== PIPELINE CONFIGURATION ====================
+# Pipeline GitLab CI/CD pour Frontend React/Vite - Version Optimisée
 
 variables:
-  VITE_API_BASE_URL: "https://immo360-api-gateway.onrender.com/api"
-  NPM_CONFIG_PROGRESS: false
-  CI: true
+  NODE_VERSION: "20"
+  NPM_CONFIG_CACHE: "$CI_PROJECT_DIR/.npm"
+  NPM_CONFIG_PROGRESS: "false"
+  VITE_API_BASE_URL: "https://immo360-auth-service.onrender.com"
+  CI: "true"
 
-cache:
-  key: ${CI_COMMIT_REF_SLUG}
+  RENDER_PRODUCTION_URL: "https://g1-projet-tutore-frontend.onrender.com"
+  RENDER_STAGING_URL: "https://g1-projet-tutore-frontend-staging.onrender.com"
+
+# ==================== CACHE OPTIMISÉ ====================
+.cache_node: &cache_node
+  key:
+    files:
+      - package-lock.json
+    prefix: ${CI_COMMIT_REF_SLUG}-${NODE_VERSION}
   paths:
+    - .npm/
     - node_modules/
-    - .npm
+  policy: pull-push
 
-build:
-  stage: build
-  tags:
-    - web
-  image: node:20-alpine  # Plus légère et généralement plus disponible
-  script:
-    - echo "🔧 Configuration de l'environnement de production..."
-    - echo "VITE_API_BASE_URL=$VITE_API_BASE_URL" > .env.production
+# ==================== JOB TEMPLATE ====================
+.node_job: &node_job
+  image: node:${NODE_VERSION}-alpine
+  before_script:
     - echo "📦 Installation des dépendances..."
-    - npm ci
-    - echo "🏗️ Build du projet React..."
-    - npm run build
+    - npm ci --cache .npm --prefer-offline --no-audit --no-fund
+  cache:
+    <<: *cache_node
+
+.build_template: &build_template
+  stage: build
+  <<: *node_job
   artifacts:
     paths:
       - dist/
     expire_in: 1 week
-  only:
-    - main
-    - develop
-    - web
-    - /^release\/.*$/
 
-pages:
-  stage: deploy
-  tags:
-    - web
-  image: node:20-alpine  # Même image
-  dependencies:
-    - build
+# ==================== STAGES ====================
+stages:
+  - install
+  - quality
+  - security
+  - test
+  - build
+  - deploy
+  - cleanup
+
+# ==================== INSTALL ====================
+install_dependencies:
+  stage: install
+  <<: *node_job
   script:
-    - echo "📦 Déploiement sur GitLab Pages..."
-    - rm -rf public || true
-    - mv dist public
+    - echo "✅ Dépendances installées avec succès"
   artifacts:
     paths:
-      - public
+      - node_modules/
+    expire_in: 1 hour
+
+# ==================== QUALITY ====================
+lint:
+  stage: quality
+  <<: *node_job
+  script:
+    - echo "🔍 Vérification de la qualité du code..."
+    - npm run lint || true
+    - echo "✅ Lint terminé"
+  allow_failure: true
+
+format_check:
+  stage: quality
+  <<: *node_job
+  script:
+    - echo "📝 Vérification du formatage du code..."
+    - npm run format:check || true
+    - echo "✅ Format vérifié"
+  allow_failure: true
+
+type_check:
+  stage: quality
+  <<: *node_job
+  script:
+    - echo "🔤 Vérification des types TypeScript..."
+    - npm run type-check || echo "⚠️ Type check non configuré"
+  allow_failure: true
+
+# ==================== SECURITY ====================
+security_audit:
+  stage: security
+  <<: *node_job
+  script:
+    - echo "🔒 Audit de sécurité des dépendances..."
+    - npm audit --audit-level=moderate || true
+    - echo "✅ Audit terminé"
+  allow_failure: true
+
+dependency_check:
+  stage: security
+  <<: *node_job
+  script:
+    - echo "📊 Vérification des dépendances obsolètes..."
+    - npm outdated || true
+    - echo "✅ Vérification terminée"
+  allow_failure: true
+
+# ==================== TEST ====================
+unit_tests:
+  stage: test
+  <<: *node_job
+  script:
+    - echo "🧪 Exécution des tests unitaires..."
+    - npm run test:unit
+  artifacts:
+    when: always
+    paths:
+      - coverage/
+    reports:
+      junit: coverage/junit.xml
+      coverage_report:
+        coverage_format: cobertura
+        path: coverage/cobertura-coverage.xml
+    expire_in: 7d
+  retry:
+    max: 2
+
+integration_tests:
+  stage: test
+  <<: *node_job
+  script:
+    - echo "🔗 Exécution des tests d'intégration..."
+    - npm run test:integration || true
+  allow_failure: true
+
+# ==================== BUILD ====================
+build_production:
+  <<: *build_template
+  script:
+    - echo "🏗️ Build PRODUCTION..."
+    - echo "VITE_API_BASE_URL=$VITE_API_BASE_URL" > .env.production
+    - echo "VITE_ENV=production" >> .env.production
+    - npm run build
+  artifacts:
+    name: "production-build-${CI_COMMIT_SHORT_SHA}"
+    paths:
+      - dist/
+    expire_in: 1 month
+  only:
+    - web
+
+build_staging:
+  <<: *build_template
+  script:
+    - echo "🏗️ Build STAGING..."
+    - echo "VITE_API_BASE_URL=$VITE_API_BASE_URL" > .env.production
+    - echo "VITE_ENV=staging" >> .env.production
+    - npm run build
+  artifacts:
+    name: "staging-build-${CI_COMMIT_SHORT_SHA}"
+    paths:
+      - dist/
     expire_in: 1 week
   only:
-    - main
+    - develop
+
+build_preview:
+  <<: *build_template
+  script:
+    - echo "🏗️ Build PREVIEW..."
+    - echo "VITE_API_BASE_URL=$VITE_API_BASE_URL" > .env.production
+    - echo "VITE_ENV=preview" >> .env.production
+    - npm run build
+  artifacts:
+    name: "preview-build-mr${CI_MERGE_REQUEST_IID}-${CI_COMMIT_SHORT_SHA}"
+    paths:
+      - dist/
+    expire_in: 3 days
+  only:
+    - merge_requests
+
+# ==================== DEPLOY ====================
+.deploy_render: &deploy_render
+  stage: deploy
+  image: curlimages/curl:latest
+  before_script:
+    - echo "🚀 Préparation du déploiement sur Render..."
+  retry:
+    max: 2
+
+deploy_production:
+  <<: *deploy_render
+  needs:
+    - build_production
+  script:
+    - |
+      echo "🌐 Déploiement PRODUCTION..."
+      curl -X POST "$RENDER_DEPLOY_HOOK_PRODUCTION"
+  environment:
+    name: production
+    url: $RENDER_PRODUCTION_URL
+  only:
     - web
+  when: manual
+
+deploy_staging:
+  <<: *deploy_render
+  needs:
+    - build_staging
+  script:
+    - |
+      echo "🧪 Déploiement STAGING..."
+      curl -X POST "$RENDER_DEPLOY_HOOK_STAGING"
+  environment:
+    name: staging
+    url: $RENDER_STAGING_URL
+  only:
+    - develop
+
+deploy_preview:
+  <<: *deploy_render
+  needs:
+    - build_preview
+  script:
+    - |
+      echo "👀 Déploiement PREVIEW MR !${CI_MERGE_REQUEST_IID}..."
+      curl -X POST "$RENDER_DEPLOY_HOOK_PREVIEW"
+  environment:
+    name: preview/mr-$CI_MERGE_REQUEST_IID
+    url: https://g1-projet-tutore-frontend-mr$CI_MERGE_REQUEST_IID.onrender.com
+  only:
+    - merge_requests
+
+# ==================== CLEANUP ====================
+cleanup_preview:
+  stage: cleanup
+  image: curlimages/curl:latest
+  script:
+    - echo "🧹 Nettoyage Preview MR"
+  environment:
+    name: preview/mr-$CI_MERGE_REQUEST_IID
+    action: stop
+  only:
+    - merge_requests
+
+cleanup_old_artifacts:
+  stage: cleanup
+  image: alpine:latest
+  script:
+    - echo "🗑️ Nettoyage des anciens artifacts..."
+  only:
+    - web
+    - develop
+  allow_failure: true
+
+# ==================== WORKFLOW ====================
+workflow:
+  rules:
+    - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
+      when: always
+    - if: '$CI_COMMIT_BRANCH == "web"'
+      when: always
+    - if: '$CI_COMMIT_BRANCH == "develop"'
+      when: always
+    - if: '$CI_COMMIT_TAG'
+      when: always
+    - when: never

@@ -1,13 +1,13 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { 
-  IoGridOutline, 
-  IoBusinessOutline, 
-  IoConstructOutline, 
-  IoPersonOutline, 
-  IoPeopleOutline, 
-  IoWarningOutline, 
-  IoStatsChartOutline, 
+import {
+  IoGridOutline,
+  IoBusinessOutline,
+  IoConstructOutline,
+  IoPersonOutline,
+  IoPeopleOutline,
+  IoWarningOutline,
+  IoStatsChartOutline,
   IoLogOutOutline,
   IoNotificationsOutline,
   IoSettingsOutline,
@@ -20,7 +20,7 @@ import {
   IoEllipsisVerticalOutline,
   IoCheckboxOutline,
   IoSquareOutline,
-  IoCloudDownloadOutline
+  IoCloudDownloadOutline,
 } from 'react-icons/io5'
 import { createEquipment } from '../api/equipment'
 import { createOccupant, getOccupants } from '../api/occupant'
@@ -43,14 +43,14 @@ function Dashboard() {
     code: '',
     type: 'Pédagogique',
     floors: 1,
-    spaces: 0
+    spaces: 0,
   })
-  
+
   // États pour la navigation hiérarchique (Bâtiments)
   const [viewLevel, setViewLevel] = useState('buildings') // 'buildings' | 'floors' | 'spaces'
   const [selectedBuilding, setSelectedBuilding] = useState(null)
   const [selectedFloor, setSelectedFloor] = useState(null)
-  
+
   // États pour la page Équipements
   const [selectedEquipments, setSelectedEquipments] = useState([])
   const [showAddEquipmentModal, setShowAddEquipmentModal] = useState(false)
@@ -64,7 +64,7 @@ function Dashboard() {
     lifespan: '',
     description: '',
     state: 'bon etat',
-    status: 'Activé'
+    status: 'Activé',
   })
 
   // États pour la page Occupants
@@ -76,10 +76,17 @@ function Dashboard() {
     roomNumber: '',
     username: '',
     password: '',
+<<<<<<< HEAD
     // building: '',
     // phone: '',
     // occupantType: '',
     status: 'Activé'
+=======
+    building: '',
+    phone: '',
+    occupantType: '',
+    status: 'Activé',
+>>>>>>> 97a3049bb2eada32451b50c58738a847a56db0f9
   })
 
   // États pour la page Agents
@@ -95,7 +102,7 @@ function Dashboard() {
     username: '',
     password: '',
     specialty: '',
-    status: 'Activé'
+    status: 'Activé',
   })
 
   // États pour la page Incidents
@@ -106,7 +113,7 @@ function Dashboard() {
     roomNumber: '',
     assignedAgent: '',
     date: '',
-    state: 'En cours'
+    state: 'En cours',
   })
 
   const handleLogout = () => {
@@ -115,7 +122,7 @@ function Dashboard() {
     localStorage.removeItem('username')
     localStorage.removeItem('token')
     localStorage.removeItem('activeMenu')
-    
+
     // Redirection vers la page de login
     navigate('/login')
   }
@@ -170,34 +177,34 @@ function Dashboard() {
   }, [])
 
   const statsData = [
-    { 
-      title: 'Incidents', 
-      count: 35, 
+    {
+      title: 'Incidents',
+      count: 35,
       description: 'Voici tous les incidents de tous les bâtiments',
       icon: IoWarningOutline,
-      bgColor: '#ff4757'
+      bgColor: '#ff4757',
     },
-    { 
-      title: 'Agents', 
-      count: apiAgents.length, 
+    {
+      title: 'Agents',
+      count: apiAgents.length,
       description: 'Voici tous les Agents de tous les bâtiments',
       icon: IoPeopleOutline,
-      bgColor: '#3b82f6'
+      bgColor: '#3b82f6',
     },
-    { 
-      title: 'Occupants', 
-      count: apiOccupants.length, 
+    {
+      title: 'Occupants',
+      count: apiOccupants.length,
       description: 'Voici tous les Occupants de tous les bâtiments',
       icon: IoPersonOutline,
-      bgColor: '#10b981'
+      bgColor: '#10b981',
     },
-    { 
-      title: 'Equipements', 
-      count: 35, 
+    {
+      title: 'Equipements',
+      count: 35,
       description: 'Voici tous les équipements de tous les bâtiments',
       icon: IoConstructOutline,
-      bgColor: '#1f2937'
-    }
+      bgColor: '#1f2937',
+    },
   ]
 
   const buildingStats = [
@@ -206,22 +213,22 @@ function Dashboard() {
       count: 4,
       description: 'Nombre total de bâtiments sur le site',
       icon: IoBusinessOutline,
-      bgColor: '#3b82f6'
+      bgColor: '#3b82f6',
     },
     {
       title: 'Étages',
       count: 12,
       description: 'Nombre total d’étages configurés',
       icon: IoGridOutline,
-      bgColor: '#10b981'
+      bgColor: '#10b981',
     },
     {
       title: 'Espaces',
       count: 215,
       description: 'Chambres, salles de classe et bureaux',
       icon: IoConstructOutline,
-      bgColor: '#6366f1'
-    }
+      bgColor: '#6366f1',
+    },
   ]
 
   const buildings = [
@@ -232,7 +239,7 @@ function Dashboard() {
       type: 'Pédagogique',
       floors: 3,
       spaces: 42,
-      incidents: 18
+      incidents: 18,
     },
     {
       id: 2,
@@ -241,7 +248,7 @@ function Dashboard() {
       type: 'Pédagogique',
       floors: 2,
       spaces: 28,
-      incidents: 9
+      incidents: 9,
     },
     {
       id: 3,
@@ -250,7 +257,7 @@ function Dashboard() {
       type: 'Résidentiel',
       floors: 4,
       spaces: 96,
-      incidents: 32
+      incidents: 32,
     },
     {
       id: 4,
@@ -259,15 +266,15 @@ function Dashboard() {
       type: 'Résidentiel',
       floors: 3,
       spaces: 24,
-      incidents: 6
-    }
+      incidents: 6,
+    },
   ]
 
   // Données simulées pour les étages (générées dynamiquement)
   const getFloorsForBuilding = (buildingId) => {
-    const building = buildings.find(b => b.id === buildingId)
+    const building = buildings.find((b) => b.id === buildingId)
     if (!building) return []
-    
+
     const floors = []
     for (let i = 0; i < building.floors; i++) {
       floors.push({
@@ -276,7 +283,7 @@ function Dashboard() {
         number: i,
         name: i === 0 ? 'Rez-de-chaussée' : `Étage ${i}`,
         spaces: Math.floor(building.spaces / building.floors),
-        incidents: Math.floor(Math.random() * 10)
+        incidents: Math.floor(Math.random() * 10),
       })
     }
     return floors
@@ -284,18 +291,19 @@ function Dashboard() {
 
   // Données simulées pour les espaces
   const getSpacesForFloor = (buildingId, floorId) => {
-    const building = buildings.find(b => b.id === buildingId)
+    const building = buildings.find((b) => b.id === buildingId)
     if (!building) return []
-    
+
     const floors = getFloorsForBuilding(buildingId)
-    const floor = floors.find(f => f.id === floorId)
+    const floor = floors.find((f) => f.id === floorId)
     if (!floor) return []
-    
+
     const spaces = []
-    const spaceTypes = building.type === 'Résidentiel' 
-      ? ['Chambre', 'Salle commune', 'Bureau']
-      : ['Salle de classe', 'Laboratoire', 'Bureau', 'Amphithéâtre']
-    
+    const spaceTypes =
+      building.type === 'Résidentiel'
+        ? ['Chambre', 'Salle commune', 'Bureau']
+        : ['Salle de classe', 'Laboratoire', 'Bureau', 'Amphithéâtre']
+
     for (let i = 1; i <= floor.spaces; i++) {
       const type = spaceTypes[Math.floor(Math.random() * spaceTypes.length)]
       spaces.push({
@@ -307,7 +315,7 @@ function Dashboard() {
         area: Math.floor(Math.random() * 50) + 20,
         occupants: Math.floor(Math.random() * 30),
         equipment: Math.floor(Math.random() * 15),
-        incidents: Math.floor(Math.random() * 5)
+        incidents: Math.floor(Math.random() * 5),
       })
     }
     return spaces
@@ -319,38 +327,102 @@ function Dashboard() {
       equipment: 'Frigo',
       description: 'Le moteur ne ronfle plus',
       status: 'A remplacer',
-      statusColor: '#ff4757'
+      statusColor: '#ff4757',
     },
     {
       building: 'Batiment A - Ch A01 - 07/11/2025',
       equipment: 'Frigo',
       description: 'Le moteur ne ronfle plus',
       status: 'Bon Etat',
-      statusColor: '#10b981'
+      statusColor: '#10b981',
     },
     {
       building: 'Batiment A - Ch A01 - 07/11/2025',
       equipment: 'Frigo',
       description: 'Le moteur ne ronfle plus',
       status: 'A remplacer',
-      statusColor: '#ff9800'
-    }
+      statusColor: '#ff9800',
+    },
   ]
 
   // Données simulées pour les équipements
   const equipments = [
-    { id: 1, name: 'Réfrigérateur LG 450L', type: 'Réfrigérateur', state: 'bon etat', lastMaintenance: '6 98 76 54 32', status: 'Activé' },
-    { id: 2, name: 'Climatiseur Samsung', type: 'Climatiseur', state: 'à remplacer', lastMaintenance: '6 98 76 54 32', status: 'Désactivé' },
-    { id: 3, name: 'Ordinateur HP ProDesk', type: 'Ordinateur', state: 'bon etat', lastMaintenance: '6 98 76 54 32', status: 'Activé' },
-    { id: 4, name: 'Imprimante Canon', type: 'Imprimante', state: 'à réparer', lastMaintenance: '6 98 76 54 32', status: 'Activé' },
-    { id: 5, name: 'Table de Bureau', type: 'Mobilier', state: 'en maintenance', lastMaintenance: '6 98 76 54 32', status: 'Désactivé' },
-    { id: 6, name: 'Ventilateur Plafond', type: 'Ventilateur', state: 'bon etat', lastMaintenance: '6 98 76 54 32', status: 'Activé' },
-    { id: 7, name: 'Projecteur Epson', type: 'Projecteur', state: 'hors service', lastMaintenance: '6 98 76 54 32', status: 'Désactivé' },
-    { id: 8, name: 'Machine à Café', type: 'Machine à Café', state: 'en attente de piece', lastMaintenance: '6 98 76 54 32', status: 'Désactivé' },
-    { id: 9, name: 'Lampe LED Bureau', type: 'Éclairage', state: 'bon etat', lastMaintenance: '6 98 76 54 32', status: 'Activé' }
+    {
+      id: 1,
+      name: 'Réfrigérateur LG 450L',
+      type: 'Réfrigérateur',
+      state: 'bon etat',
+      lastMaintenance: '6 98 76 54 32',
+      status: 'Activé',
+    },
+    {
+      id: 2,
+      name: 'Climatiseur Samsung',
+      type: 'Climatiseur',
+      state: 'à remplacer',
+      lastMaintenance: '6 98 76 54 32',
+      status: 'Désactivé',
+    },
+    {
+      id: 3,
+      name: 'Ordinateur HP ProDesk',
+      type: 'Ordinateur',
+      state: 'bon etat',
+      lastMaintenance: '6 98 76 54 32',
+      status: 'Activé',
+    },
+    {
+      id: 4,
+      name: 'Imprimante Canon',
+      type: 'Imprimante',
+      state: 'à réparer',
+      lastMaintenance: '6 98 76 54 32',
+      status: 'Activé',
+    },
+    {
+      id: 5,
+      name: 'Table de Bureau',
+      type: 'Mobilier',
+      state: 'en maintenance',
+      lastMaintenance: '6 98 76 54 32',
+      status: 'Désactivé',
+    },
+    {
+      id: 6,
+      name: 'Ventilateur Plafond',
+      type: 'Ventilateur',
+      state: 'bon etat',
+      lastMaintenance: '6 98 76 54 32',
+      status: 'Activé',
+    },
+    {
+      id: 7,
+      name: 'Projecteur Epson',
+      type: 'Projecteur',
+      state: 'hors service',
+      lastMaintenance: '6 98 76 54 32',
+      status: 'Désactivé',
+    },
+    {
+      id: 8,
+      name: 'Machine à Café',
+      type: 'Machine à Café',
+      state: 'en attente de piece',
+      lastMaintenance: '6 98 76 54 32',
+      status: 'Désactivé',
+    },
+    {
+      id: 9,
+      name: 'Lampe LED Bureau',
+      type: 'Éclairage',
+      state: 'bon etat',
+      lastMaintenance: '6 98 76 54 32',
+      status: 'Activé',
+    },
   ]
 
   // Données simulées pour les occupants
+<<<<<<< HEAD
   // const occupants = [
   //   { id: 1, roomNumber: 'A01', building: 'Bâtiment A', role: 'Agent', phone: '6 98 76 54 32', status: 'Activé' },
   //   { id: 2, roomNumber: 'B12', building: 'Bâtiment B', role: 'Client', phone: '6 98 76 54 32', status: 'Désactivé' },
@@ -362,6 +434,82 @@ function Dashboard() {
   //   { id: 8, roomNumber: 'A07', building: 'Bâtiment A', role: 'Client', phone: '6 98 76 54 32', status: 'Désactivé' },
   //   { id: 9, roomNumber: 'BP12', building: 'Bâtiment des Pères', role: 'Agent', phone: '6 98 76 54 32', status: 'Activé' }
   // ]
+=======
+  const occupants = [
+    {
+      id: 1,
+      roomNumber: 'A01',
+      building: 'Bâtiment A',
+      role: 'Agent',
+      phone: '6 98 76 54 32',
+      status: 'Activé',
+    },
+    {
+      id: 2,
+      roomNumber: 'B12',
+      building: 'Bâtiment B',
+      role: 'Client',
+      phone: '6 98 76 54 32',
+      status: 'Désactivé',
+    },
+    {
+      id: 3,
+      roomNumber: 'CU05',
+      building: 'Cité Universitaire',
+      role: 'Client',
+      phone: '6 98 76 54 32',
+      status: 'Activé',
+    },
+    {
+      id: 4,
+      roomNumber: 'A03',
+      building: 'Bâtiment A',
+      role: 'Agent',
+      phone: '6 98 76 54 32',
+      status: 'Activé',
+    },
+    {
+      id: 5,
+      roomNumber: 'BP08',
+      building: 'Bâtiment des Pères',
+      role: 'Client',
+      phone: '6 98 76 54 32',
+      status: 'Désactivé',
+    },
+    {
+      id: 6,
+      roomNumber: 'B15',
+      building: 'Bâtiment B',
+      role: 'Client',
+      phone: '6 98 76 54 32',
+      status: 'Activé',
+    },
+    {
+      id: 7,
+      roomNumber: 'CU20',
+      building: 'Cité Universitaire',
+      role: 'Agent',
+      phone: '6 98 76 54 32',
+      status: 'Activé',
+    },
+    {
+      id: 8,
+      roomNumber: 'A07',
+      building: 'Bâtiment A',
+      role: 'Client',
+      phone: '6 98 76 54 32',
+      status: 'Désactivé',
+    },
+    {
+      id: 9,
+      roomNumber: 'BP12',
+      building: 'Bâtiment des Pères',
+      role: 'Agent',
+      phone: '6 98 76 54 32',
+      status: 'Activé',
+    },
+  ]
+>>>>>>> 97a3049bb2eada32451b50c58738a847a56db0f9
 
   // Données simulées pour les agents (commentées - utilisation de l'API)
   // const agents = [
@@ -379,29 +527,92 @@ function Dashboard() {
 
   // Données simulées pour les incidents
   const incidents = [
-    { id: 1, building: 'Batiment A', roomNumber: 'A01', assignedAgent: 'Jon Snow', date: '25-09-2025', state: 'En cours' },
-    { id: 2, building: 'Batiment B', roomNumber: 'B11', assignedAgent: 'Jack Bauer', date: '25-09-2025', state: 'A Reparer' },
-    { id: 3, building: 'Batiment A', roomNumber: 'A04', assignedAgent: 'Luis Suarez', date: '25-09-2025', state: 'Bon Etat' },
-    { id: 4, building: 'Batiment A', roomNumber: 'A14', assignedAgent: 'Pablo Escobar', date: '25-09-2025', state: 'En cours' },
-    { id: 5, building: 'Batiment A', roomNumber: 'A08', assignedAgent: 'Jane Smith', date: '25-09-2025', state: 'En cours' },
-    { id: 6, building: 'Batiment D', roomNumber: 'D04', assignedAgent: 'Will Smith', date: '25-09-2025', state: 'Bon Etat' },
-    { id: 7, building: 'Batiment C', roomNumber: 'C04', assignedAgent: 'Lebron James', date: '25-09-2025', state: 'A Reparer' },
-    { id: 8, building: 'Batiment B', roomNumber: 'B02', assignedAgent: 'Steph Curry', date: '25-09-2025', state: 'A Reparer' },
-    { id: 9, building: 'Batiment D', roomNumber: 'D10', assignedAgent: 'Lionel Messi', date: '25-09-2025', state: 'En cours' }
+    {
+      id: 1,
+      building: 'Batiment A',
+      roomNumber: 'A01',
+      assignedAgent: 'Jon Snow',
+      date: '25-09-2025',
+      state: 'En cours',
+    },
+    {
+      id: 2,
+      building: 'Batiment B',
+      roomNumber: 'B11',
+      assignedAgent: 'Jack Bauer',
+      date: '25-09-2025',
+      state: 'A Reparer',
+    },
+    {
+      id: 3,
+      building: 'Batiment A',
+      roomNumber: 'A04',
+      assignedAgent: 'Luis Suarez',
+      date: '25-09-2025',
+      state: 'Bon Etat',
+    },
+    {
+      id: 4,
+      building: 'Batiment A',
+      roomNumber: 'A14',
+      assignedAgent: 'Pablo Escobar',
+      date: '25-09-2025',
+      state: 'En cours',
+    },
+    {
+      id: 5,
+      building: 'Batiment A',
+      roomNumber: 'A08',
+      assignedAgent: 'Jane Smith',
+      date: '25-09-2025',
+      state: 'En cours',
+    },
+    {
+      id: 6,
+      building: 'Batiment D',
+      roomNumber: 'D04',
+      assignedAgent: 'Will Smith',
+      date: '25-09-2025',
+      state: 'Bon Etat',
+    },
+    {
+      id: 7,
+      building: 'Batiment C',
+      roomNumber: 'C04',
+      assignedAgent: 'Lebron James',
+      date: '25-09-2025',
+      state: 'A Reparer',
+    },
+    {
+      id: 8,
+      building: 'Batiment B',
+      roomNumber: 'B02',
+      assignedAgent: 'Steph Curry',
+      date: '25-09-2025',
+      state: 'A Reparer',
+    },
+    {
+      id: 9,
+      building: 'Batiment D',
+      roomNumber: 'D10',
+      assignedAgent: 'Lionel Messi',
+      date: '25-09-2025',
+      state: 'En cours',
+    },
   ]
 
-  const pageTitle = 
-    activeMenu === 'batiment' 
+  const pageTitle =
+    activeMenu === 'batiment'
       ? 'Bâtiment'
       : activeMenu === 'equipement'
-      ? 'Equipement'
-      : activeMenu === 'occupant'
-      ? 'Occupant'
-      : activeMenu === 'agent'
-      ? 'Agent'
-      : activeMenu === 'incident'
-      ? 'Incident'
-      : 'Tableau de Bord'
+        ? 'Equipement'
+        : activeMenu === 'occupant'
+          ? 'Occupant'
+          : activeMenu === 'agent'
+            ? 'Agent'
+            : activeMenu === 'incident'
+              ? 'Incident'
+              : 'Tableau de Bord'
 
   // Fonctions de navigation
   const handleBuildingClick = (building) => {
@@ -446,17 +657,18 @@ function Dashboard() {
     } else if (viewLevel === 'floors' && selectedBuilding) {
       const floors = getFloorsForBuilding(selectedBuilding.id)
       const query = searchQuery.toLowerCase()
-      return floors.filter(floor => 
-        floor.name.toLowerCase().includes(query) ||
-        floor.number.toString().includes(query)
+      return floors.filter(
+        (floor) =>
+          floor.name.toLowerCase().includes(query) || floor.number.toString().includes(query)
       )
     } else if (viewLevel === 'spaces' && selectedBuilding && selectedFloor) {
       const spaces = getSpacesForFloor(selectedBuilding.id, selectedFloor.id)
       const query = searchQuery.toLowerCase()
-      return spaces.filter(space => 
-        space.name.toLowerCase().includes(query) ||
-        space.code.toLowerCase().includes(query) ||
-        space.type.toLowerCase().includes(query)
+      return spaces.filter(
+        (space) =>
+          space.name.toLowerCase().includes(query) ||
+          space.code.toLowerCase().includes(query) ||
+          space.type.toLowerCase().includes(query)
       )
     }
     return []
@@ -490,17 +702,17 @@ function Dashboard() {
   // Fonction pour gérer l'ajout d'un bâtiment
   const handleAddBuilding = (e) => {
     e.preventDefault()
-    
+
     // Simuler l'ajout du bâtiment (remplacer par l'appel API quand disponible)
     console.log('Bâtiment créé:', newBuilding)
-    
+
     // Réinitialiser le formulaire et fermer le modal
     setNewBuilding({
       name: '',
       code: '',
       type: 'Pédagogique',
       floors: 1,
-      spaces: 0
+      spaces: 0,
     })
     setShowAddBuildingModal(false)
   }
@@ -512,16 +724,16 @@ function Dashboard() {
       code: '',
       type: 'Pédagogique',
       floors: 1,
-      spaces: 0
+      spaces: 0,
     })
     setShowAddBuildingModal(false)
   }
 
   // Gestion des équipements
   const handleSelectEquipment = (equipmentId) => {
-    setSelectedEquipments(prev => {
+    setSelectedEquipments((prev) => {
       if (prev.includes(equipmentId)) {
-        return prev.filter(id => id !== equipmentId)
+        return prev.filter((id) => id !== equipmentId)
       } else {
         return [...prev, equipmentId]
       }
@@ -532,22 +744,22 @@ function Dashboard() {
     if (selectedEquipments.length === filteredEquipments.length) {
       setSelectedEquipments([])
     } else {
-      setSelectedEquipments(filteredEquipments.map(eq => eq.id))
+      setSelectedEquipments(filteredEquipments.map((eq) => eq.id))
     }
   }
 
   const handleAddEquipment = async (e) => {
     e.preventDefault()
-    
+
     try {
       const equipmentData = {
         ...newEquipment,
         value: parseFloat(newEquipment.value),
-        lifespan: parseInt(newEquipment.lifespan)
+        lifespan: parseInt(newEquipment.lifespan),
       }
-      
+
       await createEquipment(equipmentData)
-      
+
       // Réinitialiser le formulaire et fermer le modal
       setNewEquipment({
         name: '',
@@ -559,12 +771,11 @@ function Dashboard() {
         lifespan: '',
         description: '',
         state: 'bon etat',
-        status: 'Activé'
+        status: 'Activé',
       })
       setShowAddEquipmentModal(false)
-      
     } catch (error) {
-      console.error('Erreur lors de la création de l\'équipement:', error)
+      console.error("Erreur lors de la création de l'équipement:", error)
     }
   }
 
@@ -579,7 +790,7 @@ function Dashboard() {
       lifespan: '',
       description: '',
       state: 'bon etat',
-      status: 'Activé'
+      status: 'Activé',
     })
     setShowAddEquipmentModal(false)
   }
@@ -603,16 +814,16 @@ function Dashboard() {
       'à réparer': 'badge-a-reparer',
       'en maintenance': 'badge-en-maintenance',
       'hors service': 'badge-hors-service',
-      'en attente de piece': 'badge-en-attente-de-piece'
+      'en attente de piece': 'badge-en-attente-de-piece',
     }
     return stateMap[state] || 'badge-bon-etat'
   }
 
   // Gestion des occupants
   const handleSelectOccupant = (occupantId) => {
-    setSelectedOccupants(prev => {
+    setSelectedOccupants((prev) => {
       if (prev.includes(occupantId)) {
-        return prev.filter(id => id !== occupantId)
+        return prev.filter((id) => id !== occupantId)
       } else {
         return [...prev, occupantId]
       }
@@ -623,25 +834,32 @@ function Dashboard() {
     if (selectedOccupants.length === filteredOccupants.length) {
       setSelectedOccupants([])
     } else {
-      setSelectedOccupants(filteredOccupants.map(occ => occ.id))
+      setSelectedOccupants(filteredOccupants.map((occ) => occ.id))
     }
   }
 
   const handleAddOccupant = (e) => {
     e.preventDefault()
-    
+
     // Simuler la création (désactivé temporairement à cause de l'erreur 500)
     console.log('Occupant créé:', newOccupant)
-    
+
     // Réinitialiser le formulaire et fermer le modal
     setNewOccupant({
       roomNumber: '',
       username: '',
       password: '',
+<<<<<<< HEAD
       // building: '',
       // phone: '',
       // occupantType: '',
       status: 'Activé'
+=======
+      building: '',
+      phone: '',
+      occupantType: '',
+      status: 'Activé',
+>>>>>>> 97a3049bb2eada32451b50c58738a847a56db0f9
     })
     setShowAddOccupantModal(false)
   }
@@ -651,10 +869,17 @@ function Dashboard() {
       roomNumber: '',
       username: '',
       password: '',
+<<<<<<< HEAD
       // building: '',
       // phone: '',
       // occupantType: '',
       status: 'Activé'
+=======
+      building: '',
+      phone: '',
+      occupantType: '',
+      status: 'Activé',
+>>>>>>> 97a3049bb2eada32451b50c58738a847a56db0f9
     })
     setShowAddOccupantModal(false)
   }
@@ -662,8 +887,9 @@ function Dashboard() {
   // Debug: afficher l'état des données
   console.log('apiOccupants dans le rendu:', apiOccupants)
   console.log('loadingOccupants:', loadingOccupants)
-  
+
   // Filtrer les occupants selon la recherche (uniquement les données API)
+<<<<<<< HEAD
   const filteredOccupants = Array.isArray(apiOccupants) ? apiOccupants.filter((occupant) => {
     if (!occupant) return false
     const query = searchQuery.toLowerCase()
@@ -676,14 +902,30 @@ function Dashboard() {
     )
   }) : []
   
+=======
+  const filteredOccupants = Array.isArray(apiOccupants)
+    ? apiOccupants.filter((occupant) => {
+        if (!occupant) return false
+        const query = searchQuery.toLowerCase()
+        return (
+          (occupant.roomNumber || occupant.roomName || '').toLowerCase().includes(query) ||
+          (occupant.building || '').toLowerCase().includes(query) ||
+          (occupant.role || occupant.occupantType || '').toLowerCase().includes(query) ||
+          (occupant.phone || '').toLowerCase().includes(query) ||
+          (occupant.status || '').toLowerCase().includes(query)
+        )
+      })
+    : []
+
+>>>>>>> 97a3049bb2eada32451b50c58738a847a56db0f9
   console.log('filteredOccupants:', filteredOccupants)
   console.log('filteredOccupants.length:', filteredOccupants.length)
 
   // Gestion des agents
   const handleSelectAgent = (agentId) => {
-    setSelectedAgents(prev => {
+    setSelectedAgents((prev) => {
       if (prev.includes(agentId)) {
-        return prev.filter(id => id !== agentId)
+        return prev.filter((id) => id !== agentId)
       } else {
         return [...prev, agentId]
       }
@@ -694,16 +936,16 @@ function Dashboard() {
     if (selectedAgents.length === filteredAgents.length) {
       setSelectedAgents([])
     } else {
-      setSelectedAgents(filteredAgents.map(ag => ag.id))
+      setSelectedAgents(filteredAgents.map((ag) => ag.id))
     }
   }
 
   const handleAddAgent = (e) => {
     e.preventDefault()
-    
+
     // Simuler la création (désactivé temporairement à cause de l'erreur 500)
     console.log('Agent créé:', newAgent)
-    
+
     // Réinitialiser le formulaire et fermer le modal
     setNewAgent({
       name: '',
@@ -713,7 +955,7 @@ function Dashboard() {
       username: '',
       password: '',
       specialty: '',
-      status: 'Activé'
+      status: 'Activé',
     })
     setShowAddAgentModal(false)
   }
@@ -727,29 +969,31 @@ function Dashboard() {
       username: '',
       password: '',
       specialty: '',
-      status: 'Activé'
+      status: 'Activé',
     })
     setShowAddAgentModal(false)
   }
 
   // Filtrer les agents selon la recherche (uniquement les données API)
-  const filteredAgents = Array.isArray(apiAgents) ? apiAgents.filter((agent) => {
-    if (!agent) return false
-    const query = searchQuery.toLowerCase()
-    return (
-      (agent.name || '').toLowerCase().includes(query) ||
-      (agent.email || '').toLowerCase().includes(query) ||
-      (agent.specialty || '').toLowerCase().includes(query) ||
-      (agent.phone || '').toLowerCase().includes(query) ||
-      (agent.status || '').toLowerCase().includes(query)
-    )
-  }) : []
+  const filteredAgents = Array.isArray(apiAgents)
+    ? apiAgents.filter((agent) => {
+        if (!agent) return false
+        const query = searchQuery.toLowerCase()
+        return (
+          (agent.name || '').toLowerCase().includes(query) ||
+          (agent.email || '').toLowerCase().includes(query) ||
+          (agent.specialty || '').toLowerCase().includes(query) ||
+          (agent.phone || '').toLowerCase().includes(query) ||
+          (agent.status || '').toLowerCase().includes(query)
+        )
+      })
+    : []
 
   // Gestion des incidents
   const handleSelectIncident = (incidentId) => {
-    setSelectedIncidents(prev => {
+    setSelectedIncidents((prev) => {
       if (prev.includes(incidentId)) {
-        return prev.filter(id => id !== incidentId)
+        return prev.filter((id) => id !== incidentId)
       } else {
         return [...prev, incidentId]
       }
@@ -760,28 +1004,27 @@ function Dashboard() {
     if (selectedIncidents.length === filteredIncidents.length) {
       setSelectedIncidents([])
     } else {
-      setSelectedIncidents(filteredIncidents.map(inc => inc.id))
+      setSelectedIncidents(filteredIncidents.map((inc) => inc.id))
     }
   }
 
   const handleAddIncident = async (e) => {
     e.preventDefault()
-    
+
     try {
       await createIncident(newIncident)
-      
+
       // Réinitialiser le formulaire et fermer le modal
       setNewIncident({
         building: '',
         roomNumber: '',
         assignedAgent: '',
         date: '',
-        state: 'En cours'
+        state: 'En cours',
       })
       setShowAddIncidentModal(false)
-      
     } catch (error) {
-      console.error('Erreur lors de la création de l\'incident:', error)
+      console.error("Erreur lors de la création de l'incident:", error)
     }
   }
 
@@ -791,7 +1034,7 @@ function Dashboard() {
       roomNumber: '',
       assignedAgent: '',
       date: '',
-      state: 'En cours'
+      state: 'En cours',
     })
     setShowAddIncidentModal(false)
   }
@@ -813,7 +1056,7 @@ function Dashboard() {
     const stateMap = {
       'En cours': 'badge-en-cours',
       'A Reparer': 'badge-a-reparer',
-      'Bon Etat': 'badge-bon-etat'
+      'Bon Etat': 'badge-bon-etat',
     }
     return stateMap[state] || 'badge-en-cours'
   }
@@ -825,9 +1068,9 @@ function Dashboard() {
         <div className="sidebar-header">
           <img src={logo} alt="IMMO360" className="sidebar-logo" />
         </div>
-        
+
         <nav className="sidebar-menu">
-          <button 
+          <button
             className={`menu-item ${activeMenu === 'dashboard' ? 'active' : ''}`}
             onClick={() => {
               setActiveMenu('dashboard')
@@ -837,71 +1080,71 @@ function Dashboard() {
             <IoGridOutline className="menu-icon" />
             <span className="menu-text">Tableau de Bord</span>
           </button>
-          
-              <button 
-                className={`menu-item ${activeMenu === 'batiment' ? 'active' : ''}`}
-                onClick={() => {
-                  setActiveMenu('batiment')
-                  localStorage.setItem('activeMenu', 'batiment')
-                  setViewLevel('buildings')
-                  setSelectedBuilding(null)
-                  setSelectedFloor(null)
-                  setSearchQuery('')
-                }}
-              >
-                <IoBusinessOutline className="menu-icon" />
-                <span className="menu-text">Batiment</span>
-              </button>
-          
-            <button 
-              className={`menu-item ${activeMenu === 'equipement' ? 'active' : ''}`}
-              onClick={() => {
-                setActiveMenu('equipement')
-                localStorage.setItem('activeMenu', 'equipement')
-                setSearchQuery('')
-              }}
-            >
+
+          <button
+            className={`menu-item ${activeMenu === 'batiment' ? 'active' : ''}`}
+            onClick={() => {
+              setActiveMenu('batiment')
+              localStorage.setItem('activeMenu', 'batiment')
+              setViewLevel('buildings')
+              setSelectedBuilding(null)
+              setSelectedFloor(null)
+              setSearchQuery('')
+            }}
+          >
+            <IoBusinessOutline className="menu-icon" />
+            <span className="menu-text">Batiment</span>
+          </button>
+
+          <button
+            className={`menu-item ${activeMenu === 'equipement' ? 'active' : ''}`}
+            onClick={() => {
+              setActiveMenu('equipement')
+              localStorage.setItem('activeMenu', 'equipement')
+              setSearchQuery('')
+            }}
+          >
             <IoConstructOutline className="menu-icon" />
             <span className="menu-text">Equipement</span>
           </button>
-          
-            <button 
-              className={`menu-item ${activeMenu === 'occupant' ? 'active' : ''}`}
-              onClick={() => {
-                setActiveMenu('occupant')
-                localStorage.setItem('activeMenu', 'occupant')
-                setSearchQuery('')
-              }}
-            >
+
+          <button
+            className={`menu-item ${activeMenu === 'occupant' ? 'active' : ''}`}
+            onClick={() => {
+              setActiveMenu('occupant')
+              localStorage.setItem('activeMenu', 'occupant')
+              setSearchQuery('')
+            }}
+          >
             <IoPersonOutline className="menu-icon" />
             <span className="menu-text">Occupant</span>
           </button>
-          
-            <button 
-              className={`menu-item ${activeMenu === 'agent' ? 'active' : ''}`}
-              onClick={() => {
-                setActiveMenu('agent')
-                localStorage.setItem('activeMenu', 'agent')
-                setSearchQuery('')
-              }}
-            >
+
+          <button
+            className={`menu-item ${activeMenu === 'agent' ? 'active' : ''}`}
+            onClick={() => {
+              setActiveMenu('agent')
+              localStorage.setItem('activeMenu', 'agent')
+              setSearchQuery('')
+            }}
+          >
             <IoPeopleOutline className="menu-icon" />
             <span className="menu-text">Agent</span>
           </button>
-          
-            <button 
-              className={`menu-item ${activeMenu === 'incident' ? 'active' : ''}`}
-              onClick={() => {
-                setActiveMenu('incident')
-                localStorage.setItem('activeMenu', 'incident')
-                setSearchQuery('')
-              }}
-            >
+
+          <button
+            className={`menu-item ${activeMenu === 'incident' ? 'active' : ''}`}
+            onClick={() => {
+              setActiveMenu('incident')
+              localStorage.setItem('activeMenu', 'incident')
+              setSearchQuery('')
+            }}
+          >
             <IoWarningOutline className="menu-icon" />
             <span className="menu-text">Incident</span>
           </button>
-          
-          <button 
+
+          <button
             className={`menu-item ${activeMenu === 'analyse' ? 'active' : ''}`}
             onClick={() => {
               setActiveMenu('analyse')
@@ -925,9 +1168,7 @@ function Dashboard() {
         <header className="dashboard-header">
           <h1 className="dashboard-title">{pageTitle}</h1>
           <div className="header-actions">
-            <span className="user-name">
-              {localStorage.getItem('username') || 'Utilisateur'}
-            </span>
+            <span className="user-name">{localStorage.getItem('username') || 'Utilisateur'}</span>
             <button className="header-icon-btn">
               <IoPersonOutline />
             </button>
@@ -1077,10 +1318,10 @@ function Dashboard() {
                       <div className="grid-line"></div>
                     </div>
                     <svg className="wave-svg" viewBox="0 0 800 200" preserveAspectRatio="none">
-                      <path 
-                        d="M 0 100 Q 100 50, 200 90 T 400 80 T 600 60 T 800 40" 
-                        stroke="#ff9800" 
-                        strokeWidth="3" 
+                      <path
+                        d="M 0 100 Q 100 50, 200 90 T 400 80 T 600 60 T 800 40"
+                        stroke="#ff9800"
+                        strokeWidth="3"
                         fill="none"
                       />
                     </svg>
@@ -1142,12 +1383,10 @@ function Dashboard() {
                   <div className="buildings-header-top">
                     <div>
                       <h3 className="buildings-title">{getSectionTitle()}</h3>
-                      <p className="buildings-subtitle">
-                        {getSectionSubtitle()}
-                      </p>
+                      <p className="buildings-subtitle">{getSectionSubtitle()}</p>
                     </div>
                     {viewLevel === 'buildings' && (
-                      <button 
+                      <button
                         className="btn-add-building"
                         onClick={() => setShowAddBuildingModal(true)}
                       >
@@ -1204,72 +1443,88 @@ function Dashboard() {
                   <tbody>
                     {currentData.length > 0 ? (
                       <>
-                        {viewLevel === 'buildings' && currentData.map((building) => (
-                          <tr 
-                            key={building.code} 
-                            onClick={() => handleBuildingClick(building)}
-                            className="clickable-row"
-                          >
-                            <td>{building.name}</td>
-                            <td>{building.code}</td>
-                            <td>{building.type}</td>
-                            <td>{building.floors}</td>
-                            <td>{building.spaces}</td>
-                            <td>
-                              <span
-                                className={`badge-incidents ${
-                                  building.incidents > 20 ? 'badge-danger' : building.incidents > 10 ? 'badge-warning' : 'badge-success'
-                                }`}
-                              >
-                                {building.incidents}
-                              </span>
-                            </td>
-                          </tr>
-                        ))}
-                        {viewLevel === 'floors' && currentData.map((floor) => (
-                          <tr 
-                            key={floor.id}
-                            onClick={() => handleFloorClick(floor)}
-                            className="clickable-row"
-                          >
-                            <td>{floor.name}</td>
-                            <td>{floor.number}</td>
-                            <td>{floor.spaces}</td>
-                            <td>
-                              <span
-                                className={`badge-incidents ${
-                                  floor.incidents > 5 ? 'badge-warning' : 'badge-success'
-                                }`}
-                              >
-                                {floor.incidents}
-                              </span>
-                            </td>
-                          </tr>
-                        ))}
-                        {viewLevel === 'spaces' && currentData.map((space) => (
-                          <tr key={space.id}>
-                            <td>{space.code}</td>
-                            <td>{space.name}</td>
-                            <td>{space.type}</td>
-                            <td>{space.area}</td>
-                            <td>{space.occupants}</td>
-                            <td>{space.equipment}</td>
-                            <td>
-                              <span
-                                className={`badge-incidents ${
-                                  space.incidents > 2 ? 'badge-danger' : space.incidents > 0 ? 'badge-warning' : 'badge-success'
-                                }`}
-                              >
-                                {space.incidents}
-                              </span>
-                            </td>
-                          </tr>
-                        ))}
+                        {viewLevel === 'buildings' &&
+                          currentData.map((building) => (
+                            <tr
+                              key={building.code}
+                              onClick={() => handleBuildingClick(building)}
+                              className="clickable-row"
+                            >
+                              <td>{building.name}</td>
+                              <td>{building.code}</td>
+                              <td>{building.type}</td>
+                              <td>{building.floors}</td>
+                              <td>{building.spaces}</td>
+                              <td>
+                                <span
+                                  className={`badge-incidents ${
+                                    building.incidents > 20
+                                      ? 'badge-danger'
+                                      : building.incidents > 10
+                                        ? 'badge-warning'
+                                        : 'badge-success'
+                                  }`}
+                                >
+                                  {building.incidents}
+                                </span>
+                              </td>
+                            </tr>
+                          ))}
+                        {viewLevel === 'floors' &&
+                          currentData.map((floor) => (
+                            <tr
+                              key={floor.id}
+                              onClick={() => handleFloorClick(floor)}
+                              className="clickable-row"
+                            >
+                              <td>{floor.name}</td>
+                              <td>{floor.number}</td>
+                              <td>{floor.spaces}</td>
+                              <td>
+                                <span
+                                  className={`badge-incidents ${
+                                    floor.incidents > 5 ? 'badge-warning' : 'badge-success'
+                                  }`}
+                                >
+                                  {floor.incidents}
+                                </span>
+                              </td>
+                            </tr>
+                          ))}
+                        {viewLevel === 'spaces' &&
+                          currentData.map((space) => (
+                            <tr key={space.id}>
+                              <td>{space.code}</td>
+                              <td>{space.name}</td>
+                              <td>{space.type}</td>
+                              <td>{space.area}</td>
+                              <td>{space.occupants}</td>
+                              <td>{space.equipment}</td>
+                              <td>
+                                <span
+                                  className={`badge-incidents ${
+                                    space.incidents > 2
+                                      ? 'badge-danger'
+                                      : space.incidents > 0
+                                        ? 'badge-warning'
+                                        : 'badge-success'
+                                  }`}
+                                >
+                                  {space.incidents}
+                                </span>
+                              </td>
+                            </tr>
+                          ))}
                       </>
                     ) : (
                       <tr>
-                        <td colSpan={viewLevel === 'buildings' ? 6 : viewLevel === 'floors' ? 4 : 7} className="no-results">
-                          {searchQuery ? `Aucun résultat trouvé pour "${searchQuery}"` : 'Aucune donnée disponible'}
+                        <td
+                          colSpan={viewLevel === 'buildings' ? 6 : viewLevel === 'floors' ? 4 : 7}
+                          className="no-results"
+                        >
+                          {searchQuery
+                            ? `Aucun résultat trouvé pour "${searchQuery}"`
+                            : 'Aucune donnée disponible'}
                         </td>
                       </tr>
                     )}
@@ -1283,7 +1538,9 @@ function Dashboard() {
                   La cartographie interactive des bâtiments sera affichée ici.
                 </p>
                 <div className="buildings-map-placeholder">
-                  <span className="map-placeholder-label">Carte interactive bientôt disponible</span>
+                  <span className="map-placeholder-label">
+                    Carte interactive bientôt disponible
+                  </span>
                 </div>
               </div>
             </div>
@@ -1312,7 +1569,7 @@ function Dashboard() {
                 <button className="btn-sort">
                   <IoSwapVerticalOutline />
                 </button>
-                <button 
+                <button
                   className="btn-add-equipment"
                   onClick={() => setShowAddEquipmentModal(true)}
                 >
@@ -1327,21 +1584,19 @@ function Dashboard() {
                 <thead>
                   <tr>
                     <th className="checkbox-column">
-                      <button 
-                        className="checkbox-btn"
-                        onClick={handleSelectAllEquipments}
-                      >
-                        {selectedEquipments.length === filteredEquipments.length && filteredEquipments.length > 0 ? (
+                      <button className="checkbox-btn" onClick={handleSelectAllEquipments}>
+                        {selectedEquipments.length === filteredEquipments.length &&
+                        filteredEquipments.length > 0 ? (
                           <IoCheckboxOutline />
                         ) : (
                           <IoSquareOutline />
                         )}
                       </button>
                     </th>
-                    <th>Nom de l'équipement</th>
+                    <th>Nom de l&apos;équipement</th>
                     <th>Type</th>
                     <th>Etat</th>
-                    <th>Numéro de telephone</th>
+                    <th>Numero de telephone</th>
                     <th>Statut</th>
                     <th></th>
                   </tr>
@@ -1351,7 +1606,7 @@ function Dashboard() {
                     filteredEquipments.map((equipment) => (
                       <tr key={equipment.id}>
                         <td className="checkbox-column">
-                          <button 
+                          <button
                             className="checkbox-btn"
                             onClick={() => handleSelectEquipment(equipment.id)}
                           >
@@ -1371,7 +1626,9 @@ function Dashboard() {
                         </td>
                         <td className="equipment-maintenance">{equipment.lastMaintenance}</td>
                         <td>
-                          <span className={`badge-status ${equipment.status === 'Activé' ? 'badge-active' : 'badge-inactive'}`}>
+                          <span
+                            className={`badge-status ${equipment.status === 'Activé' ? 'badge-active' : 'badge-inactive'}`}
+                          >
                             {equipment.status}
                           </span>
                         </td>
@@ -1385,7 +1642,9 @@ function Dashboard() {
                   ) : (
                     <tr>
                       <td colSpan="7" className="no-results">
-                        {searchQuery ? `Aucun équipement trouvé pour "${searchQuery}"` : 'Aucun équipement disponible'}
+                        {searchQuery
+                          ? `Aucun équipement trouvé pour "${searchQuery}"`
+                          : 'Aucun équipement disponible'}
                       </td>
                     </tr>
                   )}
@@ -1421,10 +1680,7 @@ function Dashboard() {
                   <IoCloudDownloadOutline />
                   <span>Import csv</span>
                 </button>
-                <button 
-                  className="btn-add-occupant"
-                  onClick={() => setShowAddOccupantModal(true)}
-                >
+                <button className="btn-add-occupant" onClick={() => setShowAddOccupantModal(true)}>
                   <IoAddOutline />
                   <span>Ajouter</span>
                 </button>
@@ -1436,11 +1692,9 @@ function Dashboard() {
                 <thead>
                   <tr>
                     <th className="checkbox-column">
-                      <button 
-                        className="checkbox-btn"
-                        onClick={handleSelectAllOccupants}
-                      >
-                        {selectedOccupants.length === filteredOccupants.length && filteredOccupants.length > 0 ? (
+                      <button className="checkbox-btn" onClick={handleSelectAllOccupants}>
+                        {selectedOccupants.length === filteredOccupants.length &&
+                        filteredOccupants.length > 0 ? (
                           <IoCheckboxOutline />
                         ) : (
                           <IoSquareOutline />
@@ -1467,9 +1721,11 @@ function Dashboard() {
                     filteredOccupants.map((occupant, index) => (
                       <tr key={occupant.id || occupant._id || index}>
                         <td className="checkbox-column">
-                          <button 
+                          <button
                             className="checkbox-btn"
-                            onClick={() => handleSelectOccupant(occupant.id || occupant._id || index)}
+                            onClick={() =>
+                              handleSelectOccupant(occupant.id || occupant._id || index)
+                            }
                           >
                             {selectedOccupants.includes(occupant.id || occupant._id || index) ? (
                               <IoCheckboxOutline />
@@ -1478,13 +1734,26 @@ function Dashboard() {
                             )}
                           </button>
                         </td>
+<<<<<<< HEAD
                         <td className="occupant-room">{occupant.roomNumber || occupant.roomName || 'N/A'}</td>
                         <td className="occupant-name">{occupant.username || 'N/A'}</td>
                         {/* <td className="occupant-building">{occupant.building || 'N/A'}</td> */}
                         {/* <td className="occupant-role">{occupant.role || occupant.occupantType || 'N/A'}</td> */}
                         {/* <td className="occupant-phone">{occupant.phone || 'N/A'}</td> */}
+=======
+                        <td className="occupant-room">
+                          {occupant.roomNumber || occupant.roomName || 'N/A'}
+                        </td>
+                        <td className="occupant-building">{occupant.building || 'N/A'}</td>
+                        <td className="occupant-role">
+                          {occupant.role || occupant.occupantType || 'N/A'}
+                        </td>
+                        <td className="occupant-phone">{occupant.phone || 'N/A'}</td>
+>>>>>>> 97a3049bb2eada32451b50c58738a847a56db0f9
                         <td>
-                          <span className={`badge-status ${occupant.status === 'Activé' ? 'badge-active' : 'badge-inactive'}`}>
+                          <span
+                            className={`badge-status ${occupant.status === 'Activé' ? 'badge-active' : 'badge-inactive'}`}
+                          >
                             {occupant.status || 'N/A'}
                           </span>
                         </td>
@@ -1498,9 +1767,11 @@ function Dashboard() {
                   ) : (
                     <tr>
                       <td colSpan="7" className="no-results">
-                        {loadingOccupants ? 'Chargement...' : 
-                         searchQuery ? `Aucun occupant trouvé pour "${searchQuery}"` : 
-                         `Aucune donnée (API: ${apiOccupants.length}, Filtré: ${filteredOccupants.length})`}
+                        {loadingOccupants
+                          ? 'Chargement...'
+                          : searchQuery
+                            ? `Aucun occupant trouvé pour "${searchQuery}"`
+                            : `Aucune donnée (API: ${apiOccupants.length}, Filtré: ${filteredOccupants.length})`}
                       </td>
                     </tr>
                   )}
@@ -1536,10 +1807,7 @@ function Dashboard() {
                   <IoCloudDownloadOutline />
                   <span>Import csv</span>
                 </button>
-                <button 
-                  className="btn-add-agent"
-                  onClick={() => setShowAddAgentModal(true)}
-                >
+                <button className="btn-add-agent" onClick={() => setShowAddAgentModal(true)}>
                   <IoAddOutline />
                   <span>Ajouter</span>
                 </button>
@@ -1551,11 +1819,9 @@ function Dashboard() {
                 <thead>
                   <tr>
                     <th className="checkbox-column">
-                      <button 
-                        className="checkbox-btn"
-                        onClick={handleSelectAllAgents}
-                      >
-                        {selectedAgents.length === filteredAgents.length && filteredAgents.length > 0 ? (
+                      <button className="checkbox-btn" onClick={handleSelectAllAgents}>
+                        {selectedAgents.length === filteredAgents.length &&
+                        filteredAgents.length > 0 ? (
                           <IoCheckboxOutline />
                         ) : (
                           <IoSquareOutline />
@@ -1575,7 +1841,7 @@ function Dashboard() {
                     filteredAgents.map((agent) => (
                       <tr key={agent.id}>
                         <td className="checkbox-column">
-                          <button 
+                          <button
                             className="checkbox-btn"
                             onClick={() => handleSelectAgent(agent.id)}
                           >
@@ -1591,7 +1857,9 @@ function Dashboard() {
                         <td className="agent-specialty">{agent.specialty}</td>
                         <td className="agent-phone">{agent.phone}</td>
                         <td>
-                          <span className={`badge-status ${agent.status === 'Activé' ? 'badge-active' : 'badge-inactive'}`}>
+                          <span
+                            className={`badge-status ${agent.status === 'Activé' ? 'badge-active' : 'badge-inactive'}`}
+                          >
                             {agent.status}
                           </span>
                         </td>
@@ -1605,7 +1873,9 @@ function Dashboard() {
                   ) : (
                     <tr>
                       <td colSpan="7" className="no-results">
-                        {searchQuery ? `Aucun agent trouvé pour "${searchQuery}"` : 'Aucun agent disponible'}
+                        {searchQuery
+                          ? `Aucun agent trouvé pour "${searchQuery}"`
+                          : 'Aucun agent disponible'}
                       </td>
                     </tr>
                   )}
@@ -1637,10 +1907,7 @@ function Dashboard() {
                 <button className="btn-sort">
                   <IoSwapVerticalOutline />
                 </button>
-                <button 
-                  className="btn-add-incident"
-                  onClick={() => setShowAddIncidentModal(true)}
-                >
+                <button className="btn-add-incident" onClick={() => setShowAddIncidentModal(true)}>
                   <IoAddOutline />
                   <span>Ajouter</span>
                 </button>
@@ -1652,11 +1919,9 @@ function Dashboard() {
                 <thead>
                   <tr>
                     <th className="checkbox-column">
-                      <button 
-                        className="checkbox-btn"
-                        onClick={handleSelectAllIncidents}
-                      >
-                        {selectedIncidents.length === filteredIncidents.length && filteredIncidents.length > 0 ? (
+                      <button className="checkbox-btn" onClick={handleSelectAllIncidents}>
+                        {selectedIncidents.length === filteredIncidents.length &&
+                        filteredIncidents.length > 0 ? (
                           <IoCheckboxOutline />
                         ) : (
                           <IoSquareOutline />
@@ -1676,7 +1941,7 @@ function Dashboard() {
                     filteredIncidents.map((incident) => (
                       <tr key={incident.id}>
                         <td className="checkbox-column">
-                          <button 
+                          <button
                             className="checkbox-btn"
                             onClick={() => handleSelectIncident(incident.id)}
                           >
@@ -1692,7 +1957,9 @@ function Dashboard() {
                         <td className="incident-agent">{incident.assignedAgent}</td>
                         <td className="incident-date">{incident.date}</td>
                         <td>
-                          <span className={`badge-state ${getIncidentStateBadgeClass(incident.state)}`}>
+                          <span
+                            className={`badge-state ${getIncidentStateBadgeClass(incident.state)}`}
+                          >
                             {incident.state}
                           </span>
                         </td>
@@ -1706,7 +1973,9 @@ function Dashboard() {
                   ) : (
                     <tr>
                       <td colSpan="7" className="no-results">
-                        {searchQuery ? `Aucun incident trouvé pour "${searchQuery}"` : 'Aucun incident disponible'}
+                        {searchQuery
+                          ? `Aucun incident trouvé pour "${searchQuery}"`
+                          : 'Aucun incident disponible'}
                       </td>
                     </tr>
                   )}
@@ -1744,7 +2013,9 @@ function Dashboard() {
                     type="text"
                     id="building-code"
                     value={newBuilding.code}
-                    onChange={(e) => setNewBuilding({ ...newBuilding, code: e.target.value.toUpperCase() })}
+                    onChange={(e) =>
+                      setNewBuilding({ ...newBuilding, code: e.target.value.toUpperCase() })
+                    }
                     placeholder="Ex: BC"
                     required
                     maxLength={5}
@@ -1771,7 +2042,9 @@ function Dashboard() {
                       type="number"
                       id="building-floors"
                       value={newBuilding.floors}
-                      onChange={(e) => setNewBuilding({ ...newBuilding, floors: parseInt(e.target.value) || 1 })}
+                      onChange={(e) =>
+                        setNewBuilding({ ...newBuilding, floors: parseInt(e.target.value) || 1 })
+                      }
                       min="1"
                       required
                     />
@@ -1782,7 +2055,9 @@ function Dashboard() {
                       type="number"
                       id="building-spaces"
                       value={newBuilding.spaces}
-                      onChange={(e) => setNewBuilding({ ...newBuilding, spaces: parseInt(e.target.value) || 0 })}
+                      onChange={(e) =>
+                        setNewBuilding({ ...newBuilding, spaces: parseInt(e.target.value) || 0 })
+                      }
                       min="0"
                     />
                   </div>
@@ -1830,7 +2105,9 @@ function Dashboard() {
                         type="text"
                         id="equipment-model"
                         value={newEquipment.model}
-                        onChange={(e) => setNewEquipment({ ...newEquipment, model: e.target.value })}
+                        onChange={(e) =>
+                          setNewEquipment({ ...newEquipment, model: e.target.value })
+                        }
                         placeholder="Entrez le modele"
                         required
                       />
@@ -1841,7 +2118,9 @@ function Dashboard() {
                         type="text"
                         id="equipment-value"
                         value={newEquipment.value}
-                        onChange={(e) => setNewEquipment({ ...newEquipment, value: e.target.value })}
+                        onChange={(e) =>
+                          setNewEquipment({ ...newEquipment, value: e.target.value })
+                        }
                         placeholder="Entrez sa Valeur"
                         required
                       />
@@ -1852,7 +2131,9 @@ function Dashboard() {
                         type="text"
                         id="equipment-space"
                         value={newEquipment.space}
-                        onChange={(e) => setNewEquipment({ ...newEquipment, space: e.target.value })}
+                        onChange={(e) =>
+                          setNewEquipment({ ...newEquipment, space: e.target.value })
+                        }
                         placeholder="Entrez son espace"
                         required
                       />
@@ -1862,7 +2143,9 @@ function Dashboard() {
                       <textarea
                         id="equipment-description"
                         value={newEquipment.description}
-                        onChange={(e) => setNewEquipment({ ...newEquipment, description: e.target.value })}
+                        onChange={(e) =>
+                          setNewEquipment({ ...newEquipment, description: e.target.value })
+                        }
                         placeholder=""
                         rows={4}
                       />
@@ -1895,7 +2178,9 @@ function Dashboard() {
                         type="text"
                         id="equipment-brand"
                         value={newEquipment.brand}
-                        onChange={(e) => setNewEquipment({ ...newEquipment, brand: e.target.value })}
+                        onChange={(e) =>
+                          setNewEquipment({ ...newEquipment, brand: e.target.value })
+                        }
                         placeholder="Entrez la marque"
                         required
                       />
@@ -1906,7 +2191,9 @@ function Dashboard() {
                         type="text"
                         id="equipment-lifespan"
                         value={newEquipment.lifespan}
-                        onChange={(e) => setNewEquipment({ ...newEquipment, lifespan: e.target.value })}
+                        onChange={(e) =>
+                          setNewEquipment({ ...newEquipment, lifespan: e.target.value })
+                        }
                         placeholder="Entrez sa durée de vie"
                         required
                       />
@@ -1943,10 +2230,19 @@ function Dashboard() {
                       <label htmlFor="occupant-room-name">Numéro de Chambre</label>
                       <input
                         type="text"
+<<<<<<< HEAD
                         id="occupant-roomNumber"
                         value={newOccupant.roomNumber}
                         onChange={(e) => setNewOccupant({ ...newOccupant, roomNumber: e.target.value })}
                         placeholder="Entrez le numéro de la chambre"
+=======
+                        id="occupant-room-name"
+                        value={newOccupant.roomName}
+                        onChange={(e) =>
+                          setNewOccupant({ ...newOccupant, roomName: e.target.value })
+                        }
+                        placeholder="Entrez le nom de la chambre"
+>>>>>>> 97a3049bb2eada32451b50c58738a847a56db0f9
                         required
                       />
                     </div>
@@ -1967,7 +2263,9 @@ function Dashboard() {
                         type="password"
                         id="occupant-password"
                         value={newOccupant.password}
-                        onChange={(e) => setNewOccupant({ ...newOccupant, password: e.target.value })}
+                        onChange={(e) =>
+                          setNewOccupant({ ...newOccupant, password: e.target.value })
+                        }
                         placeholder="Entrez le mot de passe"
                         required
                       />
@@ -1979,7 +2277,9 @@ function Dashboard() {
                       <select
                         id="occupant-building"
                         value={newOccupant.building}
-                        onChange={(e) => setNewOccupant({ ...newOccupant, building: e.target.value })}
+                        onChange={(e) =>
+                          setNewOccupant({ ...newOccupant, building: e.target.value })
+                        }
                         required
                       >
                         <option value="">Selectionner le Batiment</option>
@@ -2004,10 +2304,18 @@ function Dashboard() {
                     <div className="form-group">
                       <label htmlFor="occupant-status">Statut de l'Occupant</label>
                       <select
+<<<<<<< HEAD
                         id="occupant-status"
                         value={newOccupant.status}
                         onChange={(e) => setNewOccupant({ ...newOccupant, occupantStatus: e.target.value })}
                         placeholder="Choisissez le statut de l'occupant"
+=======
+                        id="occupant-type"
+                        value={newOccupant.occupantType}
+                        onChange={(e) =>
+                          setNewOccupant({ ...newOccupant, occupantType: e.target.value })
+                        }
+>>>>>>> 97a3049bb2eada32451b50c58738a847a56db0f9
                         required
                       >
                         <option value="Activé">Activé</option>
@@ -2147,4 +2455,3 @@ function Dashboard() {
 }
 
 export default Dashboard
-

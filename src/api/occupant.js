@@ -6,7 +6,7 @@ export async function createOccupant(occupantData) {
     const response = await api.post('/occupants', occupantData)
     return response.data
   } catch (error) {
-    console.error('Erreur lors de la création de l\'occupant:', error)
+    console.error("Erreur lors de la création de l'occupant:", error)
     throw error
   }
 }
@@ -28,7 +28,7 @@ export async function updateOccupant(occupantId, occupantData) {
     const response = await api.put(`/occupants/${occupantId}`, occupantData)
     return response.data
   } catch (error) {
-    console.error('Erreur lors de la mise à jour de l\'occupant:', error)
+    console.error("Erreur lors de la mise à jour de l'occupant:", error)
     throw error
   }
 }
@@ -39,7 +39,7 @@ export async function deleteOccupant(occupantId) {
     const response = await api.delete(`/occupants/${occupantId}`)
     return response.data
   } catch (error) {
-    console.error('Erreur lors de la suppression de l\'occupant:', error)
+    console.error("Erreur lors de la suppression de l'occupant:", error)
     throw error
   }
 }
@@ -50,7 +50,7 @@ export async function getOccupantById(occupantId) {
     const response = await api.get(`/occupants/${occupantId}`)
     return response.data
   } catch (error) {
-    console.error('Erreur lors de la récupération de l\'occupant:', error)
+    console.error("Erreur lors de la récupération de l'occupant:", error)
     throw error
   }
 }
@@ -59,7 +59,7 @@ export async function getOccupantById(occupantId) {
 export async function searchOccupantsByName(name) {
   try {
     const response = await api.get(`/occupants/search`, {
-      params: { name }
+      params: { name },
     })
     return response.data
   } catch (error) {
