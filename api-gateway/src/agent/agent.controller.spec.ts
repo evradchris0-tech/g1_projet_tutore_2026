@@ -2,6 +2,7 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { AgentsController } from './agent.controller';
 import { HttpService } from '@nestjs/axios';
 import { of } from 'rxjs';
+import { describe, it, expect, beforeEach, jest } from '@jest/globals';
 
 describe('AgentController', () => {
   let controller: AgentsController;
