@@ -40,7 +40,7 @@ export default defineConfig(({ mode }) => {
       open: true,
       proxy: {
         '/api': {
-          target: process.env.VITE_API_BASE_URL ?? 'https://immo360-api-gateway.onrender.com',
+          target: process.env.VITE_API_BASE_URL ?? 'https://immo360-auth-service.onrender.com',
           changeOrigin: true,
           secure: false,
           rewrite: (p) => p.replace(/^\/api/, '/api')
