@@ -5,7 +5,7 @@ variables:
   NODE_VERSION: "20"
   NPM_CONFIG_CACHE: "$CI_PROJECT_DIR/.npm"
   NPM_CONFIG_PROGRESS: "false"
-  VITE_API_BASE_URL: "https://immo360-api-gateway.onrender.com/api"
+  VITE_API_BASE_URL: "https://immo360-api-gateway.onrender.com"
   CI: "true"
 
   RENDER_PRODUCTION_URL: "https://g1-projet-tutore-frontend.onrender.com"
