@@ -73,12 +73,12 @@ function Dashboard() {
   const [apiOccupants, setApiOccupants] = useState([])
   const [loadingOccupants, setLoadingOccupants] = useState(false)
   const [newOccupant, setNewOccupant] = useState({
-    roomName: '',
-    email: '',
+    roomNumber: '',
+    username: '',
     password: '',
-    building: '',
-    phone: '',
-    occupantType: '',
+    // building: '',
+    // phone: '',
+    // occupantType: '',
     status: 'Activé'
   })
 
@@ -351,17 +351,17 @@ function Dashboard() {
   ]
 
   // Données simulées pour les occupants
-  const occupants = [
-    { id: 1, roomNumber: 'A01', building: 'Bâtiment A', role: 'Agent', phone: '6 98 76 54 32', status: 'Activé' },
-    { id: 2, roomNumber: 'B12', building: 'Bâtiment B', role: 'Client', phone: '6 98 76 54 32', status: 'Désactivé' },
-    { id: 3, roomNumber: 'CU05', building: 'Cité Universitaire', role: 'Client', phone: '6 98 76 54 32', status: 'Activé' },
-    { id: 4, roomNumber: 'A03', building: 'Bâtiment A', role: 'Agent', phone: '6 98 76 54 32', status: 'Activé' },
-    { id: 5, roomNumber: 'BP08', building: 'Bâtiment des Pères', role: 'Client', phone: '6 98 76 54 32', status: 'Désactivé' },
-    { id: 6, roomNumber: 'B15', building: 'Bâtiment B', role: 'Client', phone: '6 98 76 54 32', status: 'Activé' },
-    { id: 7, roomNumber: 'CU20', building: 'Cité Universitaire', role: 'Agent', phone: '6 98 76 54 32', status: 'Activé' },
-    { id: 8, roomNumber: 'A07', building: 'Bâtiment A', role: 'Client', phone: '6 98 76 54 32', status: 'Désactivé' },
-    { id: 9, roomNumber: 'BP12', building: 'Bâtiment des Pères', role: 'Agent', phone: '6 98 76 54 32', status: 'Activé' }
-  ]
+  // const occupants = [
+  //   { id: 1, roomNumber: 'A01', building: 'Bâtiment A', role: 'Agent', phone: '6 98 76 54 32', status: 'Activé' },
+  //   { id: 2, roomNumber: 'B12', building: 'Bâtiment B', role: 'Client', phone: '6 98 76 54 32', status: 'Désactivé' },
+  //   { id: 3, roomNumber: 'CU05', building: 'Cité Universitaire', role: 'Client', phone: '6 98 76 54 32', status: 'Activé' },
+  //   { id: 4, roomNumber: 'A03', building: 'Bâtiment A', role: 'Agent', phone: '6 98 76 54 32', status: 'Activé' },
+  //   { id: 5, roomNumber: 'BP08', building: 'Bâtiment des Pères', role: 'Client', phone: '6 98 76 54 32', status: 'Désactivé' },
+  //   { id: 6, roomNumber: 'B15', building: 'Bâtiment B', role: 'Client', phone: '6 98 76 54 32', status: 'Activé' },
+  //   { id: 7, roomNumber: 'CU20', building: 'Cité Universitaire', role: 'Agent', phone: '6 98 76 54 32', status: 'Activé' },
+  //   { id: 8, roomNumber: 'A07', building: 'Bâtiment A', role: 'Client', phone: '6 98 76 54 32', status: 'Désactivé' },
+  //   { id: 9, roomNumber: 'BP12', building: 'Bâtiment des Pères', role: 'Agent', phone: '6 98 76 54 32', status: 'Activé' }
+  // ]
 
   // Données simulées pour les agents (commentées - utilisation de l'API)
   // const agents = [
@@ -635,12 +635,12 @@ function Dashboard() {
     
     // Réinitialiser le formulaire et fermer le modal
     setNewOccupant({
-      roomName: '',
-      email: '',
+      roomNumber: '',
+      username: '',
       password: '',
-      building: '',
-      phone: '',
-      occupantType: '',
+      // building: '',
+      // phone: '',
+      // occupantType: '',
       status: 'Activé'
     })
     setShowAddOccupantModal(false)
@@ -648,12 +648,12 @@ function Dashboard() {
 
   const handleCancelAddOccupant = () => {
     setNewOccupant({
-      roomName: '',
-      email: '',
+      roomNumber: '',
+      username: '',
       password: '',
-      building: '',
-      phone: '',
-      occupantType: '',
+      // building: '',
+      // phone: '',
+      // occupantType: '',
       status: 'Activé'
     })
     setShowAddOccupantModal(false)
@@ -669,9 +669,9 @@ function Dashboard() {
     const query = searchQuery.toLowerCase()
     return (
       (occupant.roomNumber || occupant.roomName || '').toLowerCase().includes(query) ||
-      (occupant.building || '').toLowerCase().includes(query) ||
-      (occupant.role || occupant.occupantType || '').toLowerCase().includes(query) ||
-      (occupant.phone || '').toLowerCase().includes(query) ||
+      // (occupant.building || '').toLowerCase().includes(query) ||
+      // (occupant.role || occupant.occupantType || '').toLowerCase().includes(query) ||
+      // (occupant.phone || '').toLowerCase().includes(query) ||
       (occupant.status || '').toLowerCase().includes(query)
     )
   }) : []
@@ -1448,9 +1448,10 @@ function Dashboard() {
                       </button>
                     </th>
                     <th>N° de Chambre</th>
-                    <th>Batiment</th>
-                    <th>Role</th>
-                    <th>N° de Telephone</th>
+                    <th>Nom de l'occupant</th>
+                    {/* <th>Role</th> */}
+                    {/* <th>N° de Telephone</th> */}
+                    {/* <th>Mot de passe</th> */}
                     <th>Statut</th>
                     <th></th>
                   </tr>
@@ -1478,9 +1479,10 @@ function Dashboard() {
                           </button>
                         </td>
                         <td className="occupant-room">{occupant.roomNumber || occupant.roomName || 'N/A'}</td>
-                        <td className="occupant-building">{occupant.building || 'N/A'}</td>
-                        <td className="occupant-role">{occupant.role || occupant.occupantType || 'N/A'}</td>
-                        <td className="occupant-phone">{occupant.phone || 'N/A'}</td>
+                        <td className="occupant-name">{occupant.username || 'N/A'}</td>
+                        {/* <td className="occupant-building">{occupant.building || 'N/A'}</td> */}
+                        {/* <td className="occupant-role">{occupant.role || occupant.occupantType || 'N/A'}</td> */}
+                        {/* <td className="occupant-phone">{occupant.phone || 'N/A'}</td> */}
                         <td>
                           <span className={`badge-status ${occupant.status === 'Activé' ? 'badge-active' : 'badge-inactive'}`}>
                             {occupant.status || 'N/A'}
@@ -1938,24 +1940,24 @@ function Dashboard() {
                 <div className="form-row-equipment">
                   <div className="form-column-left">
                     <div className="form-group">
-                      <label htmlFor="occupant-room-name">Nom de Chambre</label>
+                      <label htmlFor="occupant-room-name">Numéro de Chambre</label>
                       <input
                         type="text"
-                        id="occupant-room-name"
-                        value={newOccupant.roomName}
-                        onChange={(e) => setNewOccupant({ ...newOccupant, roomName: e.target.value })}
-                        placeholder="Entrez le nom de la chambre"
+                        id="occupant-roomNumber"
+                        value={newOccupant.roomNumber}
+                        onChange={(e) => setNewOccupant({ ...newOccupant, roomNumber: e.target.value })}
+                        placeholder="Entrez le numéro de la chambre"
                         required
                       />
                     </div>
                     <div className="form-group">
-                      <label htmlFor="occupant-email">Email</label>
+                      <label htmlFor="occupant-username">Nom</label>
                       <input
-                        type="email"
-                        id="occupant-email"
-                        value={newOccupant.email}
-                        onChange={(e) => setNewOccupant({ ...newOccupant, email: e.target.value })}
-                        placeholder="Entrez vôtre Email"
+                        type="text"
+                        id="occupant-username"
+                        value={newOccupant.username}
+                        onChange={(e) => setNewOccupant({ ...newOccupant, userame: e.target.value })}
+                        placeholder="Entrez votre nom"
                         required
                       />
                     </div>
@@ -2000,16 +2002,16 @@ function Dashboard() {
                       />
                     </div>
                     <div className="form-group">
-                      <label htmlFor="occupant-type">Type d&apos;Occupant</label>
+                      <label htmlFor="occupant-status">Statut de l'Occupant</label>
                       <select
-                        id="occupant-type"
-                        value={newOccupant.occupantType}
-                        onChange={(e) => setNewOccupant({ ...newOccupant, occupantType: e.target.value })}
+                        id="occupant-status"
+                        value={newOccupant.status}
+                        onChange={(e) => setNewOccupant({ ...newOccupant, occupantStatus: e.target.value })}
+                        placeholder="Choisissez le statut de l'occupant"
                         required
                       >
-                        <option value="">Selectionner le type d&apos;occupant</option>
-                        <option value="Agent">Agent</option>
-                        <option value="Client">Client</option>
+                        <option value="Activé">Activé</option>
+                        <option value="Désactivé">Désactivé</option>
                       </select>
                     </div>
                   </div>

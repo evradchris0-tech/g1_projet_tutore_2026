@@ -46,7 +46,7 @@
 import axios from 'axios';
 
 export const api = axios.create({
-  baseURL: import.meta.env.VITE_API_BASE_URL || '/api',
+  baseURL: 'https://immo360-auth-service.onrender.com',
   headers: {
     'Content-Type': 'application/json',
   },

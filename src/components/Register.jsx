@@ -15,7 +15,7 @@ function Register() {
     nom: '',
     prenom: '',
     phone: '',
-    access: 'ADMIN'
+    access: ''
   })
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
@@ -51,7 +51,7 @@ function Register() {
       }
       
       await register(userData)
-      navigate('/login')
+      navigate('/Dashboard')
     } catch (error) {
       setError(error.response?.data?.message || 'Erreur lors de l\'inscription.')
     } finally {
@@ -217,7 +217,9 @@ function Register() {
                     onChange={handleChange}
                     required
                   >
+                    <option value="">Sélectionner un accès</option>
                     <option value="ADMIN">ADMIN</option>
+                    <option value="SUPERADMIN">SUPERADMIN</option>
                   </select>
                 </div>
               </div>
