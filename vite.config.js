@@ -37,15 +37,7 @@ export default defineConfig(({ mode }) => {
       port: 3000,
       host: true,
       cors: true,
-      open: true,
-      proxy: {
-        '/api': {
-          target: 'https://immo360-api-gateway.onrender.com',
-          changeOrigin: true,
-          secure: false,
-          rewrite: (p) => p.replace(/^\/api/, '')
-        }
-      }
+      open: true
     },
 
     preview: {
