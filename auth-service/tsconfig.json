@@ -28,5 +28,6 @@
     "**/*.spec.ts",
     "**/*.e2e-spec.ts",
     "test"
-  ]
+  ],
+  "include": ["src/**/*.ts"]
 }
