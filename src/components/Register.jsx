@@ -20,11 +20,7 @@ function Register() {
     nom: '',
     prenom: '',
     phone: '',
-<<<<<<< HEAD
-    access: ''
-=======
-    access: 'ADMIN',
->>>>>>> 97a3049bb2eada32451b50c58738a847a56db0f9
+    access: 'ADMIN'
   })
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')

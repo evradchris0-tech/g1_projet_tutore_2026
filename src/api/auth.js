@@ -1,20 +1,20 @@
 import { api } from '../api/http'
 
 // Fonction pour s'inscrire
-export async function register(userData) {
-  try {
-    const response = await api.post('/auth/register', userData)
-    return response.data
-  } catch (error) {
-    console.error("Erreur lors de l'inscription:", error)
-    throw error
-  }
-}
+// export async function register(userData) { 
+//   try {
+//     const response = await api.post(`/auth/register`, userData)
+//     return response.data
+//   } catch (error) {
+//     console.error("Erreur lors de l'inscription:", error)
+//     throw error
+//   }
+// }
 
 // Fonction pour se connecter
 export async function login(username, password) {
   try {
-    const response = await api.post('/auth/login', { username, password })
+    const response = await api.post(`/auth/login`, { username, password })
     localStorage.setItem('token', response.data.token)
     return response
   } catch (error) {

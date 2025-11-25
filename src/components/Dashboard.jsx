@@ -76,17 +76,10 @@ function Dashboard() {
     roomNumber: '',
     username: '',
     password: '',
-<<<<<<< HEAD
-    // building: '',
-    // phone: '',
-    // occupantType: '',
-    status: 'Activé'
-=======
     building: '',
     phone: '',
     occupantType: '',
-    status: 'Activé',
->>>>>>> 97a3049bb2eada32451b50c58738a847a56db0f9
+    status: 'Activé'
   })
 
   // États pour la page Agents
@@ -421,8 +414,7 @@ function Dashboard() {
     },
   ]
 
-  // Données simulées pour les occupants
-<<<<<<< HEAD
+  // Données simulées pour les occupants (commentées - utilisation de l'API)
   // const occupants = [
   //   { id: 1, roomNumber: 'A01', building: 'Bâtiment A', role: 'Agent', phone: '6 98 76 54 32', status: 'Activé' },
   //   { id: 2, roomNumber: 'B12', building: 'Bâtiment B', role: 'Client', phone: '6 98 76 54 32', status: 'Désactivé' },
@@ -434,82 +426,6 @@ function Dashboard() {
   //   { id: 8, roomNumber: 'A07', building: 'Bâtiment A', role: 'Client', phone: '6 98 76 54 32', status: 'Désactivé' },
   //   { id: 9, roomNumber: 'BP12', building: 'Bâtiment des Pères', role: 'Agent', phone: '6 98 76 54 32', status: 'Activé' }
   // ]
-=======
-  const occupants = [
-    {
-      id: 1,
-      roomNumber: 'A01',
-      building: 'Bâtiment A',
-      role: 'Agent',
-      phone: '6 98 76 54 32',
-      status: 'Activé',
-    },
-    {
-      id: 2,
-      roomNumber: 'B12',
-      building: 'Bâtiment B',
-      role: 'Client',
-      phone: '6 98 76 54 32',
-      status: 'Désactivé',
-    },
-    {
-      id: 3,
-      roomNumber: 'CU05',
-      building: 'Cité Universitaire',
-      role: 'Client',
-      phone: '6 98 76 54 32',
-      status: 'Activé',
-    },
-    {
-      id: 4,
-      roomNumber: 'A03',
-      building: 'Bâtiment A',
-      role: 'Agent',
-      phone: '6 98 76 54 32',
-      status: 'Activé',
-    },
-    {
-      id: 5,
-      roomNumber: 'BP08',
-      building: 'Bâtiment des Pères',
-      role: 'Client',
-      phone: '6 98 76 54 32',
-      status: 'Désactivé',
-    },
-    {
-      id: 6,
-      roomNumber: 'B15',
-      building: 'Bâtiment B',
-      role: 'Client',
-      phone: '6 98 76 54 32',
-      status: 'Activé',
-    },
-    {
-      id: 7,
-      roomNumber: 'CU20',
-      building: 'Cité Universitaire',
-      role: 'Agent',
-      phone: '6 98 76 54 32',
-      status: 'Activé',
-    },
-    {
-      id: 8,
-      roomNumber: 'A07',
-      building: 'Bâtiment A',
-      role: 'Client',
-      phone: '6 98 76 54 32',
-      status: 'Désactivé',
-    },
-    {
-      id: 9,
-      roomNumber: 'BP12',
-      building: 'Bâtiment des Pères',
-      role: 'Agent',
-      phone: '6 98 76 54 32',
-      status: 'Activé',
-    },
-  ]
->>>>>>> 97a3049bb2eada32451b50c58738a847a56db0f9
 
   // Données simulées pour les agents (commentées - utilisation de l'API)
   // const agents = [
@@ -849,17 +765,10 @@ function Dashboard() {
       roomNumber: '',
       username: '',
       password: '',
-<<<<<<< HEAD
-      // building: '',
-      // phone: '',
-      // occupantType: '',
-      status: 'Activé'
-=======
       building: '',
       phone: '',
       occupantType: '',
-      status: 'Activé',
->>>>>>> 97a3049bb2eada32451b50c58738a847a56db0f9
+      status: 'Activé'
     })
     setShowAddOccupantModal(false)
   }
@@ -869,17 +778,10 @@ function Dashboard() {
       roomNumber: '',
       username: '',
       password: '',
-<<<<<<< HEAD
-      // building: '',
-      // phone: '',
-      // occupantType: '',
-      status: 'Activé'
-=======
       building: '',
       phone: '',
       occupantType: '',
-      status: 'Activé',
->>>>>>> 97a3049bb2eada32451b50c58738a847a56db0f9
+      status: 'Activé'
     })
     setShowAddOccupantModal(false)
   }
@@ -889,20 +791,6 @@ function Dashboard() {
   console.log('loadingOccupants:', loadingOccupants)
 
   // Filtrer les occupants selon la recherche (uniquement les données API)
-<<<<<<< HEAD
-  const filteredOccupants = Array.isArray(apiOccupants) ? apiOccupants.filter((occupant) => {
-    if (!occupant) return false
-    const query = searchQuery.toLowerCase()
-    return (
-      (occupant.roomNumber || occupant.roomName || '').toLowerCase().includes(query) ||
-      // (occupant.building || '').toLowerCase().includes(query) ||
-      // (occupant.role || occupant.occupantType || '').toLowerCase().includes(query) ||
-      // (occupant.phone || '').toLowerCase().includes(query) ||
-      (occupant.status || '').toLowerCase().includes(query)
-    )
-  }) : []
-  
-=======
   const filteredOccupants = Array.isArray(apiOccupants)
     ? apiOccupants.filter((occupant) => {
         if (!occupant) return false
@@ -916,8 +804,6 @@ function Dashboard() {
         )
       })
     : []
-
->>>>>>> 97a3049bb2eada32451b50c58738a847a56db0f9
   console.log('filteredOccupants:', filteredOccupants)
   console.log('filteredOccupants.length:', filteredOccupants.length)
 
@@ -1703,9 +1589,6 @@ function Dashboard() {
                     </th>
                     <th>N° de Chambre</th>
                     <th>Nom de l'occupant</th>
-                    {/* <th>Role</th> */}
-                    {/* <th>N° de Telephone</th> */}
-                    {/* <th>Mot de passe</th> */}
                     <th>Statut</th>
                     <th></th>
                   </tr>
@@ -1713,7 +1596,7 @@ function Dashboard() {
                 <tbody>
                   {loadingOccupants ? (
                     <tr>
-                      <td colSpan="7" className="no-results">
+                      <td colSpan="4" className="no-results">
                         Chargement des occupants... (API: {apiOccupants.length} items)
                       </td>
                     </tr>
@@ -1734,22 +1617,10 @@ function Dashboard() {
                             )}
                           </button>
                         </td>
-<<<<<<< HEAD
-                        <td className="occupant-room">{occupant.roomNumber || occupant.roomName || 'N/A'}</td>
-                        <td className="occupant-name">{occupant.username || 'N/A'}</td>
-                        {/* <td className="occupant-building">{occupant.building || 'N/A'}</td> */}
-                        {/* <td className="occupant-role">{occupant.role || occupant.occupantType || 'N/A'}</td> */}
-                        {/* <td className="occupant-phone">{occupant.phone || 'N/A'}</td> */}
-=======
                         <td className="occupant-room">
                           {occupant.roomNumber || occupant.roomName || 'N/A'}
                         </td>
-                        <td className="occupant-building">{occupant.building || 'N/A'}</td>
-                        <td className="occupant-role">
-                          {occupant.role || occupant.occupantType || 'N/A'}
-                        </td>
-                        <td className="occupant-phone">{occupant.phone || 'N/A'}</td>
->>>>>>> 97a3049bb2eada32451b50c58738a847a56db0f9
+                        <td className="occupant-name">{occupant.username || 'N/A'}</td>
                         <td>
                           <span
                             className={`badge-status ${occupant.status === 'Activé' ? 'badge-active' : 'badge-inactive'}`}
@@ -1766,7 +1637,7 @@ function Dashboard() {
                     ))
                   ) : (
                     <tr>
-                      <td colSpan="7" className="no-results">
+                      <td colSpan="4" className="no-results">
                         {loadingOccupants
                           ? 'Chargement...'
                           : searchQuery
@@ -2230,19 +2101,10 @@ function Dashboard() {
                       <label htmlFor="occupant-room-name">Numéro de Chambre</label>
                       <input
                         type="text"
-<<<<<<< HEAD
                         id="occupant-roomNumber"
                         value={newOccupant.roomNumber}
                         onChange={(e) => setNewOccupant({ ...newOccupant, roomNumber: e.target.value })}
                         placeholder="Entrez le numéro de la chambre"
-=======
-                        id="occupant-room-name"
-                        value={newOccupant.roomName}
-                        onChange={(e) =>
-                          setNewOccupant({ ...newOccupant, roomName: e.target.value })
-                        }
-                        placeholder="Entrez le nom de la chambre"
->>>>>>> 97a3049bb2eada32451b50c58738a847a56db0f9
                         required
                       />
                     </div>
@@ -2252,7 +2114,7 @@ function Dashboard() {
                         type="text"
                         id="occupant-username"
                         value={newOccupant.username}
-                        onChange={(e) => setNewOccupant({ ...newOccupant, userame: e.target.value })}
+                        onChange={(e) => setNewOccupant({ ...newOccupant, username: e.target.value })}
                         placeholder="Entrez votre nom"
                         required
                       />
@@ -2304,18 +2166,9 @@ function Dashboard() {
                     <div className="form-group">
                       <label htmlFor="occupant-status">Statut de l'Occupant</label>
                       <select
-<<<<<<< HEAD
                         id="occupant-status"
                         value={newOccupant.status}
-                        onChange={(e) => setNewOccupant({ ...newOccupant, occupantStatus: e.target.value })}
-                        placeholder="Choisissez le statut de l'occupant"
-=======
-                        id="occupant-type"
-                        value={newOccupant.occupantType}
-                        onChange={(e) =>
-                          setNewOccupant({ ...newOccupant, occupantType: e.target.value })
-                        }
->>>>>>> 97a3049bb2eada32451b50c58738a847a56db0f9
+                        onChange={(e) => setNewOccupant({ ...newOccupant, status: e.target.value })}
                         required
                       >
                         <option value="Activé">Activé</option>
