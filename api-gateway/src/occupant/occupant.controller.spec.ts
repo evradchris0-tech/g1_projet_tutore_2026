@@ -2,6 +2,7 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { OccupantsController } from './occupant.controller';
 import { HttpService } from '@nestjs/axios';
 import { of } from 'rxjs';
+import { describe, it, expect, jest, beforeEach } from '@jest/globals';
 
 describe('OccupantController', () => {
   let controller: OccupantsController;

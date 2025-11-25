@@ -2,6 +2,8 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { UserController } from './user.controller';
 import { HttpService } from '@nestjs/axios';
 import { of } from 'rxjs';
+import { describe, it, expect, beforeEach, jest } from '@jest/globals';
+
 
 describe('UserController', () => {
   let controller: UserController;
