@@ -2,10 +2,14 @@ import { Routes, Route, Navigate } from 'react-router-dom'
 import Login from './components/Login'
 import Dashboard from './components/Dashboard'
 import ProtectedRoute from './components/ProtectedRoute'
+import ForgotPassword from './components/ForgotPassword'
+import ResetForm from './components/ResetForm'
 import './App.css'
 
 function App() {
-  const isAuthenticated = localStorage.getItem('isAuthenticated') === 'true'
+  const hasAccessToken = Boolean(localStorage.getItem('accessToken'))
+  const isAuthenticated =
+    localStorage.getItem('isAuthenticated') === 'true' && hasAccessToken
 
   return (
     <Routes>
@@ -27,6 +31,8 @@ function App() {
           </ProtectedRoute>
         } 
       />
+      <Route path="/mot-de-passe-oublie" element={<ForgotPassword />} />
+      <Route path="/reset-form" element={<ResetForm />} />
     </Routes>
   )
 }

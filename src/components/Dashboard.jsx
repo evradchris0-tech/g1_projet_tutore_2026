@@ -1,116 +1,231 @@
-import { useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useEffect, useRef, useState } from 'react'
 import { 
-  IoGridOutline, 
   IoBusinessOutline, 
   IoConstructOutline, 
   IoPersonOutline, 
-  IoPeopleOutline, 
+  IoPeopleOutline,
   IoWarningOutline, 
-  IoStatsChartOutline, 
-  IoLogOutOutline,
+  IoGridOutline,
   IoNotificationsOutline,
-  IoSettingsOutline,
   IoSearchOutline,
   IoAddOutline,
-  IoCloseOutline,
-  IoArrowBackOutline,
-  IoFilterOutline,
-  IoSwapVerticalOutline,
-  IoEllipsisVerticalOutline,
   IoCheckboxOutline,
-  IoSquareOutline,
-  IoCloudDownloadOutline
+  IoCalendarOutline,
+  IoAlertCircleOutline,
+  IoCheckmarkCircleOutline,
+  IoStatsChartOutline,
+  IoLogOutOutline,
+  IoOptionsOutline,
+  IoCloseOutline,
+  IoMailOutline,
+  IoCallOutline,
+  IoLocationOutline,
+  IoLanguageOutline,
+  IoMoonOutline,
+  IoSunnyOutline,
+  IoVolumeHighOutline,
+  IoCheckmarkOutline,
+  IoRefreshOutline
 } from 'react-icons/io5'
 import '../styles/Dashboard.css'
-import logo from '../assets/logo 1.png'
+import Sidebar from './Sidebar'
+import Agents from './Agents'
+import Occupants from './Occupants'
+import Buildings from './Buildings'
+import Equipments from './Equipments'
+import Incidents from './Incidents'
+import Spinner from './Spinner'
+import { listUsers } from '../services/users'
 
 function Dashboard() {
   // Récupérer l'état du menu actif depuis localStorage ou utiliser 'dashboard' par défaut
   const [activeMenu, setActiveMenu] = useState(() => {
     return localStorage.getItem('activeMenu') || 'dashboard'
   })
-  const navigate = useNavigate()
+  // searchQuery est utilisé comme filtre dans les pages (incidents/équipements/utilisateurs)
   const [searchQuery, setSearchQuery] = useState('')
-  const [showAddBuildingModal, setShowAddBuildingModal] = useState(false)
-  const [newBuilding, setNewBuilding] = useState({
-    name: '',
-    code: '',
-    type: 'Pédagogique',
-    floors: 1,
-    spaces: 0
+  // recherche globale depuis le dashboard (ne filtre pas les cartes du dashboard)
+  const [dashboardSearchQuery, setDashboardSearchQuery] = useState('')
+  const [showDashboardSearchDropdown, setShowDashboardSearchDropdown] = useState(false)
+  const [period, setPeriod] = useState('Mensuel') // Journalier, Hebdomadaire, Mensuel, Semestriel, Annuel
+  const [showProfileMenu, setShowProfileMenu] = useState(false)
+  const [showNotificationsMenu, setShowNotificationsMenu] = useState(false)
+  const [showSettingsMenu, setShowSettingsMenu] = useState(false) // conserver état mais bouton retiré
+  const [showProfileModal, setShowProfileModal] = useState(false)
+  const [showPreferencesModal, setShowPreferencesModal] = useState(false)
+  const [isLoading, setIsLoading] = useState(true)
+  const [openCreateModalRequest, setOpenCreateModalRequest] = useState(null) // { menuId, token }
+  const [backendAgentsCount, setBackendAgentsCount] = useState(null)
+  const [backendOccupantsCount, setBackendOccupantsCount] = useState(null)
+  const [backendUsers, setBackendUsers] = useState([])
+  const [isLoadingUsers, setIsLoadingUsers] = useState(false)
+  const [usersMessage, setUsersMessage] = useState('')
+  
+  // Données du profil utilisateur (pour l'instant simulées, à remplacer par les vraies données)
+  const [userProfile, setUserProfile] = useState({
+    firstName: 'Paul',
+    lastName: 'BABODO',
+    email: 'paul.babodo@iusjc.cm',
+    phone: '+237 6XX XXX XXX',
+    position: 'Administrateur Système',
+    department: 'Direction Informatique',
+    location: 'Yaoundé, Cameroun',
+    avatar: null // Pour l'instant pas d'avatar
   })
   
-  // États pour la navigation hiérarchique (Bâtiments)
-  const [viewLevel, setViewLevel] = useState('buildings') // 'buildings' | 'floors' | 'spaces'
-  const [selectedBuilding, setSelectedBuilding] = useState(null)
-  const [selectedFloor, setSelectedFloor] = useState(null)
-  
-  // États pour la page Équipements
-  const [selectedEquipments, setSelectedEquipments] = useState([])
-  const [showAddEquipmentModal, setShowAddEquipmentModal] = useState(false)
-  const [newEquipment, setNewEquipment] = useState({
-    name: '',
-    model: '',
-    value: '',
-    space: '',
-    type: '',
-    brand: '',
-    lifespan: '',
-    description: '',
-    state: 'bon etat',
-    status: 'Activé'
+  const [isEditing, setIsEditing] = useState(false)
+  const [editedProfile, setEditedProfile] = useState(userProfile)
+
+  // Préférences utilisateur
+  const [userPreferences, setUserPreferences] = useState({
+    language: 'fr',
+    theme: 'light',
+    notifications: {
+      email: true,
+      push: true,
+      sms: false
+    },
+    dashboard: {
+      itemsPerPage: 10,
+      defaultPeriod: 'Mensuel',
+      showCharts: true
+    },
+    privacy: {
+      showEmail: true,
+      showPhone: false
+    }
   })
 
-  // États pour la page Occupants
-  const [selectedOccupants, setSelectedOccupants] = useState([])
-  const [showAddOccupantModal, setShowAddOccupantModal] = useState(false)
-  const [newOccupant, setNewOccupant] = useState({
-    roomName: '',
-    email: '',
-    password: '',
-    building: '',
-    phone: '',
-    occupantType: '',
-    status: 'Activé'
-  })
+  const [editedPreferences, setEditedPreferences] = useState(userPreferences)
 
-  // États pour la page Agents
-  const [selectedAgents, setSelectedAgents] = useState([])
-  const [showAddAgentModal, setShowAddAgentModal] = useState(false)
-  const [newAgent, setNewAgent] = useState({
-    name: '',
-    firstName: '',
-    email: '',
-    phone: '',
-    username: '',
-    password: '',
-    specialty: '',
-    status: 'Activé'
-  })
+  // Initialiser editedProfile quand userProfile change
+  useEffect(() => {
+    setEditedProfile(userProfile)
+  }, [userProfile])
 
-  // États pour la page Incidents
-  const [selectedIncidents, setSelectedIncidents] = useState([])
-  const [showAddIncidentModal, setShowAddIncidentModal] = useState(false)
-  const [newIncident, setNewIncident] = useState({
-    building: '',
-    roomNumber: '',
-    assignedAgent: '',
-    date: '',
-    state: 'En cours'
-  })
-
-  const handleLogout = () => {
-    // TODO: Implémenter la vraie logique de déconnexion avec le backend
-    // Supprimer l'état de connexion du localStorage
-    localStorage.removeItem('isAuthenticated')
-    localStorage.removeItem('username')
-    
-    // Redirection vers la page de login
-    navigate('/login')
+  // Fonction pour gérer l'ouverture du modal
+  const handleOpenProfileModal = () => {
+    setShowProfileModal(true)
+    setShowProfileMenu(false)
+    setIsEditing(false)
+    setEditedProfile(userProfile)
   }
 
-  const statsData = [
+  // Fonction pour activer le mode édition
+  const handleEditProfile = () => {
+    setIsEditing(true)
+  }
+
+  // Fonction pour annuler l'édition
+  const handleCancelEdit = () => {
+    setIsEditing(false)
+    setEditedProfile(userProfile)
+  }
+
+  // Fonction pour sauvegarder les modifications
+  const handleSaveProfile = (e) => {
+    e.preventDefault()
+    // TODO: Implémenter l'appel API pour sauvegarder le profil
+    setUserProfile(editedProfile)
+    setIsEditing(false)
+    // Optionnel: Afficher un message de succès
+    console.log('Profil mis à jour:', editedProfile)
+  }
+
+  // Fonction pour fermer le modal
+  const handleCloseProfileModal = () => {
+    setShowProfileModal(false)
+    setIsEditing(false)
+    setEditedProfile(userProfile)
+  }
+
+  // Fonction pour gérer l'ouverture du modal de préférences
+  const handleOpenPreferencesModal = () => {
+    setShowPreferencesModal(true)
+    setShowProfileMenu(false)
+    setEditedPreferences(userPreferences)
+  }
+
+  // Fonction pour sauvegarder les préférences
+  const handleSavePreferences = (e) => {
+    e.preventDefault()
+    // TODO: Implémenter l'appel API pour sauvegarder les préférences
+    setUserPreferences(editedPreferences)
+    console.log('Préférences mises à jour:', editedPreferences)
+    setShowPreferencesModal(false)
+  }
+
+  // Fonction pour fermer le modal de préférences
+  const handleClosePreferencesModal = () => {
+    setShowPreferencesModal(false)
+    setEditedPreferences(userPreferences)
+  }
+
+  const profileRef = useRef(null)
+  const notifRef = useRef(null)
+  const settingsRef = useRef(null) // laissé pour compat futur, bouton retiré
+  const dashboardSearchRef = useRef(null)
+
+  // Callback pour réinitialiser certains états quand on change de menu
+  const handleMenuChange = (menuId) => {
+    setSearchQuery('')
+  }
+
+  const triggerCreateModal = (menuId) => {
+    const token = Date.now()
+    setActiveMenu(menuId)
+    localStorage.setItem('activeMenu', menuId)
+    handleMenuChange(menuId)
+    setOpenCreateModalRequest({ menuId, token })
+  }
+
+  const handleRefreshUsersStats = async () => {
+    // Vérifier si on utilise le backdoor (faux token)
+    const accessToken = localStorage.getItem('accessToken')
+    if (accessToken === 'backdoor-access-token') {
+      setUsersMessage('⚠️ Mode backdoor actif - données simulées uniquement. Connectez-vous avec un vrai compte pour les données backend.')
+      return
+    }
+
+    setIsLoadingUsers(true)
+    setUsersMessage('')
+    try {
+      // Note: le backend limite à 100 éléments max par page
+      const [agentsRes, occupantsRes] = await Promise.all([
+        listUsers({ role: 'AGENT_TERRAIN', page: 1, limit: 100 }),
+        listUsers({ role: 'OCCUPANT', page: 1, limit: 100 })
+      ])
+
+      const agentsCount = agentsRes?.total ?? agentsRes?.data?.length ?? 0
+      const occupantsCount = occupantsRes?.total ?? occupantsRes?.data?.length ?? 0
+
+      const mappedAgents =
+        agentsRes?.data?.map((u) => ({
+          id: u.id,
+          type: 'agent',
+          name: u.fullName || `${u.firstName || ''} ${u.lastName || ''}`.trim(),
+          email: u.email
+        })) || []
+      const mappedOccupants =
+        occupantsRes?.data?.map((u) => ({
+          id: u.id,
+          type: 'occupant',
+          name: u.fullName || `${u.firstName || ''} ${u.lastName || ''}`.trim(),
+          email: u.email
+        })) || []
+
+      setBackendAgentsCount(agentsCount)
+      setBackendOccupantsCount(occupantsCount)
+      setBackendUsers([...mappedAgents, ...mappedOccupants])
+      setUsersMessage(`✅ Stats mises à jour (Agents: ${agentsCount}, Occupants: ${occupantsCount})`)
+    } catch (error) {
+      setUsersMessage(`❌ Erreur stats: ${error?.message || 'Erreur inconnue'}`)
+    } finally {
+      setIsLoadingUsers(false)
+    }
+  }
+
+  const baseStatsData = [
     { 
       title: 'Incidents', 
       count: 35, 
@@ -141,194 +256,73 @@ function Dashboard() {
     }
   ]
 
-  const buildingStats = [
-    {
-      title: 'Bâtiments',
-      count: 4,
-      description: 'Nombre total de bâtiments sur le site',
-      icon: IoBusinessOutline,
-      bgColor: '#3b82f6'
-    },
-    {
-      title: 'Étages',
-      count: 12,
-      description: 'Nombre total d’étages configurés',
-      icon: IoGridOutline,
-      bgColor: '#10b981'
-    },
-    {
-      title: 'Espaces',
-      count: 215,
-      description: 'Chambres, salles de classe et bureaux',
-      icon: IoConstructOutline,
-      bgColor: '#6366f1'
+  const statsData = baseStatsData.map((stat) => {
+    if (stat.title === 'Agents' && backendAgentsCount !== null) {
+      return { ...stat, count: backendAgentsCount }
     }
+    if (stat.title === 'Occupants' && backendOccupantsCount !== null) {
+      return { ...stat, count: backendOccupantsCount }
+    }
+    return stat
+  })
+
+  const topDefectiveRooms = [
+    { code: 'CU101', building: 'Cité U', floor: 'RDC', defects: 5 },
+    { code: 'CU205', building: 'Cité U', floor: '2ème', defects: 4 },
+    { code: 'BP102', building: 'Bât. Pères', floor: '1er', defects: 3 },
+    { code: 'BA304', building: 'Bâtiment A', floor: '3ème', defects: 3 },
+    { code: 'BB201', building: 'Bâtiment B', floor: '2ème', defects: 2 },
   ]
 
-  const buildings = [
+  const roomsWithoutIncidents = [
+    { code: 'CU301', building: 'Cité U', floor: '3ème' },
+    { code: 'CU302', building: 'Cité U', floor: '3ème' },
+    { code: 'BP201', building: 'Bât. Pères', floor: '2ème' },
+    { code: 'BA101', building: 'Bâtiment A', floor: 'RDC' },
+    { code: 'BB105', building: 'Bâtiment B', floor: '1er' },
+  ]
+
+  const equipmentStatsByBuilding = [
+    { building: 'Bâtiment A', total: 120, active: 110, defective: 10 },
+    { building: 'Bâtiment B', total: 85, active: 80, defective: 5 },
+    { building: 'Cité U', total: 210, active: 190, defective: 20 },
+    { building: 'Bât. Pères', total: 65, active: 60, defective: 5 },
+  ]
+
+
+  const recentActivity = [
     {
       id: 1,
-      name: 'Bâtiment A',
-      code: 'BA',
-      type: 'Pédagogique',
-      floors: 3,
-      spaces: 42,
-      incidents: 18
+      icon: IoAddOutline,
+      iconBg: '#fee2e2',
+      iconColor: '#dc2626',
+      text: "Nouvel incident #123 créé pour 'Serveur Principal'",
+      time: 'il y a 2m'
     },
     {
       id: 2,
-      name: 'Bâtiment B',
-      code: 'BB',
-      type: 'Pédagogique',
-      floors: 2,
-      spaces: 28,
-      incidents: 9
+      icon: IoConstructOutline,
+      iconBg: '#fef3c7',
+      iconColor: '#92400e',
+      text: "Le statut de l’incident #121 est passé à 'En cours'",
+      time: 'il y a 15m'
     },
     {
       id: 3,
-      name: 'Cité Universitaire',
-      code: 'CU',
-      type: 'Résidentiel',
-      floors: 4,
-      spaces: 96,
-      incidents: 32
+      icon: IoCheckboxOutline,
+      iconBg: '#dcfce7',
+      iconColor: '#166534',
+      text: "L’incident #119 a été résolu",
+      time: 'il y a 1h'
     },
     {
       id: 4,
-      name: 'Bâtiment des Pères',
-      code: 'BP',
-      type: 'Résidentiel',
-      floors: 3,
-      spaces: 24,
-      incidents: 6
+      icon: IoPersonOutline,
+      iconBg: '#dbeafe',
+      iconColor: '#1d4ed8',
+      text: "Un nouvel utilisateur 'Alice Martin' a été ajouté",
+      time: 'il y a 3h'
     }
-  ]
-
-  // Données simulées pour les étages (générées dynamiquement)
-  const getFloorsForBuilding = (buildingId) => {
-    const building = buildings.find(b => b.id === buildingId)
-    if (!building) return []
-    
-    const floors = []
-    for (let i = 0; i < building.floors; i++) {
-      floors.push({
-        id: `${buildingId}-floor-${i}`,
-        buildingId: buildingId,
-        number: i,
-        name: i === 0 ? 'Rez-de-chaussée' : `Étage ${i}`,
-        spaces: Math.floor(building.spaces / building.floors),
-        incidents: Math.floor(Math.random() * 10)
-      })
-    }
-    return floors
-  }
-
-  // Données simulées pour les espaces
-  const getSpacesForFloor = (buildingId, floorId) => {
-    const building = buildings.find(b => b.id === buildingId)
-    if (!building) return []
-    
-    const floors = getFloorsForBuilding(buildingId)
-    const floor = floors.find(f => f.id === floorId)
-    if (!floor) return []
-    
-    const spaces = []
-    const spaceTypes = building.type === 'Résidentiel' 
-      ? ['Chambre', 'Salle commune', 'Bureau']
-      : ['Salle de classe', 'Laboratoire', 'Bureau', 'Amphithéâtre']
-    
-    for (let i = 1; i <= floor.spaces; i++) {
-      const type = spaceTypes[Math.floor(Math.random() * spaceTypes.length)]
-      spaces.push({
-        id: `${floorId}-space-${i}`,
-        floorId: floorId,
-        code: `${building.code}${floor.number}${String(i).padStart(2, '0')}`,
-        name: `${type} ${building.code}${floor.number}${String(i).padStart(2, '0')}`,
-        type: type,
-        area: Math.floor(Math.random() * 50) + 20,
-        occupants: Math.floor(Math.random() * 30),
-        equipment: Math.floor(Math.random() * 15),
-        incidents: Math.floor(Math.random() * 5)
-      })
-    }
-    return spaces
-  }
-
-  const recentIncidents = [
-    {
-      building: 'Batiment A - Ch A01 - 07/11/2025',
-      equipment: 'Frigo',
-      description: 'Le moteur ne ronfle plus',
-      status: 'A remplacer',
-      statusColor: '#ff4757'
-    },
-    {
-      building: 'Batiment A - Ch A01 - 07/11/2025',
-      equipment: 'Frigo',
-      description: 'Le moteur ne ronfle plus',
-      status: 'Bon Etat',
-      statusColor: '#10b981'
-    },
-    {
-      building: 'Batiment A - Ch A01 - 07/11/2025',
-      equipment: 'Frigo',
-      description: 'Le moteur ne ronfle plus',
-      status: 'A remplacer',
-      statusColor: '#ff9800'
-    }
-  ]
-
-  // Données simulées pour les équipements
-  const equipments = [
-    { id: 1, name: 'Réfrigérateur LG 450L', type: 'Réfrigérateur', state: 'bon etat', lastMaintenance: '6 98 76 54 32', status: 'Activé' },
-    { id: 2, name: 'Climatiseur Samsung', type: 'Climatiseur', state: 'à remplacer', lastMaintenance: '6 98 76 54 32', status: 'Désactivé' },
-    { id: 3, name: 'Ordinateur HP ProDesk', type: 'Ordinateur', state: 'bon etat', lastMaintenance: '6 98 76 54 32', status: 'Activé' },
-    { id: 4, name: 'Imprimante Canon', type: 'Imprimante', state: 'à réparer', lastMaintenance: '6 98 76 54 32', status: 'Activé' },
-    { id: 5, name: 'Table de Bureau', type: 'Mobilier', state: 'en maintenance', lastMaintenance: '6 98 76 54 32', status: 'Désactivé' },
-    { id: 6, name: 'Ventilateur Plafond', type: 'Ventilateur', state: 'bon etat', lastMaintenance: '6 98 76 54 32', status: 'Activé' },
-    { id: 7, name: 'Projecteur Epson', type: 'Projecteur', state: 'hors service', lastMaintenance: '6 98 76 54 32', status: 'Désactivé' },
-    { id: 8, name: 'Machine à Café', type: 'Machine à Café', state: 'en attente de piece', lastMaintenance: '6 98 76 54 32', status: 'Désactivé' },
-    { id: 9, name: 'Lampe LED Bureau', type: 'Éclairage', state: 'bon etat', lastMaintenance: '6 98 76 54 32', status: 'Activé' }
-  ]
-
-  // Données simulées pour les occupants
-  const occupants = [
-    { id: 1, roomNumber: 'A01', building: 'Bâtiment A', role: 'Agent', phone: '6 98 76 54 32', status: 'Activé' },
-    { id: 2, roomNumber: 'B12', building: 'Bâtiment B', role: 'Client', phone: '6 98 76 54 32', status: 'Désactivé' },
-    { id: 3, roomNumber: 'CU05', building: 'Cité Universitaire', role: 'Client', phone: '6 98 76 54 32', status: 'Activé' },
-    { id: 4, roomNumber: 'A03', building: 'Bâtiment A', role: 'Agent', phone: '6 98 76 54 32', status: 'Activé' },
-    { id: 5, roomNumber: 'BP08', building: 'Bâtiment des Pères', role: 'Client', phone: '6 98 76 54 32', status: 'Désactivé' },
-    { id: 6, roomNumber: 'B15', building: 'Bâtiment B', role: 'Client', phone: '6 98 76 54 32', status: 'Activé' },
-    { id: 7, roomNumber: 'CU20', building: 'Cité Universitaire', role: 'Agent', phone: '6 98 76 54 32', status: 'Activé' },
-    { id: 8, roomNumber: 'A07', building: 'Bâtiment A', role: 'Client', phone: '6 98 76 54 32', status: 'Désactivé' },
-    { id: 9, roomNumber: 'BP12', building: 'Bâtiment des Pères', role: 'Agent', phone: '6 98 76 54 32', status: 'Activé' }
-  ]
-
-  // Données simulées pour les agents
-  const agents = [
-    { id: 1, name: 'Jon Snow', email: 'jonsnow@example.com', specialty: 'Electricien', phone: '6 98 76 54 32', status: 'Activé' },
-    { id: 2, name: 'Jon Snow', email: 'jonsnow@example.com', specialty: 'Electricien', phone: '6 98 76 54 32', status: 'Désactivé' },
-    { id: 3, name: 'Jon Snow', email: 'jonsnow@example.com', specialty: 'Electricien', phone: '6 98 76 54 32', status: 'Activé' },
-    { id: 4, name: 'Jon Snow', email: 'jonsnow@example.com', specialty: 'Electricien', phone: '6 98 76 54 32', status: 'Activé' },
-    { id: 5, name: 'Jon Snow', email: 'jonsnow@example.com', specialty: 'Electricien', phone: '6 98 76 54 32', status: 'Désactivé' },
-    { id: 6, name: 'Jon Snow', email: 'jonsnow@example.com', specialty: 'Electricien', phone: '6 98 76 54 32', status: 'Activé' },
-    { id: 7, name: 'Jon Snow', email: 'jonsnow@example.com', specialty: 'Electricien', phone: '6 98 76 54 32', status: 'Activé' },
-    { id: 8, name: 'Jon Snow', email: 'jonsnow@example.com', specialty: 'Electricien', phone: '6 98 76 54 32', status: 'Désactivé' },
-    { id: 9, name: 'Jon Snow', email: 'jonsnow@example.com', specialty: 'Electricien', phone: '6 98 76 54 32', status: 'Activé' },
-    { id: 10, name: 'Jon Snow', email: 'jonsnow@example.com', specialty: 'Electricien', phone: '6 98 76 54 32', status: 'Désactivé' }
-  ]
-
-  // Données simulées pour les incidents
-  const incidents = [
-    { id: 1, building: 'Batiment A', roomNumber: 'A01', assignedAgent: 'Jon Snow', date: '25-09-2025', state: 'En cours' },
-    { id: 2, building: 'Batiment B', roomNumber: 'B11', assignedAgent: 'Jack Bauer', date: '25-09-2025', state: 'A Reparer' },
-    { id: 3, building: 'Batiment A', roomNumber: 'A04', assignedAgent: 'Luis Suarez', date: '25-09-2025', state: 'Bon Etat' },
-    { id: 4, building: 'Batiment A', roomNumber: 'A14', assignedAgent: 'Pablo Escobar', date: '25-09-2025', state: 'En cours' },
-    { id: 5, building: 'Batiment A', roomNumber: 'A08', assignedAgent: 'Jane Smith', date: '25-09-2025', state: 'En cours' },
-    { id: 6, building: 'Batiment D', roomNumber: 'D04', assignedAgent: 'Will Smith', date: '25-09-2025', state: 'Bon Etat' },
-    { id: 7, building: 'Batiment C', roomNumber: 'C04', assignedAgent: 'Lebron James', date: '25-09-2025', state: 'A Reparer' },
-    { id: 8, building: 'Batiment B', roomNumber: 'B02', assignedAgent: 'Steph Curry', date: '25-09-2025', state: 'A Reparer' },
-    { id: 9, building: 'Batiment D', roomNumber: 'D10', assignedAgent: 'Lionel Messi', date: '25-09-2025', state: 'En cours' }
   ]
 
   const pageTitle = 
@@ -344,519 +338,331 @@ function Dashboard() {
       ? 'Incident'
       : 'Tableau de Bord'
 
-  // Fonctions de navigation
-  const handleBuildingClick = (building) => {
-    setSelectedBuilding(building)
-    setViewLevel('floors')
-    setSearchQuery('') // Réinitialiser la recherche
-  }
+  // ---------------------------------------------------------------------------
+  // Recherche globale (mock) : Incidents / Équipements / Utilisateurs
+  // -> prêt à être remplacé par un appel backend plus tard
+  // ---------------------------------------------------------------------------
+  const normalizedDashboardQuery = dashboardSearchQuery.trim().toLowerCase()
 
-  const handleFloorClick = (floor) => {
-    setSelectedFloor(floor)
-    setViewLevel('spaces')
-    setSearchQuery('') // Réinitialiser la recherche
-  }
+  const globalIncidents = [
+    { id: 'INC-123', title: "Incident #123 - Serveur Principal", building: 'Bâtiment A', status: 'Nouveau' },
+    { id: 'INC-121', title: "Incident #121 - Climatisation", building: 'Cité U', status: 'En cours' },
+    { id: 'INC-119', title: "Incident #119 - Éclairage", building: 'Bât. Pères', status: 'Résolu' }
+  ]
 
-  const handleBackClick = () => {
-    if (viewLevel === 'spaces') {
-      setViewLevel('floors')
-      setSelectedFloor(null)
-      setSearchQuery('')
-    } else if (viewLevel === 'floors') {
-      setViewLevel('buildings')
-      setSelectedBuilding(null)
-      setSearchQuery('')
-    }
-  }
+  const globalEquipments = [
+    { id: 'EQ-001', name: 'Serveur Principal', location: 'Bâtiment A - Local Serveur' },
+    { id: 'EQ-014', name: 'Climatiseur LG', location: 'Cité U - RDC' },
+    { id: 'EQ-022', name: 'Imprimante Canon', location: 'Siège Administratif - 1er' }
+  ]
 
-  // Filtrer les bâtiments selon la recherche
-  const filteredBuildings = buildings.filter((building) => {
-    const query = searchQuery.toLowerCase()
-    return (
-      building.name.toLowerCase().includes(query) ||
-      building.code.toLowerCase().includes(query) ||
-      building.type.toLowerCase().includes(query) ||
-      building.spaces.toString().includes(query)
+  const globalUsers = [
+    { id: 'USR-AG-01', type: 'agent', name: 'Jon Snow', email: 'jon.snow@iusjc.cm' },
+    { id: 'USR-AG-02', type: 'agent', name: 'Jane Smith', email: 'jane.smith@iusjc.cm' },
+    { id: 'USR-OC-01', type: 'occupant', name: 'Alice Martin', email: 'alice.martin@iusjc.cm' }
+  ]
+
+  const combinedUsers = [
+    ...backendUsers,
+    ...globalUsers.filter(
+      (u) => !backendUsers.find((bu) => bu.email === u.email || bu.name === u.name)
     )
-  })
+  ]
 
-  // Obtenir les données actuelles selon le niveau de navigation
-  const getCurrentData = () => {
-    if (viewLevel === 'buildings') {
-      return filteredBuildings
-    } else if (viewLevel === 'floors' && selectedBuilding) {
-      const floors = getFloorsForBuilding(selectedBuilding.id)
-      const query = searchQuery.toLowerCase()
-      return floors.filter(floor => 
-        floor.name.toLowerCase().includes(query) ||
-        floor.number.toString().includes(query)
-      )
-    } else if (viewLevel === 'spaces' && selectedBuilding && selectedFloor) {
-      const spaces = getSpacesForFloor(selectedBuilding.id, selectedFloor.id)
-      const query = searchQuery.toLowerCase()
-      return spaces.filter(space => 
-        space.name.toLowerCase().includes(query) ||
-        space.code.toLowerCase().includes(query) ||
-        space.type.toLowerCase().includes(query)
-      )
+  const globalSearchResults = (() => {
+    if (normalizedDashboardQuery.length < 2) {
+      return { incidents: [], equipments: [], users: [] }
     }
-    return []
+    const incidents = globalIncidents.filter(
+      (i) =>
+        i.id.toLowerCase().includes(normalizedDashboardQuery) ||
+        i.title.toLowerCase().includes(normalizedDashboardQuery) ||
+        i.building.toLowerCase().includes(normalizedDashboardQuery) ||
+        i.status.toLowerCase().includes(normalizedDashboardQuery)
+    )
+    const equipments = globalEquipments.filter(
+      (e) =>
+        e.id.toLowerCase().includes(normalizedDashboardQuery) ||
+        e.name.toLowerCase().includes(normalizedDashboardQuery) ||
+        e.location.toLowerCase().includes(normalizedDashboardQuery)
+    )
+    const users = combinedUsers.filter(
+      (u) =>
+        u.id.toLowerCase().includes(normalizedDashboardQuery) ||
+        u.name.toLowerCase().includes(normalizedDashboardQuery) ||
+        u.email.toLowerCase().includes(normalizedDashboardQuery)
+    )
+    return { incidents, equipments, users }
+  })()
+
+  const navigateToMenuWithSearch = (menuId, queryValue) => {
+    setActiveMenu(menuId)
+    localStorage.setItem('activeMenu', menuId)
+    handleMenuChange(menuId)
+    setSearchQuery(queryValue)
+    setDashboardSearchQuery('')
+    setShowDashboardSearchDropdown(false)
   }
 
-  const currentData = getCurrentData()
+  // Simuler le chargement du dashboard (3 secondes)
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setIsLoading(false)
+    }, 3000)
 
-  // Obtenir le titre de la section selon le niveau
-  const getSectionTitle = () => {
-    if (viewLevel === 'buildings') {
-      return 'Liste des bâtiments'
-    } else if (viewLevel === 'floors' && selectedBuilding) {
-      return `Étages - ${selectedBuilding.name}`
-    } else if (viewLevel === 'spaces' && selectedBuilding && selectedFloor) {
-      return `Espaces - ${selectedBuilding.name} - ${selectedFloor.name}`
-    }
-    return 'Liste des bâtiments'
-  }
+    return () => clearTimeout(timer)
+  }, [])
 
-  const getSectionSubtitle = () => {
-    if (viewLevel === 'buildings') {
-      return "Vue d'ensemble des bâtiments configurés sur le site d'Eyang"
-    } else if (viewLevel === 'floors') {
-      return `Liste des étages du ${selectedBuilding?.name}`
-    } else if (viewLevel === 'spaces') {
-      return `Liste des espaces au ${selectedFloor?.name}`
-    }
-    return "Vue d'ensemble des bâtiments configurés sur le site d'Eyang"
-  }
-
-  // Fonction pour gérer l'ajout d'un bâtiment
-  const handleAddBuilding = (e) => {
-    e.preventDefault()
-    // TODO: Implémenter l'appel API pour créer le bâtiment
-    console.log('Nouveau bâtiment:', newBuilding)
-    
-    // Pour l'instant, on simule juste l'ajout
-    // buildings.push({ ...newBuilding, incidents: 0 })
-    
-    // Réinitialiser le formulaire et fermer le modal
-    setNewBuilding({
-      name: '',
-      code: '',
-      type: 'Pédagogique',
-      floors: 1,
-      spaces: 0
-    })
-    setShowAddBuildingModal(false)
-  }
-
-  // Fonction pour réinitialiser le formulaire (Bâtiments)
-  const handleCancelAdd = () => {
-    setNewBuilding({
-      name: '',
-      code: '',
-      type: 'Pédagogique',
-      floors: 1,
-      spaces: 0
-    })
-    setShowAddBuildingModal(false)
-  }
-
-  // Gestion des équipements
-  const handleSelectEquipment = (equipmentId) => {
-    setSelectedEquipments(prev => {
-      if (prev.includes(equipmentId)) {
-        return prev.filter(id => id !== equipmentId)
-      } else {
-        return [...prev, equipmentId]
+  // fermer les menus si clic à l'extérieur
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (profileRef.current && !profileRef.current.contains(event.target)) {
+        setShowProfileMenu(false)
       }
-    })
-  }
-
-  const handleSelectAllEquipments = () => {
-    if (selectedEquipments.length === filteredEquipments.length) {
-      setSelectedEquipments([])
-    } else {
-      setSelectedEquipments(filteredEquipments.map(eq => eq.id))
-    }
-  }
-
-  const handleAddEquipment = (e) => {
-    e.preventDefault()
-    // TODO: Implémenter l'appel API pour créer l'équipement
-    console.log('Nouvel équipement:', newEquipment)
-    
-    // Réinitialiser le formulaire et fermer le modal
-    setNewEquipment({
-      name: '',
-      model: '',
-      value: '',
-      space: '',
-      type: '',
-      brand: '',
-      lifespan: '',
-      description: '',
-      state: 'bon etat',
-      status: 'Activé'
-    })
-    setShowAddEquipmentModal(false)
-  }
-
-  const handleCancelAddEquipment = () => {
-    setNewEquipment({
-      name: '',
-      model: '',
-      value: '',
-      space: '',
-      type: '',
-      brand: '',
-      lifespan: '',
-      description: '',
-      state: 'bon etat',
-      status: 'Activé'
-    })
-    setShowAddEquipmentModal(false)
-  }
-
-  // Filtrer les équipements selon la recherche
-  const filteredEquipments = equipments.filter((equipment) => {
-    const query = searchQuery.toLowerCase()
-    return (
-      equipment.name.toLowerCase().includes(query) ||
-      equipment.type.toLowerCase().includes(query) ||
-      equipment.state.toLowerCase().includes(query) ||
-      equipment.status.toLowerCase().includes(query)
-    )
-  })
-
-  // Fonction pour obtenir la classe CSS du badge selon l'état
-  const getStateBadgeClass = (state) => {
-    const stateMap = {
-      'bon etat': 'badge-bon-etat',
-      'à remplacer': 'badge-a-remplacer',
-      'à réparer': 'badge-a-reparer',
-      'en maintenance': 'badge-en-maintenance',
-      'hors service': 'badge-hors-service',
-      'en attente de piece': 'badge-en-attente-de-piece'
-    }
-    return stateMap[state] || 'badge-bon-etat'
-  }
-
-  // Gestion des occupants
-  const handleSelectOccupant = (occupantId) => {
-    setSelectedOccupants(prev => {
-      if (prev.includes(occupantId)) {
-        return prev.filter(id => id !== occupantId)
-      } else {
-        return [...prev, occupantId]
+      if (notifRef.current && !notifRef.current.contains(event.target)) {
+        setShowNotificationsMenu(false)
       }
-    })
-  }
-
-  const handleSelectAllOccupants = () => {
-    if (selectedOccupants.length === filteredOccupants.length) {
-      setSelectedOccupants([])
-    } else {
-      setSelectedOccupants(filteredOccupants.map(occ => occ.id))
-    }
-  }
-
-  const handleAddOccupant = (e) => {
-    e.preventDefault()
-    // TODO: Implémenter l'appel API pour créer l'occupant
-    console.log('Nouvel occupant:', newOccupant)
-    
-    // Réinitialiser le formulaire et fermer le modal
-    setNewOccupant({
-      roomName: '',
-      email: '',
-      password: '',
-      building: '',
-      phone: '',
-      occupantType: '',
-      status: 'Activé'
-    })
-    setShowAddOccupantModal(false)
-  }
-
-  const handleCancelAddOccupant = () => {
-    setNewOccupant({
-      roomName: '',
-      email: '',
-      password: '',
-      building: '',
-      phone: '',
-      occupantType: '',
-      status: 'Activé'
-    })
-    setShowAddOccupantModal(false)
-  }
-
-  // Filtrer les occupants selon la recherche
-  const filteredOccupants = occupants.filter((occupant) => {
-    const query = searchQuery.toLowerCase()
-    return (
-      occupant.roomNumber.toLowerCase().includes(query) ||
-      occupant.building.toLowerCase().includes(query) ||
-      occupant.role.toLowerCase().includes(query) ||
-      occupant.phone.toLowerCase().includes(query) ||
-      occupant.status.toLowerCase().includes(query)
-    )
-  })
-
-  // Gestion des agents
-  const handleSelectAgent = (agentId) => {
-    setSelectedAgents(prev => {
-      if (prev.includes(agentId)) {
-        return prev.filter(id => id !== agentId)
-      } else {
-        return [...prev, agentId]
+      if (settingsRef.current && !settingsRef.current.contains(event.target)) {
+        setShowSettingsMenu(false)
       }
-    })
-  }
-
-  const handleSelectAllAgents = () => {
-    if (selectedAgents.length === filteredAgents.length) {
-      setSelectedAgents([])
-    } else {
-      setSelectedAgents(filteredAgents.map(ag => ag.id))
-    }
-  }
-
-  const handleAddAgent = (e) => {
-    e.preventDefault()
-    // TODO: Implémenter l'appel API pour créer l'agent
-    console.log('Nouvel agent:', newAgent)
-    
-    // Réinitialiser le formulaire et fermer le modal
-    setNewAgent({
-      name: '',
-      firstName: '',
-      email: '',
-      phone: '',
-      username: '',
-      password: '',
-      specialty: '',
-      status: 'Activé'
-    })
-    setShowAddAgentModal(false)
-  }
-
-  const handleCancelAddAgent = () => {
-    setNewAgent({
-      name: '',
-      firstName: '',
-      email: '',
-      phone: '',
-      username: '',
-      password: '',
-      specialty: '',
-      status: 'Activé'
-    })
-    setShowAddAgentModal(false)
-  }
-
-  // Filtrer les agents selon la recherche
-  const filteredAgents = agents.filter((agent) => {
-    const query = searchQuery.toLowerCase()
-    return (
-      agent.name.toLowerCase().includes(query) ||
-      agent.email.toLowerCase().includes(query) ||
-      agent.specialty.toLowerCase().includes(query) ||
-      agent.phone.toLowerCase().includes(query) ||
-      agent.status.toLowerCase().includes(query)
-    )
-  })
-
-  // Gestion des incidents
-  const handleSelectIncident = (incidentId) => {
-    setSelectedIncidents(prev => {
-      if (prev.includes(incidentId)) {
-        return prev.filter(id => id !== incidentId)
-      } else {
-        return [...prev, incidentId]
+      if (dashboardSearchRef.current && !dashboardSearchRef.current.contains(event.target)) {
+        setShowDashboardSearchDropdown(false)
       }
-    })
-  }
-
-  const handleSelectAllIncidents = () => {
-    if (selectedIncidents.length === filteredIncidents.length) {
-      setSelectedIncidents([])
-    } else {
-      setSelectedIncidents(filteredIncidents.map(inc => inc.id))
     }
-  }
+    document.addEventListener('mousedown', handleClickOutside)
+    return () => document.removeEventListener('mousedown', handleClickOutside)
+  }, [])
 
-  const handleAddIncident = (e) => {
-    e.preventDefault()
-    // TODO: Implémenter l'appel API pour créer l'incident
-    console.log('Nouvel incident:', newIncident)
-    
-    // Réinitialiser le formulaire et fermer le modal
-    setNewIncident({
-      building: '',
-      roomNumber: '',
-      assignedAgent: '',
-      date: '',
-      state: 'En cours'
-    })
-    setShowAddIncidentModal(false)
-  }
-
-  const handleCancelAddIncident = () => {
-    setNewIncident({
-      building: '',
-      roomNumber: '',
-      assignedAgent: '',
-      date: '',
-      state: 'En cours'
-    })
-    setShowAddIncidentModal(false)
-  }
-
-  // Filtrer les incidents selon la recherche
-  const filteredIncidents = incidents.filter((incident) => {
-    const query = searchQuery.toLowerCase()
-    return (
-      incident.building.toLowerCase().includes(query) ||
-      incident.roomNumber.toLowerCase().includes(query) ||
-      incident.assignedAgent.toLowerCase().includes(query) ||
-      incident.date.toLowerCase().includes(query) ||
-      incident.state.toLowerCase().includes(query)
-    )
-  })
-
-  // Fonction pour obtenir la classe CSS du badge selon l'état de l'incident
-  const getIncidentStateBadgeClass = (state) => {
-    const stateMap = {
-      'En cours': 'badge-en-cours',
-      'A Reparer': 'badge-a-reparer',
-      'Bon Etat': 'badge-bon-etat'
-    }
-    return stateMap[state] || 'badge-en-cours'
-  }
 
   return (
     <div className="dashboard-container">
-      {/* Sidebar */}
-      <aside className="sidebar">
-        <div className="sidebar-header">
-          <img src={logo} alt="IMMO360" className="sidebar-logo" />
+      {/* Spinner de chargement */}
+      {isLoading && (
+        <div className="dashboard-loading-overlay">
+          <Spinner size="large" color="#2563eb" />
         </div>
-        
-        <nav className="sidebar-menu">
-          <button 
-            className={`menu-item ${activeMenu === 'dashboard' ? 'active' : ''}`}
-            onClick={() => {
-              setActiveMenu('dashboard')
-              localStorage.setItem('activeMenu', 'dashboard')
-            }}
-          >
-            <IoGridOutline className="menu-icon" />
-            <span className="menu-text">Tableau de Bord</span>
-          </button>
-          
-              <button 
-                className={`menu-item ${activeMenu === 'batiment' ? 'active' : ''}`}
-                onClick={() => {
-                  setActiveMenu('batiment')
-                  localStorage.setItem('activeMenu', 'batiment')
-                  setViewLevel('buildings')
-                  setSelectedBuilding(null)
-                  setSelectedFloor(null)
-                  setSearchQuery('')
-                }}
-              >
-                <IoBusinessOutline className="menu-icon" />
-                <span className="menu-text">Batiment</span>
-              </button>
-          
-            <button 
-              className={`menu-item ${activeMenu === 'equipement' ? 'active' : ''}`}
-              onClick={() => {
-                setActiveMenu('equipement')
-                localStorage.setItem('activeMenu', 'equipement')
-                setSearchQuery('')
-              }}
-            >
-            <IoConstructOutline className="menu-icon" />
-            <span className="menu-text">Equipement</span>
-          </button>
-          
-            <button 
-              className={`menu-item ${activeMenu === 'occupant' ? 'active' : ''}`}
-              onClick={() => {
-                setActiveMenu('occupant')
-                localStorage.setItem('activeMenu', 'occupant')
-                setSearchQuery('')
-              }}
-            >
-            <IoPersonOutline className="menu-icon" />
-            <span className="menu-text">Occupant</span>
-          </button>
-          
-            <button 
-              className={`menu-item ${activeMenu === 'agent' ? 'active' : ''}`}
-              onClick={() => {
-                setActiveMenu('agent')
-                localStorage.setItem('activeMenu', 'agent')
-                setSearchQuery('')
-              }}
-            >
-            <IoPeopleOutline className="menu-icon" />
-            <span className="menu-text">Agent</span>
-          </button>
-          
-            <button 
-              className={`menu-item ${activeMenu === 'incident' ? 'active' : ''}`}
-              onClick={() => {
-                setActiveMenu('incident')
-                localStorage.setItem('activeMenu', 'incident')
-                setSearchQuery('')
-              }}
-            >
-            <IoWarningOutline className="menu-icon" />
-            <span className="menu-text">Incident</span>
-          </button>
-          
-          <button 
-            className={`menu-item ${activeMenu === 'analyse' ? 'active' : ''}`}
-            onClick={() => {
-              setActiveMenu('analyse')
-              localStorage.setItem('activeMenu', 'analyse')
-            }}
-          >
-            <IoStatsChartOutline className="menu-icon" />
-            <span className="menu-text">Analyse</span>
-          </button>
-        </nav>
+      )}
 
-        <button className="menu-item logout-btn" onClick={handleLogout}>
-          <IoLogOutOutline className="menu-icon" />
-          <span className="menu-text">Deconnexion</span>
-        </button>
-      </aside>
+      {/* Sidebar */}
+      <Sidebar 
+        activeMenu={activeMenu} 
+        setActiveMenu={setActiveMenu} 
+        onMenuChange={handleMenuChange}
+      />
 
       {/* Main Content */}
-      <main className="main-content">
+      <main className={`main-content ${isLoading ? 'loading' : ''}`}>
         {/* Header */}
         <header className="dashboard-header">
-          <h1 className="dashboard-title">{pageTitle}</h1>
+          <div className="header-left">
+            <h1 className="dashboard-title">{pageTitle}</h1>
+            {activeMenu === 'dashboard' && (
+              <div className="header-search" ref={dashboardSearchRef}>
+                <IoSearchOutline className="header-search-icon" />
+                <input
+                  type="search"
+                  value={dashboardSearchQuery}
+                  onChange={(e) => {
+                    setDashboardSearchQuery(e.target.value)
+                    setShowDashboardSearchDropdown(true)
+                  }}
+                  onFocus={() => setShowDashboardSearchDropdown(true)}
+                  placeholder="Rechercher un incident, un équipement..."
+                  aria-label="Recherche globale"
+                />
+
+                {showDashboardSearchDropdown && (
+                  <div className="header-search-dropdown">
+                    {normalizedDashboardQuery.length < 2 ? (
+                      <div className="search-dropdown-empty">
+                        Saisissez au moins 2 caractères pour lancer la recherche.
+                      </div>
+                    ) : (
+                      <>
+                        <div className="search-dropdown-section">
+                          <div className="search-dropdown-section-title">
+                            Incidents ({globalSearchResults.incidents.length})
+                          </div>
+                          {globalSearchResults.incidents.slice(0, 5).map((item) => (
+                            <button
+                              key={item.id}
+                              type="button"
+                              className="search-dropdown-item"
+                              onClick={() => navigateToMenuWithSearch('incident', item.id)}
+                            >
+                              <span className="search-item-primary">{item.title}</span>
+                              <span className="search-item-secondary">
+                                {item.building} • {item.status}
+                              </span>
+                            </button>
+                          ))}
+                          {globalSearchResults.incidents.length === 0 && (
+                            <div className="search-dropdown-empty">Aucun incident trouvé.</div>
+                          )}
+                        </div>
+
+                        <div className="search-dropdown-section">
+                          <div className="search-dropdown-section-title">
+                            Équipements ({globalSearchResults.equipments.length})
+                          </div>
+                          {globalSearchResults.equipments.slice(0, 5).map((item) => (
+                            <button
+                              key={item.id}
+                              type="button"
+                              className="search-dropdown-item"
+                              onClick={() => navigateToMenuWithSearch('equipement', item.id)}
+                            >
+                              <span className="search-item-primary">{item.name}</span>
+                              <span className="search-item-secondary">
+                                {item.id} • {item.location}
+                              </span>
+                            </button>
+                          ))}
+                          {globalSearchResults.equipments.length === 0 && (
+                            <div className="search-dropdown-empty">Aucun équipement trouvé.</div>
+                          )}
+                        </div>
+
+                        <div className="search-dropdown-section">
+                          <div className="search-dropdown-section-title">
+                            Utilisateurs ({globalSearchResults.users.length})
+                          </div>
+                          {globalSearchResults.users.slice(0, 5).map((item) => (
+                            <button
+                              key={item.id}
+                              type="button"
+                              className="search-dropdown-item"
+                              onClick={() =>
+                                navigateToMenuWithSearch(
+                                  item.type === 'agent' ? 'agent' : 'occupant',
+                                  item.email
+                                )
+                              }
+                            >
+                              <span className="search-item-primary">
+                                {item.name}
+                                <span className="search-item-badge">
+                                  {item.type === 'agent' ? 'Agent' : 'Occupant'}
+                                </span>
+                              </span>
+                              <span className="search-item-secondary">{item.email}</span>
+                            </button>
+                          ))}
+                          {globalSearchResults.users.length === 0 && (
+                            <div className="search-dropdown-empty">Aucun utilisateur trouvé.</div>
+                          )}
+                        </div>
+                      </>
+                    )}
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
           <div className="header-actions">
             <span className="user-name">Paul BABODO</span>
-            <button className="header-icon-btn">
-              <IoPersonOutline />
-            </button>
-            <button className="header-icon-btn">
-              <IoNotificationsOutline />
-            </button>
-            <button className="header-icon-btn">
-              <IoSettingsOutline />
-            </button>
+            <div className="header-action-group" ref={profileRef}>
+              <button
+                className="header-icon-btn"
+                onClick={() => {
+                  setShowProfileMenu((v) => !v)
+                  setShowNotificationsMenu(false)
+                  setShowSettingsMenu(false)
+                }}
+                title="Profil"
+                aria-haspopup="true"
+                aria-expanded={showProfileMenu}
+              >
+                <IoPersonOutline />
+              </button>
+              {showProfileMenu && (
+                <div className="header-dropdown">
+                  <div className="header-dropdown-section">
+                    <p className="header-dropdown-title">Mon compte</p>
+                    <button 
+                      className="header-dropdown-item"
+                      onClick={handleOpenProfileModal}
+                    >
+                      <IoPersonOutline />
+                      <span>Profil</span>
+                    </button>
+                    <button 
+                      className="header-dropdown-item"
+                      onClick={handleOpenPreferencesModal}
+                    >
+                      <IoOptionsOutline />
+                      <span>Préférences</span>
+                    </button>
+                  </div>
+                  <div className="header-dropdown-section">
+                    <button className="header-dropdown-item danger">
+                      <IoLogOutOutline />
+                      <span>Se déconnecter</span>
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
+
+            <div className="header-action-group" ref={notifRef}>
+              <button
+                className="header-icon-btn badge-btn"
+                onClick={() => {
+                  setShowNotificationsMenu((v) => !v)
+                  setShowProfileMenu(false)
+                  setShowSettingsMenu(false)
+                }}
+                title="Notifications"
+                aria-haspopup="true"
+                aria-expanded={showNotificationsMenu}
+              >
+                <IoNotificationsOutline />
+                <span className="header-badge">3</span>
+              </button>
+              {showNotificationsMenu && (
+                <div className="header-dropdown header-dropdown-wide">
+                  <div className="header-dropdown-section">
+                    <p className="header-dropdown-title">Notifications récentes</p>
+                    {recentActivity.slice(0, 4).map((item) => {
+                      const Icon = item.icon
+                      return (
+                        <div key={item.id} className="notification-item">
+                          <div
+                            className="notification-icon"
+                            style={{ backgroundColor: item.iconBg, color: item.iconColor }}
+                          >
+                            <Icon />
+                          </div>
+                          <div className="notification-content">
+                            <p className="notification-text">{item.text}</p>
+                            <span className="notification-time">{item.time}</span>
+                          </div>
+                        </div>
+                      )
+                    })}
+                  </div>
+                </div>
+              )}
+            </div>
+
           </div>
         </header>
 
         {/* Contenu Tableau de Bord */}
         {activeMenu === 'dashboard' && (
           <>
+            <div className="stats-actions" style={{ display: 'flex', gap: '12px', alignItems: 'center', marginBottom: '12px' }}>
+              <button
+                className="btn-add-agent-header"
+                onClick={handleRefreshUsersStats}
+                disabled={isLoadingUsers}
+                style={{ backgroundColor: '#f0f0f0', color: '#333' }}
+              >
+                <IoRefreshOutline />
+                <span>{isLoadingUsers ? 'Chargement...' : 'Rafraîchir Agents/Occupants'}</span>
+              </button>
+              {usersMessage && <span style={{ fontSize: '0.9rem' }}>{usersMessage}</span>}
+            </div>
             <div className="stats-grid">
               {statsData.map((stat, index) => {
                 const IconComponent = stat.icon
@@ -874,10 +680,93 @@ function Dashboard() {
               })}
             </div>
 
+            <div className="incident-status-row">
+            <div className="incident-status-card">
+                <h3 className="incident-status-title">Status des Incidents</h3>
+                <div className="incident-status-chart">
+                  <div className="incident-status-bars">
+                    <div className="incident-status-bar">
+                      <div className="incident-status-bar-fill bar-nouveau"></div>
+                      <span className="incident-status-label">Nouveau</span>
+                    </div>
+                    <div className="incident-status-bar">
+                      <div className="incident-status-bar-fill bar-en-cours"></div>
+                      <span className="incident-status-label">En cours</span>
+                    </div>
+                    <div className="incident-status-bar">
+                      <div className="incident-status-bar-fill bar-resolu"></div>
+                      <span className="incident-status-label">Résolu</span>
+                    </div>
+                    <div className="incident-status-bar">
+                      <div className="incident-status-bar-fill bar-ferme"></div>
+                      <span className="incident-status-label">Fermé</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <aside className="quick-actions-card">
+                <h3 className="quick-actions-title">Accès Rapide</h3>
+                <div className="quick-actions-list">
+                  <button
+                    type="button"
+                    className="quick-action-item"
+                    onClick={() => triggerCreateModal('occupant')}
+                  >
+                    <span className="quick-action-icon-wrap">
+                      <IoPersonOutline className="quick-action-icon" />
+                    </span>
+                    <span className="quick-action-label">Créer un Occupant</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    className="quick-action-item"
+                    onClick={() => triggerCreateModal('agent')}
+                  >
+                    <span className="quick-action-icon-wrap">
+                      <IoPeopleOutline className="quick-action-icon" />
+                    </span>
+                    <span className="quick-action-label">Créer un Agent</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    className="quick-action-item"
+                    onClick={() => triggerCreateModal('equipement')}
+                  >
+                    <span className="quick-action-icon-wrap">
+                      <IoConstructOutline className="quick-action-icon" />
+                    </span>
+                    <span className="quick-action-label">Ajouter un Équipement</span>
+                  </button>
+
+                  <button type="button" className="quick-action-item">
+                    <span className="quick-action-icon-wrap">
+                      <IoGridOutline className="quick-action-icon" />
+                    </span>
+                    <span className="quick-action-label">Voir les Rapports</span>
+                  </button>
+                </div>
+              </aside>
+            </div>
+
             <div className="charts-row">
-              {/* Bar Chart */}
+              {/* Bar Chart - Incidents par Bâtiment */}
               <div className="chart-card">
-                <h3 className="chart-title">Incidents par Batiment</h3>
+                <div className="chart-header">
+                  <h3 className="chart-title">Incidents par Batiment</h3>
+                  <div className="period-selector">
+                    <IoCalendarOutline />
+                    <select value={period} onChange={(e) => setPeriod(e.target.value)}>
+                      <option value="Journalier">Journalier</option>
+                      <option value="Hebdomadaire">Hebdomadaire</option>
+                      <option value="Mensuel">Mensuel</option>
+                      <option value="Semestriel">Semestriel</option>
+                      <option value="Annuel">Annuel</option>
+                    </select>
+                  </div>
+                </div>
                 <div className="bar-chart">
                   <div className="chart-y-axis">
                     <span>60</span>
@@ -909,16 +798,28 @@ function Dashboard() {
                       <span className="bar-label">Batiment C</span>
                     </div>
                     <div className="bar-group">
-                      <div className="bar" style={{ height: '0%' }}></div>
-                      <span className="bar-label">Batiment B</span>
+                      <div className="bar" style={{ height: '40%' }}></div>
+                      <span className="bar-label">Cité U</span>
                     </div>
                   </div>
                 </div>
               </div>
 
-              {/* Line Chart with Dots */}
+              {/* Line Chart - Évolution temporelle */}
               <div className="chart-card">
-                <h3 className="chart-title">Incidents par Mois</h3>
+                <div className="chart-header">
+                  <h3 className="chart-title">Incidents par Période</h3>
+                  <div className="period-selector">
+                    <IoCalendarOutline />
+                    <select value={period} onChange={(e) => setPeriod(e.target.value)}>
+                      <option value="Journalier">Journalier</option>
+                      <option value="Hebdomadaire">Hebdomadaire</option>
+                      <option value="Mensuel">Mensuel</option>
+                      <option value="Semestriel">Semestriel</option>
+                      <option value="Annuel">Annuel</option>
+                    </select>
+                  </div>
+                </div>
                 <div className="line-chart">
                   <div className="chart-y-axis">
                     <span>300</span>
@@ -951,73 +852,134 @@ function Dashboard() {
                       <circle cx="550" cy="140" r="4" fill="#2563eb" />
                     </svg>
                     <div className="chart-x-labels">
-                      <span>Aou</span>
-                      <span>Sep</span>
-                      <span>Oct</span>
-                      <span>Nov</span>
-                      <span>Dec</span>
-                      <span>Jan</span>
-                      <span>Feb</span>
-                      <span>Mar</span>
-                      <span>Avr</span>
-                      <span>Mai</span>
-                      <span>Juin</span>
+                      <span>P-10</span>
+                      <span>P-9</span>
+                      <span>P-8</span>
+                      <span>P-7</span>
+                      <span>P-6</span>
+                      <span>P-5</span>
+                      <span>P-4</span>
+                      <span>P-3</span>
+                      <span>P-2</span>
+                      <span>P-1</span>
+                      <span>Actuel</span>
                     </div>
                   </div>
                 </div>
               </div>
             </div>
 
-            <div className="bottom-row">
-              {/* Wave Chart */}
-              <div className="chart-card wave-chart-card">
-                <h3 className="chart-title">Incidents par Batiment</h3>
-                <div className="wave-chart">
-                  <div className="chart-y-axis">
-                    <span>60</span>
-                    <span>50</span>
-                    <span>40</span>
-                    <span>30</span>
-                    <span>20</span>
-                    <span>10</span>
-                  </div>
-                  <div className="wave-container">
-                    <div className="chart-grid-lines">
-                      <div className="grid-line"></div>
-                      <div className="grid-line"></div>
-                      <div className="grid-line"></div>
-                      <div className="grid-line"></div>
-                      <div className="grid-line"></div>
-                      <div className="grid-line"></div>
-                    </div>
-                    <svg className="wave-svg" viewBox="0 0 800 200" preserveAspectRatio="none">
-                      <path 
-                        d="M 0 100 Q 100 50, 200 90 T 400 80 T 600 60 T 800 40" 
-                        stroke="#ff9800" 
-                        strokeWidth="3" 
-                        fill="none"
-                      />
-                    </svg>
-                  </div>
+            <div className="stats-advanced-row">
+               {/* Top Chambres Défectueuses */}
+              <div className="advanced-stat-card">
+                <div className="card-header-flex">
+                  <h3 className="card-title-small">Top Chambres Défectueuses</h3>
+                  <div className="badge-period">{period}</div>
                 </div>
-              </div>
-
-              {/* Recent Incidents */}
-              <div className="incidents-card">
-                <h3 className="chart-title">Incident Recentes</h3>
-                <div className="incidents-list">
-                  {recentIncidents.map((incident, index) => (
-                    <div key={index} className="incident-item">
-                      <div className="incident-info">
-                        <div className="incident-building">{incident.building}</div>
-                        <div className="incident-equipment">{incident.equipment}</div>
-                        <div className="incident-description">{incident.description}</div>
+                <div className="list-compact">
+                  {topDefectiveRooms.map((room, idx) => (
+                    <div key={idx} className="list-item-row">
+                      <div className="list-item-icon bg-red-100 text-red-600">
+                        <IoAlertCircleOutline />
                       </div>
-                      <div className="incident-status" style={{ color: incident.statusColor }}>
-                        {incident.status}
+                      <div className="list-item-details">
+                        <span className="list-item-title">{room.code}</span>
+                        <span className="list-item-subtitle">{room.building} - {room.floor}</span>
+                      </div>
+                      <div className="list-item-value text-red-600">
+                        {room.defects}
                       </div>
                     </div>
                   ))}
+                </div>
+              </div>
+
+              {/* Chambres sans incident */}
+              <div className="advanced-stat-card">
+                <div className="card-header-flex">
+                  <h3 className="card-title-small">Chambres Sans Incident</h3>
+                  <div className="badge-period">{period}</div>
+                </div>
+                <div className="list-compact">
+                  {roomsWithoutIncidents.map((room, idx) => (
+                    <div key={idx} className="list-item-row">
+                      <div className="list-item-icon bg-green-100 text-green-600">
+                        <IoCheckmarkCircleOutline />
+                      </div>
+                      <div className="list-item-details">
+                        <span className="list-item-title">{room.code}</span>
+                        <span className="list-item-subtitle">{room.building} - {room.floor}</span>
+                      </div>
+                      <div className="list-item-value text-green-600">
+                        OK
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Équipements par Bâtiment */}
+              <div className="advanced-stat-card">
+                <div className="card-header-flex">
+                  <h3 className="card-title-small">Équipements par Bâtiment</h3>
+                  <div className="badge-period text-gray-500"><IoStatsChartOutline /></div>
+                </div>
+                <div className="equipment-stats-list">
+                  {equipmentStatsByBuilding.map((stat, idx) => (
+                    <div key={idx} className="equipment-stat-item">
+                      <div className="equipment-stat-header">
+                        <span className="equipment-stat-building">{stat.building}</span>
+                        <span className="equipment-stat-total">{stat.total} Total</span>
+                      </div>
+                      <div className="progress-bar-container">
+                        <div 
+                          className="progress-bar-fill bg-green-500" 
+                          style={{ width: `${(stat.active / stat.total) * 100}%` }}
+                          title={`Actifs: ${stat.active}`}
+                        ></div>
+                        <div 
+                          className="progress-bar-fill bg-red-500" 
+                          style={{ width: `${(stat.defective / stat.total) * 100}%` }}
+                          title={`Défectueux: ${stat.defective}`}
+                        ></div>
+                      </div>
+                      <div className="equipment-stat-legend">
+                        <span className="text-green-600">{stat.active} Actifs</span>
+                        <span className="text-red-600">{stat.defective} Défaut</span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+
+            <div className="bottom-row">
+              <div className="incidents-card">
+                <h3 className="chart-title">Activité Récente</h3>
+                <div className="incidents-list">
+                  {recentActivity.map((item, index) => {
+                    const Icon = item.icon
+                    const isLast = index === recentActivity.length - 1
+                    return (
+                      <div
+                        key={item.id}
+                        className={`incident-item ${isLast ? 'incident-item-last' : ''}`}
+                      >
+                        <div className="incident-timeline">
+                          <div
+                            className="incident-timeline-icon"
+                            style={{ backgroundColor: item.iconBg, color: item.iconColor }}
+                          >
+                            <Icon />
+                          </div>
+                        </div>
+                        <div className="incident-info">
+                          <p className="incident-text">{item.text}</p>
+                        </div>
+                        <div className="incident-time">{item.time}</div>
+                      </div>
+                    )
+                  })}
                 </div>
               </div>
             </div>
@@ -1026,1026 +988,457 @@ function Dashboard() {
 
         {/* Contenu Bâtiment */}
         {activeMenu === 'batiment' && (
-          <div className="buildings-page">
-            <div className="stats-grid">
-              {buildingStats.map((stat, index) => {
-                const IconComponent = stat.icon
-                return (
-                  <div key={index} className="stat-card">
-                    <div className="stat-icon" style={{ backgroundColor: stat.bgColor }}>
-                      <IconComponent />
-                    </div>
-                    <h3 className="stat-title">{stat.title}</h3>
-                    <div className="stat-count">{stat.count}</div>
-                    <div className="stat-divider"></div>
-                    <p className="stat-description">{stat.description}</p>
-                  </div>
-                )
-              })}
-            </div>
-
-            <div className="buildings-layout">
-              <div className="buildings-list-card">
-                <div className="buildings-card-header">
-                  {viewLevel !== 'buildings' && (
-                    <button className="btn-back" onClick={handleBackClick}>
-                      <IoArrowBackOutline />
-                      <span>Retour</span>
-                    </button>
-                  )}
-                  <div className="buildings-header-top">
-                    <div>
-                      <h3 className="buildings-title">{getSectionTitle()}</h3>
-                      <p className="buildings-subtitle">
-                        {getSectionSubtitle()}
-                      </p>
-                    </div>
-                    {viewLevel === 'buildings' && (
-                      <button 
-                        className="btn-add-building"
-                        onClick={() => setShowAddBuildingModal(true)}
-                      >
-                        <IoAddOutline />
-                        <span>Ajouter un bâtiment</span>
-                      </button>
-                    )}
-                  </div>
-                  <div className="search-container">
-                    <IoSearchOutline className="search-icon" />
-                    <input
-                      type="text"
-                      className="search-input"
-                      placeholder="Rechercher un bâtiment ou un espace..."
-                      value={searchQuery}
-                      onChange={(e) => setSearchQuery(e.target.value)}
-                    />
-                  </div>
-                </div>
-                <table className="buildings-table">
-                  <thead>
-                    <tr>
-                      {viewLevel === 'buildings' && (
-                        <>
-                          <th>Nom</th>
-                          <th>Code</th>
-                          <th>Type</th>
-                          <th>Étages</th>
-                          <th>Espaces</th>
-                          <th>Incidents</th>
-                        </>
-                      )}
-                      {viewLevel === 'floors' && (
-                        <>
-                          <th>Étage</th>
-                          <th>Numéro</th>
-                          <th>Espaces</th>
-                          <th>Incidents</th>
-                        </>
-                      )}
-                      {viewLevel === 'spaces' && (
-                        <>
-                          <th>Code</th>
-                          <th>Nom</th>
-                          <th>Type</th>
-                          <th>Surface (m²)</th>
-                          <th>Occupants</th>
-                          <th>Équipements</th>
-                          <th>Incidents</th>
-                        </>
-                      )}
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {currentData.length > 0 ? (
-                      <>
-                        {viewLevel === 'buildings' && currentData.map((building) => (
-                          <tr 
-                            key={building.code} 
-                            onClick={() => handleBuildingClick(building)}
-                            className="clickable-row"
-                          >
-                            <td>{building.name}</td>
-                            <td>{building.code}</td>
-                            <td>{building.type}</td>
-                            <td>{building.floors}</td>
-                            <td>{building.spaces}</td>
-                            <td>
-                              <span
-                                className={`badge-incidents ${
-                                  building.incidents > 20 ? 'badge-danger' : building.incidents > 10 ? 'badge-warning' : 'badge-success'
-                                }`}
-                              >
-                                {building.incidents}
-                              </span>
-                            </td>
-                          </tr>
-                        ))}
-                        {viewLevel === 'floors' && currentData.map((floor) => (
-                          <tr 
-                            key={floor.id}
-                            onClick={() => handleFloorClick(floor)}
-                            className="clickable-row"
-                          >
-                            <td>{floor.name}</td>
-                            <td>{floor.number}</td>
-                            <td>{floor.spaces}</td>
-                            <td>
-                              <span
-                                className={`badge-incidents ${
-                                  floor.incidents > 5 ? 'badge-warning' : 'badge-success'
-                                }`}
-                              >
-                                {floor.incidents}
-                              </span>
-                            </td>
-                          </tr>
-                        ))}
-                        {viewLevel === 'spaces' && currentData.map((space) => (
-                          <tr key={space.id}>
-                            <td>{space.code}</td>
-                            <td>{space.name}</td>
-                            <td>{space.type}</td>
-                            <td>{space.area}</td>
-                            <td>{space.occupants}</td>
-                            <td>{space.equipment}</td>
-                            <td>
-                              <span
-                                className={`badge-incidents ${
-                                  space.incidents > 2 ? 'badge-danger' : space.incidents > 0 ? 'badge-warning' : 'badge-success'
-                                }`}
-                              >
-                                {space.incidents}
-                              </span>
-                            </td>
-                          </tr>
-                        ))}
-                      </>
-                    ) : (
-                      <tr>
-                        <td colSpan={viewLevel === 'buildings' ? 6 : viewLevel === 'floors' ? 4 : 7} className="no-results">
-                          {searchQuery ? `Aucun résultat trouvé pour "${searchQuery}"` : 'Aucune donnée disponible'}
-                        </td>
-                      </tr>
-                    )}
-                  </tbody>
-                </table>
-              </div>
-
-              <div className="buildings-map-card">
-                <h3 className="buildings-title">Carte des bâtiments</h3>
-                <p className="buildings-subtitle">
-                  La cartographie interactive des bâtiments sera affichée ici.
-                </p>
-                <div className="buildings-map-placeholder">
-                  <span className="map-placeholder-label">Carte interactive bientôt disponible</span>
-                </div>
-              </div>
-            </div>
-          </div>
+          <Buildings searchQuery={searchQuery} setSearchQuery={setSearchQuery} />
         )}
 
         {/* Contenu Équipement */}
         {activeMenu === 'equipement' && (
-          <div className="equipments-page">
-            <div className="equipments-header-bar">
-              <h2 className="equipments-page-title">Table des Equipements</h2>
-              <div className="search-container search-equipments">
-                <IoSearchOutline className="search-icon" />
-                <input
-                  type="text"
-                  className="search-input"
-                  placeholder="Faites votre recherche ici"
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                />
-              </div>
-              <div className="equipments-actions-right">
-                <button className="btn-filter">
-                  <IoFilterOutline />
-                </button>
-                <button className="btn-sort">
-                  <IoSwapVerticalOutline />
-                </button>
-                <button 
-                  className="btn-add-equipment"
-                  onClick={() => setShowAddEquipmentModal(true)}
-                >
-                  <IoAddOutline />
-                  <span>Ajouter</span>
-                </button>
-              </div>
-            </div>
-
-            <div className="equipments-table-container">
-              <table className="equipments-table">
-                <thead>
-                  <tr>
-                    <th className="checkbox-column">
-                      <button 
-                        className="checkbox-btn"
-                        onClick={handleSelectAllEquipments}
-                      >
-                        {selectedEquipments.length === filteredEquipments.length && filteredEquipments.length > 0 ? (
-                          <IoCheckboxOutline />
-                        ) : (
-                          <IoSquareOutline />
-                        )}
-                      </button>
-                    </th>
-                    <th>Nom de l'équipement</th>
-                    <th>Type</th>
-                    <th>Etat</th>
-                    <th>Numéro de telephone</th>
-                    <th>Statut</th>
-                    <th></th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {filteredEquipments.length > 0 ? (
-                    filteredEquipments.map((equipment) => (
-                      <tr key={equipment.id}>
-                        <td className="checkbox-column">
-                          <button 
-                            className="checkbox-btn"
-                            onClick={() => handleSelectEquipment(equipment.id)}
-                          >
-                            {selectedEquipments.includes(equipment.id) ? (
-                              <IoCheckboxOutline />
-                            ) : (
-                              <IoSquareOutline />
-                            )}
-                          </button>
-                        </td>
-                        <td className="equipment-name">{equipment.name}</td>
-                        <td className="equipment-type">{equipment.type}</td>
-                        <td>
-                          <span className={`badge-state ${getStateBadgeClass(equipment.state)}`}>
-                            {equipment.state}
-                          </span>
-                        </td>
-                        <td className="equipment-maintenance">{equipment.lastMaintenance}</td>
-                        <td>
-                          <span className={`badge-status ${equipment.status === 'Activé' ? 'badge-active' : 'badge-inactive'}`}>
-                            {equipment.status}
-                          </span>
-                        </td>
-                        <td className="actions-column">
-                          <button className="btn-actions">
-                            <IoEllipsisVerticalOutline />
-                          </button>
-                        </td>
-                      </tr>
-                    ))
-                  ) : (
-                    <tr>
-                      <td colSpan="7" className="no-results">
-                        {searchQuery ? `Aucun équipement trouvé pour "${searchQuery}"` : 'Aucun équipement disponible'}
-                      </td>
-                    </tr>
-                  )}
-                </tbody>
-              </table>
-            </div>
-          </div>
+          <Equipments
+            searchQuery={searchQuery}
+            setSearchQuery={setSearchQuery}
+            openCreateModalToken={
+              openCreateModalRequest?.menuId === 'equipement'
+                ? openCreateModalRequest.token
+                : null
+            }
+          />
         )}
 
         {/* Contenu Occupant */}
         {activeMenu === 'occupant' && (
-          <div className="occupants-page">
-            <div className="occupants-header-bar">
-              <h2 className="occupants-page-title">Table des Occupants</h2>
-              <div className="search-container search-occupants">
-                <IoSearchOutline className="search-icon" />
-                <input
-                  type="text"
-                  className="search-input"
-                  placeholder="Faites votre recherche ici"
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                />
-              </div>
-              <div className="occupants-actions-right">
-                <button className="btn-filter">
-                  <IoFilterOutline />
-                </button>
-                <button className="btn-sort">
-                  <IoSwapVerticalOutline />
-                </button>
-                <button className="btn-import-csv">
-                  <IoCloudDownloadOutline />
-                  <span>Import csv</span>
-                </button>
-                <button 
-                  className="btn-add-occupant"
-                  onClick={() => setShowAddOccupantModal(true)}
-                >
-                  <IoAddOutline />
-                  <span>Ajouter</span>
-                </button>
-              </div>
-            </div>
-
-            <div className="occupants-table-container">
-              <table className="occupants-table">
-                <thead>
-                  <tr>
-                    <th className="checkbox-column">
-                      <button 
-                        className="checkbox-btn"
-                        onClick={handleSelectAllOccupants}
-                      >
-                        {selectedOccupants.length === filteredOccupants.length && filteredOccupants.length > 0 ? (
-                          <IoCheckboxOutline />
-                        ) : (
-                          <IoSquareOutline />
-                        )}
-                      </button>
-                    </th>
-                    <th>N° de Chambre</th>
-                    <th>Batiment</th>
-                    <th>Role</th>
-                    <th>N° de Telephone</th>
-                    <th>Statut</th>
-                    <th></th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {filteredOccupants.length > 0 ? (
-                    filteredOccupants.map((occupant) => (
-                      <tr key={occupant.id}>
-                        <td className="checkbox-column">
-                          <button 
-                            className="checkbox-btn"
-                            onClick={() => handleSelectOccupant(occupant.id)}
-                          >
-                            {selectedOccupants.includes(occupant.id) ? (
-                              <IoCheckboxOutline />
-                            ) : (
-                              <IoSquareOutline />
-                            )}
-                          </button>
-                        </td>
-                        <td className="occupant-room">{occupant.roomNumber}</td>
-                        <td className="occupant-building">{occupant.building}</td>
-                        <td className="occupant-role">{occupant.role}</td>
-                        <td className="occupant-phone">{occupant.phone}</td>
-                        <td>
-                          <span className={`badge-status ${occupant.status === 'Activé' ? 'badge-active' : 'badge-inactive'}`}>
-                            {occupant.status}
-                          </span>
-                        </td>
-                        <td className="actions-column">
-                          <button className="btn-actions">
-                            <IoEllipsisVerticalOutline />
-                          </button>
-                        </td>
-                      </tr>
-                    ))
-                  ) : (
-                    <tr>
-                      <td colSpan="7" className="no-results">
-                        {searchQuery ? `Aucun occupant trouvé pour "${searchQuery}"` : 'Aucun occupant disponible'}
-                      </td>
-                    </tr>
-                  )}
-                </tbody>
-              </table>
-            </div>
-          </div>
+          <Occupants
+            searchQuery={searchQuery}
+            setSearchQuery={setSearchQuery}
+            openCreateModalToken={
+              openCreateModalRequest?.menuId === 'occupant'
+                ? openCreateModalRequest.token
+                : null
+            }
+          />
         )}
 
         {/* Contenu Agent */}
         {activeMenu === 'agent' && (
-          <div className="agents-page">
-            <div className="agents-header-bar">
-              <h2 className="agents-page-title">Table des Agents</h2>
-              <div className="search-container search-agents">
-                <IoSearchOutline className="search-icon" />
-                <input
-                  type="text"
-                  className="search-input"
-                  placeholder="Faites votre recherche ici"
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                />
-              </div>
-              <div className="agents-actions-right">
-                <button className="btn-filter">
-                  <IoFilterOutline />
-                </button>
-                <button className="btn-sort">
-                  <IoSwapVerticalOutline />
-                </button>
-                <button className="btn-import-csv">
-                  <IoCloudDownloadOutline />
-                  <span>Import csv</span>
-                </button>
-                <button 
-                  className="btn-add-agent"
-                  onClick={() => setShowAddAgentModal(true)}
-                >
-                  <IoAddOutline />
-                  <span>Ajouter</span>
-                </button>
-              </div>
-            </div>
-
-            <div className="agents-table-container">
-              <table className="agents-table">
-                <thead>
-                  <tr>
-                    <th className="checkbox-column">
-                      <button 
-                        className="checkbox-btn"
-                        onClick={handleSelectAllAgents}
-                      >
-                        {selectedAgents.length === filteredAgents.length && filteredAgents.length > 0 ? (
-                          <IoCheckboxOutline />
-                        ) : (
-                          <IoSquareOutline />
-                        )}
-                      </button>
-                    </th>
-                    <th>Nom</th>
-                    <th>Email</th>
-                    <th>Specialité</th>
-                    <th>N° de Telephone</th>
-                    <th>Statut</th>
-                    <th></th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {filteredAgents.length > 0 ? (
-                    filteredAgents.map((agent) => (
-                      <tr key={agent.id}>
-                        <td className="checkbox-column">
-                          <button 
-                            className="checkbox-btn"
-                            onClick={() => handleSelectAgent(agent.id)}
-                          >
-                            {selectedAgents.includes(agent.id) ? (
-                              <IoCheckboxOutline />
-                            ) : (
-                              <IoSquareOutline />
-                            )}
-                          </button>
-                        </td>
-                        <td className="agent-name">{agent.name}</td>
-                        <td className="agent-email">{agent.email}</td>
-                        <td className="agent-specialty">{agent.specialty}</td>
-                        <td className="agent-phone">{agent.phone}</td>
-                        <td>
-                          <span className={`badge-status ${agent.status === 'Activé' ? 'badge-active' : 'badge-inactive'}`}>
-                            {agent.status}
-                          </span>
-                        </td>
-                        <td className="actions-column">
-                          <button className="btn-actions">
-                            <IoEllipsisVerticalOutline />
-                          </button>
-                        </td>
-                      </tr>
-                    ))
-                  ) : (
-                    <tr>
-                      <td colSpan="7" className="no-results">
-                        {searchQuery ? `Aucun agent trouvé pour "${searchQuery}"` : 'Aucun agent disponible'}
-                      </td>
-                    </tr>
-                  )}
-                </tbody>
-              </table>
-            </div>
-          </div>
+          <Agents
+            searchQuery={searchQuery}
+            setSearchQuery={setSearchQuery}
+            openCreateModalToken={
+              openCreateModalRequest?.menuId === 'agent'
+                ? openCreateModalRequest.token
+                : null
+            }
+          />
         )}
 
         {/* Contenu Incident */}
         {activeMenu === 'incident' && (
-          <div className="incidents-page">
-            <div className="incidents-header-bar">
-              <h2 className="incidents-page-title">Table des Incidents</h2>
-              <div className="search-container search-incidents">
-                <IoSearchOutline className="search-icon" />
-                <input
-                  type="text"
-                  className="search-input"
-                  placeholder="Faites votre recherche ici"
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                />
-              </div>
-              <div className="incidents-actions-right">
-                <button className="btn-filter">
-                  <IoFilterOutline />
-                </button>
-                <button className="btn-sort">
-                  <IoSwapVerticalOutline />
-                </button>
-                <button 
-                  className="btn-add-incident"
-                  onClick={() => setShowAddIncidentModal(true)}
-                >
-                  <IoAddOutline />
-                  <span>Ajouter</span>
-                </button>
-              </div>
-            </div>
-
-            <div className="incidents-table-container">
-              <table className="incidents-table">
-                <thead>
-                  <tr>
-                    <th className="checkbox-column">
-                      <button 
-                        className="checkbox-btn"
-                        onClick={handleSelectAllIncidents}
-                      >
-                        {selectedIncidents.length === filteredIncidents.length && filteredIncidents.length > 0 ? (
-                          <IoCheckboxOutline />
-                        ) : (
-                          <IoSquareOutline />
-                        )}
-                      </button>
-                    </th>
-                    <th>Batiment</th>
-                    <th>N° de Chambre</th>
-                    <th>Agent Assigné</th>
-                    <th>Date</th>
-                    <th>Etat</th>
-                    <th></th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {filteredIncidents.length > 0 ? (
-                    filteredIncidents.map((incident) => (
-                      <tr key={incident.id}>
-                        <td className="checkbox-column">
-                          <button 
-                            className="checkbox-btn"
-                            onClick={() => handleSelectIncident(incident.id)}
-                          >
-                            {selectedIncidents.includes(incident.id) ? (
-                              <IoCheckboxOutline />
-                            ) : (
-                              <IoSquareOutline />
-                            )}
-                          </button>
-                        </td>
-                        <td className="incident-building">{incident.building}</td>
-                        <td className="incident-room">{incident.roomNumber}</td>
-                        <td className="incident-agent">{incident.assignedAgent}</td>
-                        <td className="incident-date">{incident.date}</td>
-                        <td>
-                          <span className={`badge-state ${getIncidentStateBadgeClass(incident.state)}`}>
-                            {incident.state}
-                          </span>
-                        </td>
-                        <td className="actions-column">
-                          <button className="btn-actions">
-                            <IoEllipsisVerticalOutline />
-                          </button>
-                        </td>
-                      </tr>
-                    ))
-                  ) : (
-                    <tr>
-                      <td colSpan="7" className="no-results">
-                        {searchQuery ? `Aucun incident trouvé pour "${searchQuery}"` : 'Aucun incident disponible'}
-                      </td>
-                    </tr>
-                  )}
-                </tbody>
-              </table>
-            </div>
-          </div>
+          <Incidents searchQuery={searchQuery} setSearchQuery={setSearchQuery} />
         )}
 
-        {/* Modal Ajouter un bâtiment */}
-        {showAddBuildingModal && (
-          <div className="modal-overlay" onClick={handleCancelAdd}>
-            <div className="modal-content" onClick={(e) => e.stopPropagation()}>
-              <div className="modal-header">
-                <h2 className="modal-title">Ajouter un nouveau bâtiment</h2>
-                <button className="modal-close-btn" onClick={handleCancelAdd}>
-                  <IoCloseOutline />
-                </button>
+      </main>
+
+      {/* Modal Profil */}
+      {showProfileModal && (
+        <div className="modal-overlay" onClick={handleCloseProfileModal}>
+          <div className="modal-content modal-profile" onClick={(e) => e.stopPropagation()}>
+            <div className="modal-header">
+              <h2 className="modal-title">Mon Profil</h2>
+              <button className="modal-close-btn" onClick={handleCloseProfileModal}>
+                <IoCloseOutline />
+              </button>
+            </div>
+
+            <form className="modal-form modal-profile-form" onSubmit={handleSaveProfile}>
+              {/* Avatar Section */}
+              <div className="profile-avatar-section">
+                <div className="profile-avatar">
+                  {userProfile.avatar ? (
+                    <img src={userProfile.avatar} alt="Avatar" />
+                  ) : (
+                    <div className="profile-avatar-placeholder">
+                      <IoPersonOutline />
+                    </div>
+                  )}
+                </div>
+                {isEditing && (
+                  <button type="button" className="btn-change-avatar">
+                    Changer la photo
+                  </button>
+                )}
               </div>
-              <form onSubmit={handleAddBuilding} className="modal-form">
-                <div className="form-group">
-                  <label htmlFor="building-name">Nom du bâtiment *</label>
-                  <input
-                    type="text"
-                    id="building-name"
-                    value={newBuilding.name}
-                    onChange={(e) => setNewBuilding({ ...newBuilding, name: e.target.value })}
-                    placeholder="Ex: Bâtiment C"
-                    required
-                  />
-                </div>
-                <div className="form-group">
-                  <label htmlFor="building-code">Code du bâtiment *</label>
-                  <input
-                    type="text"
-                    id="building-code"
-                    value={newBuilding.code}
-                    onChange={(e) => setNewBuilding({ ...newBuilding, code: e.target.value.toUpperCase() })}
-                    placeholder="Ex: BC"
-                    required
-                    maxLength={5}
-                  />
-                </div>
-                <div className="form-group">
-                  <label htmlFor="building-type">Type de bâtiment *</label>
-                  <select
-                    id="building-type"
-                    value={newBuilding.type}
-                    onChange={(e) => setNewBuilding({ ...newBuilding, type: e.target.value })}
-                    required
-                  >
-                    <option value="Pédagogique">Pédagogique</option>
-                    <option value="Administratif">Administratif</option>
-                    <option value="Résidentiel">Résidentiel</option>
-                    <option value="Mixte">Mixte</option>
-                  </select>
-                </div>
+
+              {/* Informations personnelles */}
+              <div className="profile-section">
+                <h3 className="profile-section-title">Informations personnelles</h3>
                 <div className="form-row">
                   <div className="form-group">
-                    <label htmlFor="building-floors">Nombre d&apos;étages *</label>
+                    <label htmlFor="profile-firstname">Prénom</label>
                     <input
-                      type="number"
-                      id="building-floors"
-                      value={newBuilding.floors}
-                      onChange={(e) => setNewBuilding({ ...newBuilding, floors: parseInt(e.target.value) || 1 })}
-                      min="1"
+                      type="text"
+                      id="profile-firstname"
+                      value={editedProfile.firstName}
+                      onChange={(e) => setEditedProfile({ ...editedProfile, firstName: e.target.value })}
+                      disabled={!isEditing}
                       required
                     />
                   </div>
                   <div className="form-group">
-                    <label htmlFor="building-spaces">Nombre d&apos;espaces</label>
+                    <label htmlFor="profile-lastname">Nom</label>
                     <input
-                      type="number"
-                      id="building-spaces"
-                      value={newBuilding.spaces}
-                      onChange={(e) => setNewBuilding({ ...newBuilding, spaces: parseInt(e.target.value) || 0 })}
-                      min="0"
+                      type="text"
+                      id="profile-lastname"
+                      value={editedProfile.lastName}
+                      onChange={(e) => setEditedProfile({ ...editedProfile, lastName: e.target.value })}
+                      disabled={!isEditing}
+                      required
                     />
                   </div>
                 </div>
-                <div className="modal-actions">
-                  <button type="button" className="btn-cancel" onClick={handleCancelAdd}>
-                    Annuler
-                  </button>
-                  <button type="submit" className="btn-submit">
-                    Ajouter le bâtiment
-                  </button>
-                </div>
-              </form>
-            </div>
-          </div>
-        )}
 
-        {/* Modal Ajouter un équipement */}
-        {showAddEquipmentModal && (
-          <div className="modal-overlay" onClick={handleCancelAddEquipment}>
-            <div className="modal-content modal-equipment" onClick={(e) => e.stopPropagation()}>
-              <div className="modal-header">
-                <h2 className="modal-title">Ajouter un Equipement</h2>
-                <button className="modal-close-btn" onClick={handleCancelAddEquipment}>
-                  <IoCloseOutline />
+                <div className="form-group">
+                  <label htmlFor="profile-email">
+                    <IoMailOutline className="form-label-icon" />
+                    Adresse e-mail
+                  </label>
+                  <input
+                    type="email"
+                    id="profile-email"
+                    value={editedProfile.email}
+                    onChange={(e) => setEditedProfile({ ...editedProfile, email: e.target.value })}
+                    disabled={!isEditing}
+                    required
+                  />
+                </div>
+
+                <div className="form-group">
+                  <label htmlFor="profile-phone">
+                    <IoCallOutline className="form-label-icon" />
+                    Téléphone
+                  </label>
+                  <input
+                    type="tel"
+                    id="profile-phone"
+                    value={editedProfile.phone}
+                    onChange={(e) => setEditedProfile({ ...editedProfile, phone: e.target.value })}
+                    disabled={!isEditing}
+                  />
+                </div>
+              </div>
+
+              {/* Informations professionnelles */}
+              <div className="profile-section">
+                <h3 className="profile-section-title">Informations professionnelles</h3>
+                <div className="form-group">
+                  <label htmlFor="profile-position">Poste</label>
+                  <input
+                    type="text"
+                    id="profile-position"
+                    value={editedProfile.position}
+                    onChange={(e) => setEditedProfile({ ...editedProfile, position: e.target.value })}
+                    disabled={!isEditing}
+                  />
+                </div>
+
+                <div className="form-group">
+                  <label htmlFor="profile-department">Département</label>
+                  <input
+                    type="text"
+                    id="profile-department"
+                    value={editedProfile.department}
+                    onChange={(e) => setEditedProfile({ ...editedProfile, department: e.target.value })}
+                    disabled={!isEditing}
+                  />
+                </div>
+
+                <div className="form-group">
+                  <label htmlFor="profile-location">
+                    <IoLocationOutline className="form-label-icon" />
+                    Localisation
+                  </label>
+                  <input
+                    type="text"
+                    id="profile-location"
+                    value={editedProfile.location}
+                    onChange={(e) => setEditedProfile({ ...editedProfile, location: e.target.value })}
+                    disabled={!isEditing}
+                  />
+                </div>
+              </div>
+
+              {/* Actions */}
+              <div className="modal-actions">
+                {!isEditing ? (
+                  <>
+                    <button type="button" className="btn-cancel" onClick={handleCloseProfileModal}>
+                      Fermer
+                    </button>
+                    <button type="button" className="btn-submit" onClick={handleEditProfile}>
+                      Modifier le profil
+                    </button>
+                  </>
+                ) : (
+                  <>
+                    <button type="button" className="btn-cancel" onClick={handleCancelEdit}>
+                      Annuler
+                    </button>
+                    <button type="submit" className="btn-submit">
+                      Enregistrer les modifications
+                    </button>
+                  </>
+                )}
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Modal Préférences */}
+      {showPreferencesModal && (
+        <div className="modal-overlay" onClick={handleClosePreferencesModal}>
+          <div className="modal-content modal-preferences" onClick={(e) => e.stopPropagation()}>
+            <div className="modal-header">
+              <h2 className="modal-title">Préférences</h2>
+              <button className="modal-close-btn" onClick={handleClosePreferencesModal}>
+                <IoCloseOutline />
+              </button>
+            </div>
+
+            <form className="modal-form modal-preferences-form" onSubmit={handleSavePreferences}>
+              {/* Langue */}
+              <div className="preferences-section">
+                <h3 className="preferences-section-title">
+                  <IoLanguageOutline className="preferences-section-icon" />
+                  Langue
+                </h3>
+                <div className="form-group">
+                  <label htmlFor="preferences-language">Langue de l'interface</label>
+                  <select
+                    id="preferences-language"
+                    value={editedPreferences.language}
+                    onChange={(e) => setEditedPreferences({ ...editedPreferences, language: e.target.value })}
+                    className="form-select"
+                  >
+                    <option value="fr">Français</option>
+                    <option value="en">English</option>
+                    <option value="es">Español</option>
+                  </select>
+                </div>
+              </div>
+
+              {/* Thème */}
+              <div className="preferences-section">
+                <h3 className="preferences-section-title">
+                  {editedPreferences.theme === 'light' ? (
+                    <IoSunnyOutline className="preferences-section-icon" />
+                  ) : (
+                    <IoMoonOutline className="preferences-section-icon" />
+                  )}
+                  Apparence
+                </h3>
+                <div className="form-group">
+                  <label htmlFor="preferences-theme">Thème</label>
+                  <div className="theme-selector">
+                    <button
+                      type="button"
+                      className={`theme-option ${editedPreferences.theme === 'light' ? 'active' : ''}`}
+                      onClick={() => setEditedPreferences({ ...editedPreferences, theme: 'light' })}
+                    >
+                      <IoSunnyOutline />
+                      <span>Clair</span>
+                    </button>
+                    <button
+                      type="button"
+                      className={`theme-option ${editedPreferences.theme === 'dark' ? 'active' : ''}`}
+                      onClick={() => setEditedPreferences({ ...editedPreferences, theme: 'dark' })}
+                    >
+                      <IoMoonOutline />
+                      <span>Sombre</span>
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              {/* Notifications */}
+              <div className="preferences-section">
+                <h3 className="preferences-section-title">
+                  <IoNotificationsOutline className="preferences-section-icon" />
+                  Notifications
+                </h3>
+                <div className="preferences-checkbox-group">
+                  <label className="preferences-checkbox-item">
+                    <input
+                      type="checkbox"
+                      checked={editedPreferences.notifications.email}
+                      onChange={(e) => setEditedPreferences({
+                        ...editedPreferences,
+                        notifications: { ...editedPreferences.notifications, email: e.target.checked }
+                      })}
+                    />
+                    <div className="checkbox-content">
+                      <IoMailOutline className="checkbox-icon" />
+                      <div>
+                        <span className="checkbox-label">Notifications par e-mail</span>
+                        <span className="checkbox-description">Recevoir les notifications importantes par e-mail</span>
+                      </div>
+                    </div>
+                  </label>
+
+                  <label className="preferences-checkbox-item">
+                    <input
+                      type="checkbox"
+                      checked={editedPreferences.notifications.push}
+                      onChange={(e) => setEditedPreferences({
+                        ...editedPreferences,
+                        notifications: { ...editedPreferences.notifications, push: e.target.checked }
+                      })}
+                    />
+                    <div className="checkbox-content">
+                      <IoNotificationsOutline className="checkbox-icon" />
+                      <div>
+                        <span className="checkbox-label">Notifications push</span>
+                        <span className="checkbox-description">Recevoir des notifications dans le navigateur</span>
+                      </div>
+                    </div>
+                  </label>
+
+                  <label className="preferences-checkbox-item">
+                    <input
+                      type="checkbox"
+                      checked={editedPreferences.notifications.sms}
+                      onChange={(e) => setEditedPreferences({
+                        ...editedPreferences,
+                        notifications: { ...editedPreferences.notifications, sms: e.target.checked }
+                      })}
+                    />
+                    <div className="checkbox-content">
+                      <IoCallOutline className="checkbox-icon" />
+                      <div>
+                        <span className="checkbox-label">Notifications SMS</span>
+                        <span className="checkbox-description">Recevoir des alertes importantes par SMS</span>
+                      </div>
+                    </div>
+                  </label>
+                </div>
+              </div>
+
+              {/* Tableau de bord */}
+              <div className="preferences-section">
+                <h3 className="preferences-section-title">
+                  <IoGridOutline className="preferences-section-icon" />
+                  Tableau de bord
+                </h3>
+                <div className="form-group">
+                  <label htmlFor="preferences-items-per-page">Éléments par page</label>
+                  <select
+                    id="preferences-items-per-page"
+                    value={editedPreferences.dashboard.itemsPerPage}
+                    onChange={(e) => setEditedPreferences({
+                      ...editedPreferences,
+                      dashboard: { ...editedPreferences.dashboard, itemsPerPage: parseInt(e.target.value) }
+                    })}
+                    className="form-select"
+                  >
+                    <option value="5">5</option>
+                    <option value="10">10</option>
+                    <option value="20">20</option>
+                    <option value="50">50</option>
+                  </select>
+                </div>
+
+                <div className="form-group">
+                  <label htmlFor="preferences-default-period">Période par défaut</label>
+                  <select
+                    id="preferences-default-period"
+                    value={editedPreferences.dashboard.defaultPeriod}
+                    onChange={(e) => setEditedPreferences({
+                      ...editedPreferences,
+                      dashboard: { ...editedPreferences.dashboard, defaultPeriod: e.target.value }
+                    })}
+                    className="form-select"
+                  >
+                    <option value="Journalier">Journalier</option>
+                    <option value="Hebdomadaire">Hebdomadaire</option>
+                    <option value="Mensuel">Mensuel</option>
+                    <option value="Semestriel">Semestriel</option>
+                    <option value="Annuel">Annuel</option>
+                  </select>
+                </div>
+
+                <label className="preferences-checkbox-item">
+                  <input
+                    type="checkbox"
+                    checked={editedPreferences.dashboard.showCharts}
+                    onChange={(e) => setEditedPreferences({
+                      ...editedPreferences,
+                      dashboard: { ...editedPreferences.dashboard, showCharts: e.target.checked }
+                    })}
+                  />
+                  <div className="checkbox-content">
+                    <IoStatsChartOutline className="checkbox-icon" />
+                    <div>
+                      <span className="checkbox-label">Afficher les graphiques</span>
+                      <span className="checkbox-description">Afficher les graphiques sur le tableau de bord</span>
+                    </div>
+                  </div>
+                </label>
+              </div>
+
+              {/* Confidentialité */}
+              <div className="preferences-section">
+                <h3 className="preferences-section-title">
+                  <IoPersonOutline className="preferences-section-icon" />
+                  Confidentialité
+                </h3>
+                <label className="preferences-checkbox-item">
+                  <input
+                    type="checkbox"
+                    checked={editedPreferences.privacy.showEmail}
+                    onChange={(e) => setEditedPreferences({
+                      ...editedPreferences,
+                      privacy: { ...editedPreferences.privacy, showEmail: e.target.checked }
+                    })}
+                  />
+                  <div className="checkbox-content">
+                    <IoMailOutline className="checkbox-icon" />
+                    <div>
+                      <span className="checkbox-label">Afficher mon e-mail</span>
+                      <span className="checkbox-description">Permettre aux autres utilisateurs de voir mon adresse e-mail</span>
+                    </div>
+                  </div>
+                </label>
+
+                <label className="preferences-checkbox-item">
+                  <input
+                    type="checkbox"
+                    checked={editedPreferences.privacy.showPhone}
+                    onChange={(e) => setEditedPreferences({
+                      ...editedPreferences,
+                      privacy: { ...editedPreferences.privacy, showPhone: e.target.checked }
+                    })}
+                  />
+                  <div className="checkbox-content">
+                    <IoCallOutline className="checkbox-icon" />
+                    <div>
+                      <span className="checkbox-label">Afficher mon téléphone</span>
+                      <span className="checkbox-description">Permettre aux autres utilisateurs de voir mon numéro de téléphone</span>
+                    </div>
+                  </div>
+                </label>
+              </div>
+
+              {/* Actions */}
+              <div className="modal-actions">
+                <button type="button" className="btn-cancel" onClick={handleClosePreferencesModal}>
+                  Annuler
+                </button>
+                <button type="submit" className="btn-submit">
+                  Enregistrer les préférences
                 </button>
               </div>
-              <form onSubmit={handleAddEquipment} className="modal-form modal-form-equipment">
-                <div className="form-row-equipment">
-                  <div className="form-column-left">
-                    <div className="form-group">
-                      <label htmlFor="equipment-name">Nom</label>
-                      <input
-                        type="text"
-                        id="equipment-name"
-                        value={newEquipment.name}
-                        onChange={(e) => setNewEquipment({ ...newEquipment, name: e.target.value })}
-                        placeholder="Entrez vôtre nom"
-                        required
-                      />
-                    </div>
-                    <div className="form-group">
-                      <label htmlFor="equipment-model">Modele</label>
-                      <input
-                        type="text"
-                        id="equipment-model"
-                        value={newEquipment.model}
-                        onChange={(e) => setNewEquipment({ ...newEquipment, model: e.target.value })}
-                        placeholder="Entrez le modele"
-                        required
-                      />
-                    </div>
-                    <div className="form-group">
-                      <label htmlFor="equipment-value">Valeur</label>
-                      <input
-                        type="text"
-                        id="equipment-value"
-                        value={newEquipment.value}
-                        onChange={(e) => setNewEquipment({ ...newEquipment, value: e.target.value })}
-                        placeholder="Entrez sa Valeur"
-                        required
-                      />
-                    </div>
-                    <div className="form-group">
-                      <label htmlFor="equipment-space">Espace</label>
-                      <input
-                        type="text"
-                        id="equipment-space"
-                        value={newEquipment.space}
-                        onChange={(e) => setNewEquipment({ ...newEquipment, space: e.target.value })}
-                        placeholder="Entrez son espace"
-                        required
-                      />
-                    </div>
-                    <div className="form-group">
-                      <label htmlFor="equipment-description">Description</label>
-                      <textarea
-                        id="equipment-description"
-                        value={newEquipment.description}
-                        onChange={(e) => setNewEquipment({ ...newEquipment, description: e.target.value })}
-                        placeholder=""
-                        rows={4}
-                      />
-                    </div>
-                  </div>
-                  <div className="form-column-right">
-                    <div className="form-group">
-                      <label htmlFor="equipment-type">Type d&apos;equipement</label>
-                      <select
-                        id="equipment-type"
-                        value={newEquipment.type}
-                        onChange={(e) => setNewEquipment({ ...newEquipment, type: e.target.value })}
-                        required
-                      >
-                        <option value="">Selectionner le type d&apos;equipement</option>
-                        <option value="Réfrigérateur">Réfrigérateur</option>
-                        <option value="Climatiseur">Climatiseur</option>
-                        <option value="Ordinateur">Ordinateur</option>
-                        <option value="Imprimante">Imprimante</option>
-                        <option value="Mobilier">Mobilier</option>
-                        <option value="Ventilateur">Ventilateur</option>
-                        <option value="Projecteur">Projecteur</option>
-                        <option value="Machine à Café">Machine à Café</option>
-                        <option value="Éclairage">Éclairage</option>
-                      </select>
-                    </div>
-                    <div className="form-group">
-                      <label htmlFor="equipment-brand">Marque</label>
-                      <input
-                        type="text"
-                        id="equipment-brand"
-                        value={newEquipment.brand}
-                        onChange={(e) => setNewEquipment({ ...newEquipment, brand: e.target.value })}
-                        placeholder="Entrez la marque"
-                        required
-                      />
-                    </div>
-                    <div className="form-group">
-                      <label htmlFor="equipment-lifespan">Durée de Vie</label>
-                      <input
-                        type="text"
-                        id="equipment-lifespan"
-                        value={newEquipment.lifespan}
-                        onChange={(e) => setNewEquipment({ ...newEquipment, lifespan: e.target.value })}
-                        placeholder="Entrez sa durée de vie"
-                        required
-                      />
-                    </div>
-                  </div>
-                </div>
-                <div className="modal-actions">
-                  <button type="button" className="btn-cancel" onClick={handleCancelAddEquipment}>
-                    Annuler
-                  </button>
-                  <button type="submit" className="btn-submit">
-                    Creer
-                  </button>
-                </div>
-              </form>
-            </div>
+            </form>
           </div>
-        )}
-
-        {/* Modal Créer un Occupant */}
-        {showAddOccupantModal && (
-          <div className="modal-overlay" onClick={handleCancelAddOccupant}>
-            <div className="modal-content modal-occupant" onClick={(e) => e.stopPropagation()}>
-              <div className="modal-header">
-                <h2 className="modal-title">Creer Un(e) Occupant(e)</h2>
-                <button className="modal-close-btn" onClick={handleCancelAddOccupant}>
-                  <IoCloseOutline />
-                </button>
-              </div>
-              <form onSubmit={handleAddOccupant} className="modal-form modal-form-occupant">
-                <div className="form-row-equipment">
-                  <div className="form-column-left">
-                    <div className="form-group">
-                      <label htmlFor="occupant-room-name">Nom de Chambre</label>
-                      <input
-                        type="text"
-                        id="occupant-room-name"
-                        value={newOccupant.roomName}
-                        onChange={(e) => setNewOccupant({ ...newOccupant, roomName: e.target.value })}
-                        placeholder="Entrez le nom de la chambre"
-                        required
-                      />
-                    </div>
-                    <div className="form-group">
-                      <label htmlFor="occupant-email">Email</label>
-                      <input
-                        type="email"
-                        id="occupant-email"
-                        value={newOccupant.email}
-                        onChange={(e) => setNewOccupant({ ...newOccupant, email: e.target.value })}
-                        placeholder="Entrez vôtre Email"
-                        required
-                      />
-                    </div>
-                    <div className="form-group">
-                      <label htmlFor="occupant-password">Mot de Passe</label>
-                      <input
-                        type="password"
-                        id="occupant-password"
-                        value={newOccupant.password}
-                        onChange={(e) => setNewOccupant({ ...newOccupant, password: e.target.value })}
-                        placeholder="Entrez le mot de passe"
-                        required
-                      />
-                    </div>
-                  </div>
-                  <div className="form-column-right">
-                    <div className="form-group">
-                      <label htmlFor="occupant-building">Batiment</label>
-                      <select
-                        id="occupant-building"
-                        value={newOccupant.building}
-                        onChange={(e) => setNewOccupant({ ...newOccupant, building: e.target.value })}
-                        required
-                      >
-                        <option value="">Selectionner le Batiment</option>
-                        {buildings.map((building) => (
-                          <option key={building.id} value={building.name}>
-                            {building.name}
-                          </option>
-                        ))}
-                      </select>
-                    </div>
-                    <div className="form-group">
-                      <label htmlFor="occupant-phone">Telephone</label>
-                      <input
-                        type="text"
-                        id="occupant-phone"
-                        value={newOccupant.phone}
-                        onChange={(e) => setNewOccupant({ ...newOccupant, phone: e.target.value })}
-                        placeholder="Entrez vôtre numero de téléphone"
-                        required
-                      />
-                    </div>
-                    <div className="form-group">
-                      <label htmlFor="occupant-type">Type d&apos;Occupant</label>
-                      <select
-                        id="occupant-type"
-                        value={newOccupant.occupantType}
-                        onChange={(e) => setNewOccupant({ ...newOccupant, occupantType: e.target.value })}
-                        required
-                      >
-                        <option value="">Selectionner le type d&apos;occupant</option>
-                        <option value="Agent">Agent</option>
-                        <option value="Client">Client</option>
-                      </select>
-                    </div>
-                  </div>
-                </div>
-                <div className="modal-actions">
-                  <button type="submit" className="btn-submit">
-                    Creer
-                  </button>
-                  <button type="button" className="btn-cancel" onClick={handleCancelAddOccupant}>
-                    Annuler
-                  </button>
-                </div>
-              </form>
-            </div>
-          </div>
-        )}
-
-        {/* Modal Créer un Agent */}
-        {showAddAgentModal && (
-          <div className="modal-overlay" onClick={handleCancelAddAgent}>
-            <div className="modal-content modal-agent" onClick={(e) => e.stopPropagation()}>
-              <div className="modal-header">
-                <h2 className="modal-title">Creer Un(e) Agent(e)</h2>
-                <button className="modal-close-btn" onClick={handleCancelAddAgent}>
-                  <IoCloseOutline />
-                </button>
-              </div>
-              <form onSubmit={handleAddAgent} className="modal-form modal-form-agent">
-                <div className="form-row-equipment">
-                  <div className="form-column-left">
-                    <div className="form-group">
-                      <label htmlFor="agent-name">Nom</label>
-                      <input
-                        type="text"
-                        id="agent-name"
-                        value={newAgent.name}
-                        onChange={(e) => setNewAgent({ ...newAgent, name: e.target.value })}
-                        placeholder="Entrez vôtre nom"
-                        required
-                      />
-                    </div>
-                    <div className="form-group">
-                      <label htmlFor="agent-email">Email</label>
-                      <input
-                        type="email"
-                        id="agent-email"
-                        value={newAgent.email}
-                        onChange={(e) => setNewAgent({ ...newAgent, email: e.target.value })}
-                        placeholder="Entrez vôtre Email"
-                        required
-                      />
-                    </div>
-                    <div className="form-group">
-                      <label htmlFor="agent-username">Pseudo</label>
-                      <input
-                        type="text"
-                        id="agent-username"
-                        value={newAgent.username}
-                        onChange={(e) => setNewAgent({ ...newAgent, username: e.target.value })}
-                        placeholder="Entrez son Pseudo"
-                        required
-                      />
-                    </div>
-                    <div className="form-group">
-                      <label htmlFor="agent-password">Mot de Passe</label>
-                      <input
-                        type="password"
-                        id="agent-password"
-                        value={newAgent.password}
-                        onChange={(e) => setNewAgent({ ...newAgent, password: e.target.value })}
-                        placeholder="Entrez son mot de passe"
-                        required
-                      />
-                    </div>
-                  </div>
-                  <div className="form-column-right">
-                    <div className="form-group">
-                      <label htmlFor="agent-firstname">Prenom</label>
-                      <input
-                        type="text"
-                        id="agent-firstname"
-                        value={newAgent.firstName}
-                        onChange={(e) => setNewAgent({ ...newAgent, firstName: e.target.value })}
-                        placeholder="Entrez vôtre Prenom"
-                        required
-                      />
-                    </div>
-                    <div className="form-group">
-                      <label htmlFor="agent-phone">Telephone</label>
-                      <input
-                        type="text"
-                        id="agent-phone"
-                        value={newAgent.phone}
-                        onChange={(e) => setNewAgent({ ...newAgent, phone: e.target.value })}
-                        placeholder="Entrez vôtre numero de téléphone"
-                        required
-                      />
-                    </div>
-                    <div className="form-group">
-                      <label htmlFor="agent-specialty">Specialité</label>
-                      <select
-                        id="agent-specialty"
-                        value={newAgent.specialty}
-                        onChange={(e) => setNewAgent({ ...newAgent, specialty: e.target.value })}
-                        required
-                      >
-                        <option value="">Selectionner la spécialité</option>
-                        <option value="Electricien">Electricien</option>
-                        <option value="Plombier">Plombier</option>
-                        <option value="Menuisier">Menuisier</option>
-                        <option value="Peintre">Peintre</option>
-                        <option value="Technicien">Technicien</option>
-                        <option value="Maintenance">Maintenance</option>
-                      </select>
-                    </div>
-                  </div>
-                </div>
-                <div className="modal-actions">
-                  <button type="submit" className="btn-submit">
-                    Creer
-                  </button>
-                  <button type="button" className="btn-cancel" onClick={handleCancelAddAgent}>
-                    Annuler
-                  </button>
-                </div>
-              </form>
-            </div>
-          </div>
-        )}
-      </main>
+        </div>
+      )}
     </div>
   )
 }
