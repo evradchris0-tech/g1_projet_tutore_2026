@@ -1,0 +1,614 @@
+/* Equipments Page Styles */
+.equipments-page {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.equipments-header-bar {
+  background: white;
+  border-radius: 12px;
+  padding: 20px 25px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+  display: flex;
+  align-items: center;
+  gap: 20px;
+}
+
+.equipments-page-title {
+  font-size: 20px;
+  font-weight: 600;
+  color: #1f2937;
+  margin: 0;
+  white-space: nowrap;
+}
+
+.search-equipments {
+  flex: 1;
+  max-width: 500px;
+}
+
+.equipments-actions-right {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-left: auto;
+}
+
+.btn-filter,
+.btn-sort {
+  width: 40px;
+  height: 40px;
+  border-radius: 8px;
+  border: 1px solid #e5e7eb;
+  background: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  color: #6b7280;
+  font-size: 18px;
+  padding: 0;
+}
+
+.btn-filter svg,
+.btn-sort svg {
+  width: 18px;
+  height: 18px;
+  color: #6b7280;
+  display: block;
+}
+
+.btn-filter:hover,
+.btn-sort:hover {
+  background: #f3f4f6;
+  border-color: #d1d5db;
+}
+
+.btn-filter:hover svg,
+.btn-sort:hover svg {
+  color: #374151;
+}
+
+.btn-add-equipment {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 20px;
+  background-color: #2563eb;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.btn-add-equipment:hover {
+  background-color: #1d4ed8;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 8px rgba(37, 99, 235, 0.3);
+}
+
+.btn-add-equipment svg {
+  width: 18px;
+  height: 18px;
+  color: white;
+  display: block;
+}
+
+.equipments-table-container {
+  background: white;
+  border-radius: 12px;
+  padding: 0;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+  overflow: hidden;
+}
+
+.equipments-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 14px;
+}
+
+.equipments-table th {
+  padding: 16px 20px;
+  text-align: left;
+  border-bottom: 1px solid #e5e7eb;
+  font-weight: 600;
+  color: #6b7280;
+  background-color: #f9fafb;
+}
+
+.equipments-table td {
+  padding: 16px 20px;
+  text-align: left;
+  border-bottom: 1px solid #f3f4f6;
+  color: #1f2937;
+}
+
+.equipments-table tbody tr:hover {
+  background-color: #f9fafb;
+}
+
+.equipments-table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+.checkbox-column {
+  width: 50px;
+  text-align: center;
+}
+
+.checkbox-btn {
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #6b7280;
+  font-size: 20px;
+  padding: 0;
+  transition: color 0.3s ease;
+}
+
+.checkbox-btn:hover {
+  color: #2563eb;
+}
+
+.checkbox-btn svg {
+  width: 20px;
+  height: 20px;
+}
+
+.equipment-name {
+  font-weight: 500;
+  color: #1f2937;
+}
+
+.equipment-type {
+  color: #6b7280;
+}
+
+.equipment-maintenance {
+  color: #6b7280;
+}
+
+/* Badge Status Styles */
+.badge-status {
+  display: inline-block;
+  padding: 4px 12px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.badge-active {
+  background-color: #dcfce7;
+  color: #166534;
+}
+
+.badge-inactive {
+  background-color: #fee2e2;
+  color: #991b1b;
+}
+
+/* Badge State Styles */
+.badge-state {
+  display: inline-block;
+  padding: 4px 12px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 500;
+  text-transform: capitalize;
+}
+
+.badge-bon-etat {
+  background-color: #dcfce7;
+  color: #166534;
+}
+
+.badge-a-remplacer {
+  background-color: #fee2e2;
+  color: #991b1b;
+}
+
+.badge-a-reparer {
+  background-color: #fef3c7;
+  color: #92400e;
+}
+
+.badge-en-maintenance {
+  background-color: #dbeafe;
+  color: #1e40af;
+}
+
+.badge-hors-service {
+  background-color: #f3f4f6;
+  color: #374151;
+}
+
+.badge-en-attente-de-piece {
+  background-color: #fce7f3;
+  color: #9f1239;
+}
+
+/* Actions Column Styles */
+.actions-column {
+  width: 50px;
+  text-align: center;
+}
+
+.btn-actions {
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #6b7280;
+  font-size: 20px;
+  padding: 4px;
+  transition: all 0.3s ease;
+  border-radius: 4px;
+}
+
+.btn-actions:hover {
+  background-color: #f3f4f6;
+  color: #2563eb;
+}
+
+.btn-actions svg {
+  width: 20px;
+  height: 20px;
+}
+
+/* Search Container Styles */
+.search-container {
+  position: relative;
+  width: 100%;
+}
+
+.search-icon {
+  position: absolute;
+  left: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 18px;
+  color: #6b7280;
+  pointer-events: none;
+  width: 18px;
+  height: 18px;
+  display: block;
+  z-index: 1;
+}
+
+.search-icon svg {
+  width: 18px;
+  height: 18px;
+  color: #6b7280;
+  display: block;
+}
+
+.search-input {
+  width: 100%;
+  padding: 10px 15px 10px 40px;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  font-size: 14px;
+  color: #1f2937;
+  background-color: #f9fafb;
+  transition: all 0.3s ease;
+  font-family: inherit;
+}
+
+.search-input:focus {
+  outline: none;
+  border-color: #2563eb;
+  background-color: white;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+}
+
+.search-input::placeholder {
+  color: #9ca3af;
+}
+
+/* No Results */
+.no-results {
+  text-align: center;
+  padding: 40px 20px;
+  color: #6b7280;
+  font-style: italic;
+}
+
+/* Modal Styles */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: 20px;
+}
+
+.modal-content {
+  background: white;
+  border-radius: 12px;
+  width: 100%;
+  max-width: 900px;
+  max-height: 90vh;
+  overflow-y: auto;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+}
+
+.modal-equipment {
+  max-width: 900px;
+}
+
+.modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 25px;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.modal-title {
+  font-size: 20px;
+  font-weight: 600;
+  color: #1f2937;
+  margin: 0;
+}
+
+.modal-close-btn {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  border: none;
+  background: transparent;
+  color: #6b7280;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+  font-size: 20px;
+}
+
+.modal-close-btn:hover {
+  background: #f3f4f6;
+  color: #1f2937;
+}
+
+.modal-form {
+  padding: 25px;
+}
+
+.modal-form-equipment {
+  padding: 25px;
+}
+
+.form-row-equipment {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 30px;
+  margin-bottom: 20px;
+}
+
+.form-column-left,
+.form-column-right {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.form-group label {
+  font-size: 14px;
+  font-weight: 500;
+  color: #1f2937;
+}
+
+.form-group input,
+.form-group select,
+.form-group textarea {
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  font-size: 14px;
+  color: #1f2937;
+  background-color: white;
+  font-family: inherit;
+  transition: all 0.2s ease;
+  box-sizing: border-box;
+}
+
+.form-group input:focus,
+.form-group select:focus,
+.form-group textarea:focus {
+  outline: none;
+  border-color: #2563eb;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+}
+
+.form-group input::placeholder {
+  color: #9ca3af;
+}
+
+.form-group textarea {
+  resize: vertical;
+  min-height: 80px;
+}
+
+.modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  margin-top: 25px;
+  padding-top: 20px;
+  border-top: 1px solid #e5e7eb;
+}
+
+.modal-form-equipment .modal-actions {
+  flex-direction: row-reverse;
+}
+
+.btn-submit {
+  padding: 10px 20px;
+  background-color: #2563eb;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.btn-submit:hover {
+  background-color: #1d4ed8;
+}
+
+.btn-cancel {
+  padding: 10px 20px;
+  background-color: white;
+  color: #6b7280;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.btn-cancel:hover {
+  background-color: #f9fafb;
+  border-color: #d1d5db;
+}
+
+/* Pagination */
+.equipments-pagination {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px;
+  background-color: rgba(231, 235, 243, 0.5);
+  border-top: 1px solid #cfd7e7;
+  border-radius: 0 0 12px 12px;
+}
+
+.pagination-info {
+  font-size: 14px;
+  color: #4c669a;
+  margin: 0;
+}
+
+.pagination-info .font-medium {
+  font-weight: 500;
+  color: #0d121b;
+}
+
+.pagination-controls {
+  display: flex;
+  gap: 4px;
+}
+
+.pagination-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  background-color: #e7ebf3;
+  color: #4c669a;
+  border: none;
+  border-radius: 8px;
+  font-size: 14px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.pagination-btn:hover:not(:disabled) {
+  background-color: rgba(19, 91, 236, 0.1);
+  color: #135bec;
+}
+
+.pagination-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.pagination-btn.active {
+  background-color: #135bec;
+  color: white;
+}
+
+.pagination-btn svg {
+  font-size: 20px;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .equipments-header-bar {
+    flex-wrap: wrap;
+    gap: 15px;
+  }
+
+  .equipments-page-title {
+    width: 100%;
+  }
+
+  .search-equipments {
+    flex: 1;
+    max-width: 100%;
+  }
+
+  .equipments-actions-right {
+    margin-left: 0;
+    flex-wrap: wrap;
+  }
+
+  .equipments-table {
+    font-size: 12px;
+  }
+
+  .equipments-table th,
+  .equipments-table td {
+    padding: 12px 10px;
+  }
+
+  .form-row-equipment {
+    grid-template-columns: 1fr;
+    gap: 20px;
+  }
+
+  .modal-content {
+    max-width: 100%;
+  }
+
+  .equipments-pagination {
+    flex-direction: column;
+    gap: 12px;
+    align-items: center;
+  }
+
+  .pagination-info {
+    text-align: center;
+  }
+}
+
