@@ -284,7 +284,7 @@ function createFloor(scene, parent, floorIndex, config, highlightLayer) {
 }
 
 // Créer le bâtiment complet
-function createBuilding(scene, config, highlightLayer) {
+function createBuilding(scene, config, highlightLayer, onBuildingClick, onBuildingHover) {
   const buildingGroup = new TransformNode('building', scene)
   const floors = []
 
@@ -310,15 +310,74 @@ function createBuilding(scene, config, highlightLayer) {
   roof.parent = buildingGroup
   roof.material = roofMat
 
+  // Ajouter l'interactivité au bâtiment
+  const buildingMeshes = buildingGroup.getChildMeshes(true)
+  buildingMeshes.forEach(mesh => {
+    if (!mesh.actionManager) {
+      mesh.actionManager = new ActionManager(scene)
+    }
+    
+    // Clic sur le bâtiment
+    mesh.actionManager.registerAction(
+      new ExecuteCodeAction(ActionManager.OnPickTrigger, () => {
+        if (onBuildingClick) {
+          onBuildingClick({
+            id: 1,
+            name: config.name,
+            code: 'BA',
+            type: 'Pédagogique',
+            floors: config.floors,
+            spaces: config.floors * config.roomsPerFloor
+          })
+        }
+      })
+    )
+    
+    // Survol du bâtiment
+    mesh.actionManager.registerAction(
+      new ExecuteCodeAction(ActionManager.OnPointerOverTrigger, (evt) => {
+        if (onBuildingHover) {
+          onBuildingHover({
+            building: {
+              name: config.name,
+              floors: config.floors,
+              spaces: config.floors * config.roomsPerFloor,
+              incidents: 18
+            },
+            position: { x: evt.pointerX, y: evt.pointerY }
+          })
+        }
+        // Highlight du bâtiment
+        buildingMeshes.forEach(m => {
+          if (m.material && m.material.diffuseColor) {
+            highlightLayer.addMesh(m, Color3.FromHexString('#3b82f6'))
+          }
+        })
+      })
+    )
+    
+    mesh.actionManager.registerAction(
+      new ExecuteCodeAction(ActionManager.OnPointerOutTrigger, () => {
+        if (onBuildingHover) {
+          onBuildingHover(null)
+        }
+        // Retirer le highlight
+        buildingMeshes.forEach(m => highlightLayer.removeMesh(m))
+      })
+    )
+  })
+
   return { group: buildingGroup, floors }
 }
 
-function Campus3DView({ selectionInfo = null }) {
+function Campus3DView({ selectionInfo = null, onBuildingClick = null }) {
   const canvasRef = useRef(null)
   const engineRef = useRef(null)
   const sceneRef = useRef(null)
   const [selectedFloor, setSelectedFloor] = useState(null)
   const [buildingInfo, setBuildingInfo] = useState(null)
+  const [hoveredBuilding, setHoveredBuilding] = useState(null)
+  const [tooltipPosition, setTooltipPosition] = useState({ x: 0, y: 0 })
 
   const isolateFloor = useCallback((floorIndex) => {
     if (!buildingInfo) return
@@ -404,8 +463,24 @@ function Campus3DView({ selectionInfo = null }) {
     highlightLayer.outerGlow = true
     highlightLayer.innerGlow = false
 
+    // Handlers pour l'interactivité
+    const handleBuildingClick = (building) => {
+      if (onBuildingClick) {
+        onBuildingClick(building)
+      }
+    }
+    
+    const handleBuildingHover = (hoverData) => {
+      if (hoverData) {
+        setHoveredBuilding(hoverData.building)
+        setTooltipPosition(hoverData.position)
+      } else {
+        setHoveredBuilding(null)
+      }
+    }
+
     // Créer le bâtiment
-    const building = createBuilding(scene, BUILDING_CONFIG, highlightLayer)
+    const building = createBuilding(scene, BUILDING_CONFIG, highlightLayer, handleBuildingClick, handleBuildingHover)
     setBuildingInfo(building)
 
     engine.runRenderLoop(() => {
@@ -441,7 +516,35 @@ function Campus3DView({ selectionInfo = null }) {
             : `${BUILDING_CONFIG.floors} étages • ${BUILDING_CONFIG.floors * BUILDING_CONFIG.roomsPerFloor} pièces • ${BUILDING_CONFIG.floors * BUILDING_CONFIG.roomsPerFloor * BUILDING_CONFIG.objectsPerRoom} objets`
           }
         </div>
+        {onBuildingClick && (
+          <div className="buildings-map-overlay-hint">
+            💡 Cliquez sur le bâtiment pour voir ses étages
+          </div>
+        )}
       </div>
+      
+      {/* Tooltip au survol */}
+      {hoveredBuilding && (
+        <div 
+          className="building-tooltip"
+          style={{
+            position: 'absolute',
+            left: tooltipPosition.x + 10,
+            top: tooltipPosition.y - 10,
+            zIndex: 1000,
+            pointerEvents: 'none'
+          }}
+        >
+          <div className="building-tooltip-content">
+            <div className="building-tooltip-title">{hoveredBuilding.name}</div>
+            <div className="building-tooltip-details">
+              <div>🏢 {hoveredBuilding.floors} étages</div>
+              <div>🏠 {hoveredBuilding.spaces} espaces</div>
+              <div>⚠️ {hoveredBuilding.incidents} incidents</div>
+            </div>
+          </div>
+        </div>
+      )}
       
       {/* Contrôles des étages */}
       <div className="floor-controls">

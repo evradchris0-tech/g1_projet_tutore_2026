@@ -304,7 +304,7 @@ function Dashboard() {
       icon: IoConstructOutline,
       iconBg: '#fef3c7',
       iconColor: '#92400e',
-      text: "Le statut de l’incident #121 est passé à 'En cours'",
+      text: "Le statut de l'incident #121 est passé à 'En cours'",
       time: 'il y a 15m'
     },
     {
@@ -312,7 +312,7 @@ function Dashboard() {
       icon: IoCheckboxOutline,
       iconBg: '#dcfce7',
       iconColor: '#166534',
-      text: "L’incident #119 a été résolu",
+      text: "L'incident #119 a été résolu",
       time: 'il y a 1h'
     },
     {
@@ -1444,4 +1444,3 @@ function Dashboard() {
 }
 
 export default Dashboard
-

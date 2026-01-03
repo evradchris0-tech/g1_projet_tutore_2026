@@ -216,6 +216,50 @@
   color: #6b7280;
 }
 
+.buildings-map-overlay-hint {
+  margin-top: 8px;
+  font-size: 11px;
+  color: #2563eb;
+  font-weight: 500;
+  padding: 4px 8px;
+  background-color: rgba(37, 99, 235, 0.1);
+  border-radius: 6px;
+  border: 1px solid rgba(37, 99, 235, 0.2);
+}
+
+/* Tooltip au survol du bâtiment 3D */
+.building-tooltip {
+  background: rgba(0, 0, 0, 0.9);
+  color: white;
+  padding: 8px 12px;
+  border-radius: 8px;
+  font-size: 12px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  backdrop-filter: blur(4px);
+  max-width: 200px;
+}
+
+.building-tooltip-content {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.building-tooltip-title {
+  font-weight: 600;
+  font-size: 13px;
+  color: #ffffff;
+  margin-bottom: 4px;
+}
+
+.building-tooltip-details {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  font-size: 11px;
+  color: #cbd5e1;
+}
+
 /* Modal Styles */
 .modal-overlay {
   position: fixed;

@@ -19,12 +19,13 @@ import {
 } from 'react-icons/io5'
 import '../styles/Buildings.css'
 import Campus3DView from './Campus3DView'
-import { listBuildings, createBuilding, deleteBuilding, updateBuilding } from '../services/buildings'
+import { listBuildings, createBuilding, deleteBuilding, updateBuilding, getBlocksForBuilding } from '../services/buildings'
 
 function Buildings({ searchQuery, setSearchQuery }) {
   // États pour la navigation hiérarchique (Bâtiments)
-  const [viewLevel, setViewLevel] = useState('buildings') // 'buildings' | 'floors' | 'spaces'
+  const [viewLevel, setViewLevel] = useState('buildings') // 'buildings' | 'blocks' | 'floors' | 'spaces'
   const [selectedBuilding, setSelectedBuilding] = useState(null)
+  const [selectedBlock, setSelectedBlock] = useState(null)
   const [selectedFloor, setSelectedFloor] = useState(null)
   const [showAddBuildingModal, setShowAddBuildingModal] = useState(false)
   const [showSpaceDetailModal, setShowSpaceDetailModal] = useState(false)
@@ -33,6 +34,7 @@ function Buildings({ searchQuery, setSearchQuery }) {
   const [currentPage, setCurrentPage] = useState(1)
   const itemsPerPage = 6
   const [isFullscreen3D, setIsFullscreen3D] = useState(false)
+  const [blocks, setBlocks] = useState([])
   const [newBuilding, setNewBuilding] = useState({
     name: '',
     code: '',
@@ -45,6 +47,45 @@ function Buildings({ searchQuery, setSearchQuery }) {
   const [buildingsMessage, setBuildingsMessage] = useState('')
   const [buildingActionId, setBuildingActionId] = useState(null)
   const [editingBuilding, setEditingBuilding] = useState(null)
+  const [selectedEquipmentsForAssign, setSelectedEquipmentsForAssign] = useState([])
+
+  // Fonctions pour le modal d'assignation d'équipements
+  const handleCancelAssignEquipment = () => {
+    setShowAssignEquipmentModal(false)
+    setSelectedEquipmentsForAssign([])
+  }
+
+  const getAvailableEquipments = () => {
+    // Mock data pour les équipements disponibles
+    return [
+      { id: 'eq1', name: 'Réfrigérateur Samsung', type: 'Réfrigérateur', brand: 'Samsung', state: 'bon etat' },
+      { id: 'eq2', name: 'Climatiseur LG', type: 'Climatiseur', brand: 'LG', state: 'bon etat' },
+      { id: 'eq3', name: 'Ordinateur HP', type: 'Ordinateur', brand: 'HP', state: 'à réparer' }
+    ]
+  }
+
+  const handleSelectEquipmentForAssign = (equipmentId) => {
+    setSelectedEquipmentsForAssign(prev => 
+      prev.includes(equipmentId) 
+        ? prev.filter(id => id !== equipmentId)
+        : [...prev, equipmentId]
+    )
+  }
+
+  const handleSelectAllEquipmentsForAssign = () => {
+    const availableEquipments = getAvailableEquipments()
+    if (selectedEquipmentsForAssign.length === availableEquipments.length) {
+      setSelectedEquipmentsForAssign([])
+    } else {
+      setSelectedEquipmentsForAssign(availableEquipments.map(eq => eq.id))
+    }
+  }
+
+  const handleAssignEquipments = () => {
+    // Mock assignment - dans la vraie implémentation, cela ferait un appel API
+    console.log('Assigning equipments:', selectedEquipmentsForAssign)
+    handleCancelAssignEquipment()
+  }
 
   const buildingStats = [
     {
@@ -124,17 +165,19 @@ function Buildings({ searchQuery, setSearchQuery }) {
   })
 
   // Données simulées pour les étages (générées dynamiquement)
-  const getFloorsForBuilding = (buildingId) => {
+  const getFloorsForBuilding = (buildingId, blockId = null) => {
     const building = allBuildings.find(b => b.id === buildingId)
     if (!building) return []
     
     const floors = []
     for (let i = 0; i < building.floors; i++) {
       floors.push({
-        id: `${buildingId}-floor-${i}`,
+        id: `${buildingId}-${blockId || 'main'}-floor-${i}`,
         buildingId: buildingId,
+        blockId: blockId,
         number: i,
         name: i === 0 ? 'Rez-de-chaussée' : `Étage ${i}`,
+        block: blockId ? blocks.find(b => b.id === blockId)?.name : null,
         spaces: Math.floor(building.spaces / building.floors),
         incidents: Math.floor(Math.random() * 10)
       })
@@ -147,7 +190,7 @@ function Buildings({ searchQuery, setSearchQuery }) {
     const building = allBuildings.find(b => b.id === buildingId)
     if (!building) return []
     
-    const floors = getFloorsForBuilding(buildingId)
+    const floors = getFloorsForBuilding(buildingId, selectedBlock?.id)
     const floor = floors.find(f => f.id === floorId)
     if (!floor) return []
     
@@ -174,7 +217,8 @@ function Buildings({ searchQuery, setSearchQuery }) {
         occupants: Math.floor(Math.random() * 30),
         equipment: equipmentCount,
         defectiveEquipments: defectiveCount,
-        incidents: Math.floor(Math.random() * 5)
+        incidents: Math.floor(Math.random() * 5),
+        block: floor.blockId ? blocks.find(b => b.id === floor.blockId)?.name : null
       })
     }
     return spaces
@@ -260,8 +304,21 @@ function Buildings({ searchQuery, setSearchQuery }) {
   }
 
   // Fonctions de navigation
-  const handleBuildingClick = (building) => {
+  const handleBuildingClick = async (building) => {
     setSelectedBuilding(building)
+    const buildingBlocks = await getBlocksForBuilding(building.id)
+    setBlocks(buildingBlocks)
+    
+    if (buildingBlocks.length > 0) {
+      setViewLevel('blocks')
+    } else {
+      setViewLevel('floors')
+    }
+    setSearchQuery('') // Réinitialiser la recherche
+  }
+
+  const handleBlockClick = (block) => {
+    setSelectedBlock(block)
     setViewLevel('floors')
     setSearchQuery('') // Réinitialiser la recherche
   }
@@ -280,8 +337,20 @@ function Buildings({ searchQuery, setSearchQuery }) {
       setSearchQuery('')
       setCurrentPage(1) // Réinitialiser la pagination
     } else if (viewLevel === 'floors') {
+      if (selectedBlock) {
+        setViewLevel('blocks')
+        setSelectedBlock(null)
+      } else {
+        setViewLevel('buildings')
+        setSelectedBuilding(null)
+        setBlocks([])
+      }
+      setSearchQuery('')
+    } else if (viewLevel === 'blocks') {
       setViewLevel('buildings')
       setSelectedBuilding(null)
+      setSelectedBlock(null)
+      setBlocks([])
       setSearchQuery('')
     }
   }
@@ -363,12 +432,19 @@ function Buildings({ searchQuery, setSearchQuery }) {
   const getCurrentData = () => {
     if (viewLevel === 'buildings') {
       return filteredBuildings
+    } else if (viewLevel === 'blocks' && selectedBuilding) {
+      const query = searchQuery.toLowerCase()
+      return blocks.filter(block => 
+        block.name.toLowerCase().includes(query) ||
+        block.description.toLowerCase().includes(query)
+      )
     } else if (viewLevel === 'floors' && selectedBuilding) {
-      const floors = getFloorsForBuilding(selectedBuilding.id)
+      const floors = getFloorsForBuilding(selectedBuilding.id, selectedBlock?.id)
       const query = searchQuery.toLowerCase()
       return floors.filter(floor => 
         floor.name.toLowerCase().includes(query) ||
-        floor.number.toString().includes(query)
+        floor.number.toString().includes(query) ||
+        (floor.block && floor.block.toLowerCase().includes(query))
       )
     } else if (viewLevel === 'spaces' && selectedBuilding && selectedFloor) {
       const spaces = getSpacesForFloor(selectedBuilding.id, selectedFloor.id)
@@ -376,7 +452,8 @@ function Buildings({ searchQuery, setSearchQuery }) {
       return spaces.filter(space => 
         space.name.toLowerCase().includes(query) ||
         space.code.toLowerCase().includes(query) ||
-        space.type.toLowerCase().includes(query)
+        space.type.toLowerCase().includes(query) ||
+        (space.block && space.block.toLowerCase().includes(query))
       )
     }
     return []
@@ -432,8 +509,11 @@ function Buildings({ searchQuery, setSearchQuery }) {
   const getSectionTitle = () => {
     if (viewLevel === 'buildings') {
       return 'Liste des bâtiments'
+    } else if (viewLevel === 'blocks' && selectedBuilding) {
+      return `Blocs & Ailes - ${selectedBuilding.name}`
     } else if (viewLevel === 'floors' && selectedBuilding) {
-      return `Étages - ${selectedBuilding.name}`
+      const blockInfo = selectedBlock ? ` - ${selectedBlock.name}` : ''
+      return `Étages - ${selectedBuilding.name}${blockInfo}`
     } else if (viewLevel === 'spaces' && selectedBuilding && selectedFloor) {
       return `Espaces - ${selectedBuilding.name} - ${selectedFloor.name}`
     }
@@ -443,8 +523,11 @@ function Buildings({ searchQuery, setSearchQuery }) {
   const getSectionSubtitle = () => {
     if (viewLevel === 'buildings') {
       return "Vue d'ensemble des bâtiments configurés sur le site d'Eyang"
+    } else if (viewLevel === 'blocks') {
+      return `Sélectionnez un bloc ou une aile du ${selectedBuilding?.name}`
     } else if (viewLevel === 'floors') {
-      return `Liste des étages du ${selectedBuilding?.name}`
+      const blockInfo = selectedBlock ? ` dans ${selectedBlock.name}` : ''
+      return `Liste des étages du ${selectedBuilding?.name}${blockInfo}`
     } else if (viewLevel === 'spaces') {
       return `Liste des espaces au ${selectedFloor?.name}`
     }
@@ -593,10 +676,18 @@ function Buildings({ searchQuery, setSearchQuery }) {
                           <th className="text-right">Actions</th>
                     </>
                   )}
+                  {viewLevel === 'blocks' && (
+                    <>
+                      <th>Nom</th>
+                      <th>Description</th>
+                      <th>Actions</th>
+                    </>
+                  )}
                   {viewLevel === 'floors' && (
                     <>
                       <th>Étage</th>
                       <th>Numéro</th>
+                      {selectedBlock && <th>Bloc/Aile</th>}
                       <th>Espaces</th>
                       <th>Incidents</th>
                     </>
@@ -606,6 +697,7 @@ function Buildings({ searchQuery, setSearchQuery }) {
                       <th>Code</th>
                       <th>Nom</th>
                       <th>Type</th>
+                      {blocks.length > 0 && <th>Bloc/Aile</th>}
                       <th>Surface (m²)</th>
                       <th>Occupants</th>
                       <th>Équipements</th>
@@ -660,6 +752,21 @@ function Buildings({ searchQuery, setSearchQuery }) {
                         </td>
                       </tr>
                     ))}
+                    {viewLevel === 'blocks' && currentData.map((block) => (
+                      <tr 
+                        key={block.id}
+                        onClick={() => handleBlockClick(block)}
+                        className="clickable-row"
+                      >
+                        <td>{block.name}</td>
+                        <td>{block.description}</td>
+                        <td className="text-right">
+                          <button className="btn-view-details" title="Voir les étages">
+                            Voir étages
+                          </button>
+                        </td>
+                      </tr>
+                    ))}
                     {viewLevel === 'floors' && currentData.map((floor) => (
                       <tr 
                         key={floor.id}
@@ -668,6 +775,7 @@ function Buildings({ searchQuery, setSearchQuery }) {
                       >
                         <td>{floor.name}</td>
                         <td>{floor.number}</td>
+                        {selectedBlock && <td>{floor.block || selectedBlock.name}</td>}
                         <td>{floor.spaces}</td>
                         <td>
                           <span
@@ -685,6 +793,7 @@ function Buildings({ searchQuery, setSearchQuery }) {
                         <td>{space.code}</td>
                         <td>{space.name}</td>
                         <td>{space.type}</td>
+                        {blocks.length > 0 && <td>{space.block || '-'}</td>}
                         <td>{space.area}</td>
                         <td>{space.occupants}</td>
                         <td>
@@ -721,7 +830,7 @@ function Buildings({ searchQuery, setSearchQuery }) {
                   </>
                 ) : (
                   <tr>
-                    <td colSpan={viewLevel === 'buildings' ? 6 : viewLevel === 'floors' ? 4 : 8} className="no-results">
+                    <td colSpan={viewLevel === 'buildings' ? 7 : viewLevel === 'blocks' ? 3 : viewLevel === 'floors' ? (selectedBlock ? 5 : 4) : (blocks.length > 0 ? 9 : 8)} className="no-results">
                       {searchQuery ? `Aucun résultat trouvé pour "${searchQuery}"` : 'Aucune donnée disponible'}
                     </td>
                   </tr>
@@ -796,7 +905,10 @@ function Buildings({ searchQuery, setSearchQuery }) {
                 <IoExpandOutline />
               </button>
             </div>
-            <Campus3DView selectionInfo={selectionInfo} />
+            <Campus3DView 
+              selectionInfo={selectionInfo} 
+              onBuildingClick={handleBuildingClick}
+            />
           </div>
         </div>
       </div>
@@ -1154,7 +1266,10 @@ function Buildings({ searchQuery, setSearchQuery }) {
               </button>
             </div>
             <div className="fullscreen-3d-content">
-              <Campus3DView selectionInfo={selectionInfo} />
+              <Campus3DView 
+                selectionInfo={selectionInfo} 
+                onBuildingClick={handleBuildingClick}
+              />
             </div>
           </div>
         </div>
